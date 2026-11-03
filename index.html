@@ -10,7 +10,7 @@
             --primary-dark: #0369a1;
             --accent: #38bdf8;
             --bg-gradient: linear-gradient(135deg, #090d16 0%, #020617 100%);
-            --card-bg: rgba(15, 23, 42, 0.85);
+            --card-bg: rgba(15, 23, 42, 0.9);
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --danger: #ef4444;
@@ -206,7 +206,7 @@
 
         .map-frame {
             width: 100%;
-            height: 240px;
+            height: 280px;
             border-radius: 14px;
             border: 1px solid rgba(255, 255, 255, 0.15);
             margin-top: 22px;
@@ -227,7 +227,7 @@
 
     <div class="container">
         <header>
-            <h1>EasyHelp Smart Cane & GPS</h1>
+            <h1>Amazon Collection - EasyHelp Smart Cane & GPS</h1>
             <p>Created by Humaira Sardar | Professional Vision & GPS Navigation</p>
         </header>
 
@@ -235,18 +235,18 @@
         <div class="control-group">
             <label for="voiceLanguage">Voice & Translation Language</label>
             <select id="voiceLanguage">
-                <option value="ur-PK">Urdu (Pakistan - اردو)</option>
-                <option value="en-US" selected>English (United States)</option>
-                <option value="hi-IN">Hindi (India - हिंदी)</option>
-                <option value="ar-SA">Arabic (Saudi Arabia - العربية)</option>
-                <option value="pa-IN">Punjabi (ਪੰਜਾਬੀ)</option>
-                <option value="es-ES">Spanish (Español)</option>
-                <option value="fr-FR">French (Français)</option>
-                <option value="de-DE">German (Deutsch)</option>
-                <option value="zh-CN">Chinese Simplified (中文)</option>
-                <option value="ja-JP">Japanese (日本語)</option>
-                <option value="tr-TR">Turkish (Türkçe)</option>
-                <option value="fa-IR">Persian (فارسی)</option>
+                <option value="ur-PK">Urdu</option>
+                <option value="en-US" selected>English</option>
+                <option value="hi-IN">Hindi</option>
+                <option value="ar-SA">Arabic</option>
+                <option value="pa-IN">Punjabi</option>
+                <option value="es-ES">Spanish</option>
+                <option value="fr-FR">French</option>
+                <option value="de-DE">German</option>
+                <option value="zh-CN">Chinese Simplified</option>
+                <option value="ja-JP">Japanese</option>
+                <option value="tr-TR">Turkish</option>
+                <option value="fa-IR">Persian</option>
             </select>
         </div>
 
@@ -286,7 +286,7 @@
             <label>Live AI Assistant Rear Camera (Real-time Vision)</label>
             <div class="camera-container">
                 <video id="webcam" autoplay playsinline muted></video>
-                <div class="camera-overlay" id="cameraStatusOverlay">Camera inactive. Press Start to initialize live vision.</div>
+                <div class="camera-overlay" id="cameraStatusOverlay">Camera inactive. Press Start to activate back camera and vision.</div>
             </div>
         </div>
 
@@ -302,7 +302,7 @@
         <div class="guidance-box">
             <h3>Live Assistant Guidance</h3>
             <div class="step-counter" id="stepCounterDisplay">Step: 0</div>
-            <p id="instructionDisplay">Press 'Start Live Voice Navigation & AI Vision' to begin real-time navigation and camera tracking.</p>
+            <p id="instructionDisplay">Press 'Start Live Voice Navigation & AI Vision' to activate your rear camera, GPS tracking, and real-time guidance.</p>
         </div>
 
         <!-- Live Google Map Integration with Dynamic GPS Tracking -->
@@ -310,7 +310,7 @@
     </div>
 
     <footer>
-        Empowering Independent Mobility, Step by Step.
+        Amazon Collection - Empowering Independent Mobility, Step by Step.
     </footer>
 
     <script>
@@ -328,19 +328,20 @@
 
         let isNavigating = false;
         let navInterval = null;
+        let gpsWatchId = null;
         let stepCount = 0;
         let cameraStream = null;
 
-        // 1. Force Rear Camera Activation ONLY when user clicks Start or explicitly triggers
+        // 1. Force Rear Camera Activation on Start button click
         async function startRearCamera() {
             try {
                 if (cameraStream) {
                     cameraStream.getTracks().forEach(track => track.stop());
                 }
                 
-                cameraStatusOverlay.innerText = "Activating rear camera...";
+                cameraStatusOverlay.innerText = "Activating mobile rear camera...";
                 
-                // Request back camera with environment constraint
+                // Request back camera with environment constraint (crucial for mobile devices)
                 const constraints = {
                     video: { 
                         facingMode: { exact: "environment" },
@@ -352,9 +353,9 @@
 
                 cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
                 webcam.srcObject = cameraStream;
-                cameraStatusOverlay.innerText = "Rear camera active. Real-time vision tracking ready.";
+                cameraStatusOverlay.innerText = "Rear camera active and scanning.";
             } catch (err) {
-                // Fallback if exact environment camera fails
+                // Fallback constraint if exact environment camera is not strictly available
                 try {
                     const fallbackConstraints = { 
                         video: { facingMode: "environment" }, 
@@ -364,31 +365,31 @@
                     webcam.srcObject = cameraStream;
                     cameraStatusOverlay.innerText = "Rear camera active (Standard mode).";
                 } catch (e) {
-                    cameraStatusOverlay.innerText = "Camera access denied or unavailable. Please grant permissions.";
-                    console.error("Camera error:", e);
+                    // Final fallback to any available camera if environment fails
+                    try {
+                        cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                        webcam.srcObject = cameraStream;
+                        cameraStatusOverlay.innerText = "Camera active (Front/Default mode).";
+                    } catch (finalErr) {
+                        cameraStatusOverlay.innerText = "Camera access error. Please check browser permissions.";
+                        console.error("Camera error:", finalErr);
+                    }
                 }
             }
         }
 
-        // 2. Native Language Speech Synthesis Dictionary
-        function speakNative(textKey, lang) {
+        // 2. Native Language Speech Synthesis Dictionary (Multi-language Support)
+        function speakNative(textKey, lang, customMsg = "") {
             if (!('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel();
 
             const translations = {
                 'start': {
-                    'ur-PK': 'نیویگیشن شروع ہو گئی ہے۔ کیمرہ اور جی پی ایس فعال ہیں۔ براہ کرم بتائیں کس طرف جانا ہے؟',
-                    'en-US': 'Navigation started. Live camera and GPS are active. Please guide me where to go.',
-                    'hi-IN': 'नेविगेशन शुरू हो गया है। कैमरा और जीपीएस सक्रिय हैं।',
-                    'ar-SA': 'بدأ التنقل. الكاميرا ونظام تحديد الموقع نشطان.',
-                    'pa-IN': 'ਨੇਵੀਗੇਸ਼ਨ ਸ਼ੁਰੂ ਹੋ ਗਈ ਹੈ। ਕੈਮਰਾ ਅਤੇ ਜੀਪੀਐਸ ਐਕਟਿਵ ਹਨ।'
-                },
-                'gps_live': {
-                    'ur-PK': 'جی پی ایس فعال ہے۔ آپ کا موجودہ مقام ٹریک ہو رہا ہے۔ آگے سیدھے چلیں۔',
-                    'en-US': 'GPS active. Your current location is being tracked. Walk straight ahead.',
-                    'hi-IN': 'जीपीएस सक्रिय है। आपकी वर्तमान स्थिति ट्रैक की जा रही है। सीधे चलें।',
-                    'ar-SA': 'نظام تحديد الموقع نشط. يتم تتبع موقعك الحالي. امشي مستقيماً.',
-                    'pa-IN': 'ਜੀਪੀਐਸ ਐਕਟਿਵ ਹੈ। ਤੁਹਾਡੀ ਮੌਜੂਦਾ ਸਥਿਤੀ ਟ੍ਰੈਕ ਕੀਤੀ ਜਾ ਰਹੀ ਹੈ।'
+                    'ur-PK': 'نیویگیشن اور بیک کیمرہ شروع ہو گیا ہے۔ جی پی ایس لائیو ہے۔ براہ کرم بتائیں کس طرف جانا ہے؟',
+                    'en-US': 'Navigation and rear camera started. Live GPS is active. Please guide me where to go.',
+                    'hi-IN': 'नेविगेशन और पीछे का कैमरा शुरू हो गया है। जीपीएस सक्रिय है।',
+                    'ar-SA': 'بدأ التنقل والكاميرا الخلفية. نظام تحديد الموقع نشط.',
+                    'pa-IN': 'ਨੇਵੀਗੇਸ਼ਨ ਅਤੇ ਪਿਛਲਾ ਕੈਮਰਾ ਸ਼ੁਰੂ ਹੋ ਗਿਆ ਹੈ।'
                 },
                 'step_forward': {
                     'ur-PK': 'قدم آگے بڑھائیں۔ راستہ صاف ہے۔',
@@ -412,15 +413,20 @@
                     'pa-IN': 'ਧਿਆਨ ਦਿਓ! ਸੱਜੇ ਪਾਸੇ ਮੁੜੋ।'
                 },
                 'obstacle_ahead': {
-                    'ur-PK': 'احتیاط کریں! سامنے رکاوٹ یا دیوار موجود ہے۔',
-                    'en-US': 'Caution! Obstacle or wall ahead.',
-                    'hi-IN': 'सावधान! सामने बाधा या दीवार है।',
-                    'ar-SA': 'تنبيه! يوجد عائق أو جدار في الأمام.',
-                    'pa-IN': 'ਸਾਵਧਾਨ! ਸਾਹਮਣੇ ਰੁਕਾਵਟ ਜਾਂ ਦੀਵਾਰ ਹੈ।'
+                    'ur-PK': 'احتیاط کریں! سامنے رکاوٹ یا سیڑھیاں موجود ہیں۔',
+                    'en-US': 'Caution! Obstacle or stairs ahead.',
+                    'hi-IN': 'सावधान! सामने बाधा या सीढ़ियाँ हैं।',
+                    'ar-SA': 'تنبيه! يوجد عائق أو سلالم في الأمام.',
+                    'pa-IN': 'ਸਾਵਧਾਨ! ਸਾਹਮਣੇ ਰੁਕਾਵਟ ਜਾਂ ਪੌੜੀਆਂ ਹਨ।'
                 }
             };
 
-            let spokenText = (translations[textKey] && translations[textKey][lang]) ? translations[textKey][lang] : textKey;
+            let spokenText = "";
+            if (customMsg) {
+                spokenText = customMsg;
+            } else {
+                spokenText = (translations[textKey] && translations[textKey][lang]) ? translations[textKey][lang] : textKey;
+            }
             
             const utterance = new SpeechSynthesisUtterance(spokenText);
             utterance.lang = lang;
@@ -428,33 +434,47 @@
             window.speechSynthesis.speak(utterance);
         }
 
-        // 3. Dynamic GPS & Real-time Location Tracking Integration
-        function updateLiveGPS(lang) {
+        // 3. Real-time Live GPS Tracking with Google Maps & Language Localization
+        function startLiveGPS(lang) {
             if ("geolocation" in navigator) {
-                navigator.geolocation.getCurrentPosition(
+                gpsWatchId = navigator.geolocation.watchPosition(
                     (position) => {
                         const lat = position.coords.latitude;
                         const lng = position.coords.longitude;
                         
-                        // Update embedded map dynamically with user's live coordinates
-                        liveMapFrame.src = `https://www.maps.google.com/maps?q=${lat},${lng}&z=16&output=embed`;
+                        // Update embedded Google Map iframe with real-time live coordinates
+                        liveMapFrame.src = `https://www.google.com/maps?q=${lat},${lng}&z=17&output=embed`;
                         
-                        let locationMsg = indoorSelect.value || outdoorSelect.value || "street walking";
+                        let venueInfo = indoorSelect.options[indoorSelect.selectedIndex]?.text || "";
+                        let outdoorInfo = outdoorSelect.options[outdoorSelect.selectedIndex]?.text || "";
+                        let modeText = venueInfo || outdoorInfo || "Free Street Walking";
+                        
                         sensorText.innerText = `GPS Connected | Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
                         sensorStatusCard.classList.remove('alert');
                         
-                        instructionDisplay.innerHTML = `<strong>Live Location Tracked:</strong> Latitude ${lat.toFixed(4)}, Longitude ${lng.toFixed(4)}.<br>Mode: <strong>${locationMsg.toUpperCase()}</strong>. Camera is actively scanning surroundings.`;
-                        speakNative('gps_live', lang);
+                        let locationStatusString = "";
+                        if (lang === 'ur-PK') {
+                            locationStatusString = `لائیو لوکیشن منسلک: عرض البلد ${lat.toFixed(4)}, طول البلد ${lng.toFixed(4)}. موڈ: ${modeText}.`;
+                        } else {
+                            locationStatusString = `Live Location Connected: Latitude ${lat.toFixed(4)}, Longitude ${lng.toFixed(4)}. Mode: ${modeText}.`;
+                        }
+                        
+                        instructionDisplay.innerHTML = `<strong>${locationStatusString}</strong><br>Rear camera is actively scanning surroundings for obstacles.`;
                     },
                     (error) => {
-                        sensorText.innerText = "GPS Error / Permission Denied - Using Simulation Mode";
+                        sensorText.innerText = "GPS Error / Permission Denied - Please Enable Location Services";
                         sensorStatusCard.classList.add('alert');
-                        instructionDisplay.innerText = "Could not fetch precise GPS coordinates. Please ensure location services are enabled.";
+                        if (lang === 'ur-PK') {
+                            instructionDisplay.innerText = "جی پی ایس سگنل نہیں مل رہا۔ براہ کرم اپنے موبائل کی لوکیشن سروسز آن کریں۔";
+                            speakNative('', lang, "براہ کرم لوکیشن سروسز آن کریں تاکہ جی پی ایس آپ کی درست رہنمائی کر سکے۔");
+                        } else {
+                            instructionDisplay.innerText = "Could not fetch precise GPS coordinates. Please enable device location permissions.";
+                        }
                     },
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
                 );
             } else {
-                sensorText.innerText = "Geolocation not supported by browser.";
+                sensorText.innerText = "Geolocation not supported by your browser.";
             }
         }
 
@@ -467,18 +487,18 @@
                 
                 const selectedLang = voiceLanguageSelect.value;
                 
-                // Immediately start rear camera
+                // Trigger back camera activation immediately upon clicking start
                 await startRearCamera();
                 
                 // Initial welcome speech
                 speakNative('start', selectedLang);
                 
-                // Perform initial GPS lookup
-                updateLiveGPS(selectedLang);
+                // Start live GPS tracking & map embedding
+                startLiveGPS(selectedLang);
                 
-                // Start continuous guidance loop
+                // Continuous smart guidance loop
                 stepCount = 0;
-                const dynamicGuards = ['step_forward', 'turn_left', 'turn_right', 'obstacle_ahead', 'step_forward'];
+                const dynamicGuards = ['step_forward', 'turn_left', 'step_forward', 'obstacle_ahead', 'turn_right'];
                 let guardIndex = 0;
 
                 navInterval = setInterval(() => {
@@ -496,17 +516,21 @@
                         sensorStatusCard.classList.remove('alert');
                     }
 
-                }, 7000); // Guiding every 7 seconds intelligently without spamming
+                }, 8000);
 
             } else {
-                // Stop Navigation
+                // Stop Navigation & Release Camera / GPS
                 isNavigating = false;
                 clearInterval(navInterval);
+                if (gpsWatchId !== null) {
+                    navigator.geolocation.clearWatch(gpsWatchId);
+                    gpsWatchId = null;
+                }
                 if (cameraStream) {
                     cameraStream.getTracks().forEach(track => track.stop());
                 }
                 webcam.srcObject = null;
-                cameraStatusOverlay.innerText = "Camera inactive. Press Start to initialize live vision.";
+                cameraStatusOverlay.innerText = "Camera inactive. Press Start to activate back camera and vision.";
                 startNavBtn.innerText = "Start Live Voice Navigation & AI Vision";
                 startNavBtn.style.background = "linear-gradient(135deg, #0284c7 0%, #2563eb 100%)";
                 instructionDisplay.innerText = "Navigation stopped. Press 'Start Live Voice Navigation & AI Vision' to begin again.";
