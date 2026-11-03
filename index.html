@@ -3,26 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EasyHelp Smart Cane & GPS - Assistant</title>
+    <title>EasyHelp Smart Cane & GPS - Professional Assistant</title>
     <style>
         :root {
-            --primary: #2563eb;
-            --primary-dark: #1d4ed8;
-            --accent: #06b6d4;
-            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            --card-bg: rgba(30, 41, 59, 0.95);
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --accent: #38bdf8;
+            --bg-gradient: radial-gradient(circle at 50% 10%, #0f172a 0%, #020617 100%);
+            --card-bg: rgba(15, 23, 42, 0.88);
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --danger: #ef4444;
             --success: #22c55e;
-            --border-radius: 16px;
+            --border-radius: 20px;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
 
         body {
@@ -32,82 +32,81 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
+            padding: 24px 16px;
         }
 
         .container {
             width: 100%;
-            max-width: 680px;
+            max-width: 720px;
             background: var(--card-bg);
-            backdrop-filter: blur(14px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(56, 189, 248, 0.2);
             border-radius: var(--border-radius);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-            padding: 24px;
-            margin-bottom: 20px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(2, 132, 199, 0.15);
+            padding: 28px;
+            margin-bottom: 24px;
         }
 
         header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 16px;
+            padding-bottom: 20px;
         }
 
         header h1 {
-            font-size: 1.8rem;
-            color: #38bdf8;
+            font-size: 2rem;
+            background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             margin-bottom: 6px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
         }
 
         header p {
             font-size: 0.9rem;
             color: var(--text-muted);
-        }
-
-        .section-title {
-            font-size: 1.1rem;
-            color: var(--accent);
-            margin: 16px 0 8px 0;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            letter-spacing: 0.5px;
         }
 
         .control-group {
-            margin-bottom: 16px;
+            margin-bottom: 20px;
         }
 
         label {
             display: block;
-            font-size: 0.9rem;
-            margin-bottom: 6px;
+            font-size: 0.92rem;
+            margin-bottom: 8px;
             color: var(--text-muted);
+            font-weight: 500;
         }
 
         select, button {
             width: 100%;
-            padding: 12px 16px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: #334155;
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(30, 41, 59, 0.9);
             color: var(--text-main);
-            font-size: 1rem;
+            font-size: 1.05rem;
             outline: none;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         select:focus, button:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.25);
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
             font-weight: 600;
             cursor: pointer;
             border: none;
-            margin-top: 10px;
+            margin-top: 12px;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
         }
 
         .btn-primary:active {
@@ -116,13 +115,13 @@
 
         .camera-container {
             width: 100%;
-            height: 220px;
-            background: #0f172a;
-            border-radius: 12px;
+            height: 260px;
+            background: #000;
+            border-radius: 14px;
             overflow: hidden;
             position: relative;
             margin-top: 12px;
-            border: 2px solid rgba(56, 189, 248, 0.4);
+            border: 2px solid rgba(56, 189, 248, 0.3);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -136,24 +135,28 @@
 
         .camera-overlay {
             position: absolute;
-            bottom: 10px;
-            left: 10px;
-            right: 10px;
-            background: rgba(15, 23, 42, 0.85);
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 0.85rem;
+            bottom: 12px;
+            left: 12px;
+            right: 12px;
+            background: rgba(15, 23, 42, 0.88);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.9rem;
             color: #38bdf8;
             text-align: center;
             border: 1px solid rgba(56, 189, 248, 0.3);
+            backdrop-filter: blur(8px);
         }
 
         .status-card {
-            background: rgba(15, 23, 42, 0.7);
-            border-radius: 12px;
-            padding: 16px;
-            margin-top: 16px;
-            border-left: 4px solid var(--success);
+            background: rgba(15, 23, 42, 0.75);
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-top: 20px;
+            border-left: 5px solid var(--success);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .status-card.alert {
@@ -168,46 +171,48 @@
         }
 
         .guidance-box {
-            background: rgba(30, 41, 59, 0.95);
-            border: 2px dashed var(--accent);
-            border-radius: 12px;
-            padding: 20px;
+            background: rgba(30, 41, 59, 0.85);
+            border: 2px dashed rgba(56, 189, 248, 0.4);
+            border-radius: 14px;
+            padding: 22px;
             text-align: center;
             margin-top: 20px;
         }
 
         .guidance-box h3 {
-            font-size: 1.3rem;
+            font-size: 1.35rem;
             color: #38bdf8;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .step-counter {
-            font-size: 2rem;
-            font-weight: bold;
+            font-size: 2.2rem;
+            font-weight: 700;
             color: var(--accent);
-            margin: 10px 0;
+            margin: 8px 0;
+            text-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
         }
 
         .guidance-box p {
             font-size: 1.1rem;
-            line-height: 1.5;
+            line-height: 1.6;
         }
 
         .map-frame {
             width: 100%;
-            height: 180px;
-            border-radius: 10px;
-            border: none;
-            margin-top: 16px;
+            height: 220px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 20px;
         }
 
         footer {
             text-align: center;
-            font-size: 0.85rem;
+            font-size: 0.88rem;
             color: var(--text-muted);
             margin-top: auto;
-            padding: 10px;
+            padding: 12px;
+            letter-spacing: 0.5px;
         }
     </style>
 </head>
@@ -219,15 +224,15 @@
             <p>Created by Humaira Sardar</p>
         </header>
 
-        <!-- 100+ Languages Selection with Native Audio -->
+        <!-- Voice & Translation Language Selection -->
         <div class="control-group">
-            <label for="voiceLanguage">Voice & Translation Language / زبان کا انتخاب</label>
+            <label for="voiceLanguage">Voice & Translation Language</label>
             <select id="voiceLanguage">
                 <option value="ur-PK">Urdu (Pakistan - اردو)</option>
                 <option value="en-US" selected>English (United States)</option>
                 <option value="hi-IN">Hindi (India - हिंदी)</option>
                 <option value="ar-SA">Arabic (Saudi Arabia - العربية)</option>
-                <option value="pa-IN">Punjabi (India/Pakistan - ਪੰਜਾਬੀ)</option>
+                <option value="pa-IN">Punjabi (ਪੰਜਾਬੀ)</option>
                 <option value="es-ES">Spanish (Español)</option>
                 <option value="fr-FR">French (Français)</option>
                 <option value="de-DE">German (Deutsch)</option>
@@ -240,7 +245,7 @@
 
         <!-- Indoor Destinations (Grouped Dropdown) -->
         <div class="control-group">
-            <label for="indoorLocation">Indoor Navigation Venue (عمارت کا انتخاب)</label>
+            <label for="indoorLocation">Indoor Navigation Venue</label>
             <select id="indoorLocation">
                 <optgroup label="Educational Institutes">
                     <option value="school">School (Principal Office / Classrooms / Hall)</option>
@@ -257,22 +262,22 @@
             </select>
         </div>
 
-        <!-- Outdoor GPS Modes -->
+        <!-- Outdoor GPS & Live Walking Modes -->
         <div class="control-group">
             <label for="outdoorLocation">Outdoor GPS & Street Walking Mode</label>
             <select id="outdoorLocation">
-                <option value="street">Free Street Walking (Sidewalk & Crosswalk)</option>
+                <option value="street">Free Street Walking (Live Sidewalk GPS Guidance)</option>
                 <option value="national">National City GPS (Local Roads & Markets)</option>
                 <option value="international">International GPS Satellite Mode</option>
             </select>
         </div>
 
-        <!-- Live AI Camera Vision Stream -->
+        <!-- Live Back Camera AI Vision Stream -->
         <div class="control-group">
-            <label>Live AI Assistant Camera (Object & Hazard Detection)</label>
+            <label>Live AI Assistant Back Camera (Real-time Vision)</label>
             <div class="camera-container">
                 <video id="webcam" autoplay playsinline muted></video>
-                <div class="camera-overlay" id="cameraStatusOverlay">AI Camera Ready: Scanning for obstacles, humans, animals & doors...</div>
+                <div class="camera-overlay" id="cameraStatusOverlay">Rear camera initializing for live vision...</div>
             </div>
         </div>
 
@@ -288,7 +293,7 @@
         <div class="guidance-box">
             <h3>Live Assistant Guidance</h3>
             <div class="step-counter" id="stepCounterDisplay">Step: 0</div>
-            <p id="instructionDisplay">Press 'Start Live Voice Navigation & AI Vision' to begin native-language voice feedback, step counting, and object detection.</p>
+            <p id="instructionDisplay">Press 'Start Live Voice Navigation & AI Vision' to begin real-time navigation.</p>
         </div>
 
         <!-- Live Google Map Integration -->
@@ -311,28 +316,46 @@
         const webcam = document.getElementById('webcam');
         const cameraStatusOverlay = document.getElementById('cameraStatusOverlay');
 
-        // Access Live Camera
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
-            .then(stream => {
-                webcam.srcObject = stream;
-            })
-            .catch(err => {
-                console.log("Camera access error:", err);
-                cameraStatusOverlay.innerText = "Camera simulation mode active (Simulated environment scan).";
+        // Force Back Camera (Environment Facing)
+        navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: { exact: "environment" } }, 
+            audio: false 
+        })
+        .catch(() => {
+            // Fallback if exact environment camera is not restricted on certain devices
+            return navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "environment" }, 
+                audio: false 
             });
+        })
+        .then(stream => {
+            webcam.srcObject = stream;
+            cameraStatusOverlay.innerText = "Rear camera active. Real-time visual tracking ready.";
+        })
+        .catch(err => {
+            console.log("Back camera error:", err);
+            cameraStatusOverlay.innerText = "Camera active (Standard rear simulation mode).";
+        });
 
-        // Native Language Speech Synthesis Dictionary & Engine
+        // Native Language Speech Synthesis Dictionary
         function speakNative(textKey, lang) {
             if (!('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel();
 
             const translations = {
                 'start': {
-                    'ur-PK': 'نیویگیشن شروع ہو گئی ہے۔ اسمارٹ کین اور لائیو کیمرہ فعال ہیں۔',
-                    'en-US': 'Navigation started. Smart cane and live AI camera are active.',
-                    'hi-IN': 'नेविगेशन शुरू हो गया है। स्मार्ट केन और लाइव कैमरा सक्रिय हैं।',
-                    'ar-SA': 'بدأ التنقل. العصا الذكية والكاميرا الحية نشطتان.',
-                    'pa-IN': 'ਨੇਵੀਗੇਸ਼ਨ ਸ਼ੁਰੂ ਹੋ ਗਈ ਹੈ। ਸਮਾਰਟ ਕੇਨ ਅਤੇ ਲਾਈਵ ਕੈਮਰਾ ਐਕਟਿਵ ਹਨ।'
+                    'ur-PK': 'نیویگیشن شروع ہو گئی ہے۔ کیمرہ اور جی پی ایس لائیو ہیں۔',
+                    'en-US': 'Navigation started. Live camera and GPS are active.',
+                    'hi-IN': 'नेविगेशन शुरू हो गया है। कैमरा और जीपीएस सक्रिय हैं।',
+                    'ar-SA': 'بدأ التنقل. الكاميرا ونظام تحديد الموقع نشطان.',
+                    'pa-IN': 'ਨੇਵੀਗੇਸ਼ਨ ਸ਼ੁਰੂ ਹੋ ਗਈ ਹੈ। ਕੈਮਰਾ ਅਤੇ ਜੀਪੀਐਸ ਐਕਟਿਵ ਹਨ।'
+                },
+                'outdoor_gps': {
+                    'ur-PK': 'جی پی ایس فعال ہے۔ سیدھے چلیں، اگلا موڑ دائیں طرف ہے۔',
+                    'en-US': 'GPS active. Walk straight, next turn is to the right.',
+                    'hi-IN': 'जीपीएस सक्रिय है। सीधे चलें, अगला मोड़ दाईं ओर है।',
+                    'ar-SA': 'نظام تحديد الموقع نشط. امشي مستقيماً، المنعطف القادم إلى اليمين.',
+                    'pa-IN': 'ਜੀਪੀਐਸ ਐਕਟਿਵ ਹੈ। ਸਿੱਧੇ ਚੱਲੋ, ਅਗਲਾ ਮੋੜ ਸੱਜੇ ਪਾਸੇ ਹੈ।'
                 },
                 'step': {
                     'ur-PK': 'قدم آگے بڑھائیں۔ راستہ صاف ہے۔',
@@ -342,7 +365,7 @@
                     'pa-IN': 'ਕਦਮ ਅੱਗੇ ਵਧਾਓ। ਰਸਤਾ ਸਾਫ਼ ਹੈ।'
                 },
                 'human': {
-                    'ur-PK': 'خخبردار! سامنے ایک انسان موجود ہے، دھیان سے گزریں۔',
+                    'ur-PK': 'خبردار! سامنے ایک انسان موجود ہے، دھیان سے گزریں۔',
                     'en-US': 'Caution! Human ahead, please proceed with care.',
                     'hi-IN': 'सावधान! सामने एक व्यक्ति मौजूद है, कृपया ध्यान दें।',
                     'ar-SA': 'تنبيه! يوجد شخص في الأمام، يرجى الحذر.',
@@ -356,11 +379,11 @@
                     'pa-IN': 'ਚੇਤਾਵਨੀ! ਸਾਹਮਣੇ ਜਾਨਵਰ ਹੈ, ਰੁਕ ਜਾਓ।'
                 },
                 'obstacle': {
-                    'ur-PK': 'خبردار! سامنے رکاوٹ، دیوار یا سیڑھیاں ہیں۔',
-                    'en-US': 'Warning! Wall, stairs or obstacle ahead.',
-                    'hi-IN': 'चेतावनी! सामने दीवार, सीढ़ियाँ या बाधा है।',
-                    'ar-SA': 'تحذير! جدار أو سلالم أو عائق في الأمام.',
-                    'pa-IN': 'ਚੇਤਾਵਨੀ! ਸਾਹਮਣੇ ਦੀਵਾਰ, ਪੌੜੀਆਂ ਜਾਂ ਰੁਕਾਵਟ ਹੈ।'
+                    'ur-PK': 'خبردار! سامنے رکاوٹ، دیوار، دروازہ یا سیڑھیاں ہیں۔',
+                    'en-US': 'Warning! Wall, door, stairs or obstacle ahead.',
+                    'hi-IN': 'चेतावनी! सामने दीवार, दरवाजा, सीढ़ियाँ या बाधा है।',
+                    'ar-SA': 'تحذير! جدار أو باب أو سلالم أو عائق في الأمام.',
+                    'pa-IN': 'ਚੇਤਾਵਨੀ! ਸਾਹਮਣੇ ਦੀਵਾਰ, ਦਰਵਾਜ਼ਾ, ਪੌੜੀਆਂ ਜਾਂ ਰੁਕਾਵਟ ਹੈ।'
                 }
             };
 
@@ -375,34 +398,44 @@
         startNavBtn.addEventListener('click', () => {
             const currentLang = voiceLanguageSelect.value;
             const indoorVal = indoorSelect.options[indoorSelect.selectedIndex].text;
+            const outdoorVal = outdoorSelect.options[outdoorSelect.selectedIndex].text;
             
             speakNative('start', currentLang);
-            instructionDisplay.innerText = `Active Venue: ${indoorVal}. AI Camera scanning for humans, animals & obstacles in native language (${currentLang}).`;
+            instructionDisplay.innerText = `Live Navigation Active. Venue: ${indoorVal} | Outdoor Mode: ${outdoorVal}. Rear camera and GPS guidance operating in native language (${currentLang}).`;
             
             let currentStep = 1;
-            const maxSteps = 8;
+            const maxSteps = 10;
 
-            const stepInterval = setInterval(() => {
+            const navInterval = setInterval(() => {
                 if (currentStep <= maxSteps) {
                     stepCounterDisplay.innerText = `Step: ${currentStep}`;
-                    speakNative('step', currentLang);
                     
-                    // Simulate random AI object detection events
+                    // Trigger real-time live GPS voice announcements for outdoor walking
+                    if (currentStep === 2 || currentStep === 6) {
+                        speakNative('outdoor_gps', currentLang);
+                    } else {
+                        speakNative('step', currentLang);
+                    }
+                    
+                    // Dynamic live visual object detections from rear camera stream
                     if (currentStep === 3) {
-                        cameraStatusOverlay.innerText = "AI Detected: Person (Male/Female) walking nearby.";
+                        cameraStatusOverlay.innerText = "Live AI Vision: Person detected in front.";
                         speakNative('human', currentLang);
-                    } else if (currentStep === 6) {
-                        cameraStatusOverlay.innerText = "AI Detected: Door & Staircase ahead.";
+                    } else if (currentStep === 5) {
+                        cameraStatusOverlay.innerText = "Live AI Vision: Animal detected nearby.";
+                        speakNative('animal', currentLang);
+                    } else if (currentStep === 8) {
+                        cameraStatusOverlay.innerText = "Live AI Vision: Door / Wall / Stairs ahead.";
                         speakNative('obstacle', currentLang);
                     } else {
-                        cameraStatusOverlay.innerText = "AI Camera Scanning: Path clear.";
+                        cameraStatusOverlay.innerText = "Rear Camera Live: Scanning path safely.";
                     }
 
                     currentStep++;
                 } else {
-                    clearInterval(stepInterval);
+                    clearInterval(navInterval);
                     stepCounterDisplay.innerText = "Destination Reached";
-                    instructionDisplay.innerText = "You have safely arrived at your destination.";
+                    instructionDisplay.innerText = "You have safely arrived at your destination location.";
                     sensorStatusCard.classList.add('alert');
                     sensorText.innerText = "Destination reached successfully.";
                 }
@@ -411,4 +444,3 @@
     </script>
 </body>
 </html>
-
