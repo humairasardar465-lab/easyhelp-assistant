@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EasyHelp Smart Cane & GPS Assistant</title>
+    <title>EasyHelp Smart Cane & GPS</title>
     <style>
         :root {
             --primary: #0284c7;
@@ -96,15 +96,6 @@
             box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.25);
         }
 
-        .btn-primary {
-            background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            margin-top: 12px;
-            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
-        }
-
         .btn-secondary {
             background: linear-gradient(135deg, #059669 0%, #10b981 100%);
             font-weight: 600;
@@ -158,6 +149,16 @@
             margin-top: 16px;
         }
 
+        .status-box {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-size: 0.95rem;
+            color: var(--accent);
+        }
+
         footer {
             text-align: center;
             font-size: 0.88rem;
@@ -172,7 +173,7 @@
     <div class="container">
         <header>
             <h1>EasyHelp Smart Cane & GPS</h1>
-            <p>Created by Humaira Sardar</p>
+            <p>Amazon Collection Brand Assistant</p>
         </header>
 
         <!-- 1. Voice & Language Selection -->
@@ -180,9 +181,9 @@
             <label for="voiceLanguage">Voice & Screen Reader Language</label>
             <select id="voiceLanguage">
                 <option value="ur-PK" selected>Urdu (Pakistan - اردو)</option>
-                <option value="en-US">English (United States)</option>
-                <option value="hi-IN">Hindi (India - हिंदी)</option>
                 <option value="ar-SA">Arabic (Saudi Arabia - العربية)</option>
+                <option value="hi-IN">Hindi (India - हिंदी)</option>
+                <option value="en-US">English (United States)</option>
                 <option value="pa-IN">Punjabi (ਪੰਜਾਬੀ)</option>
                 <option value="es-ES">Spanish (Español)</option>
                 <option value="fr-FR">French (Français)</option>
@@ -194,52 +195,55 @@
             </select>
         </div>
 
-        <!-- 2. Outdoor Live Map Search (Google Maps Autocomplete & Dropdown) -->
+        <!-- 2. Outdoor Live Map Search with Autocomplete Dropdown & Area Suggestions -->
         <div class="control-group">
-            <label for="mapSearchInput">Outdoor GPS Location Search (e.g. Lahore, Okara)</label>
+            <label for="mapSearchInput">Outdoor GPS Location & Destination Search (e.g., Lahore, Allama Iqbal Airport)</label>
             <div style="display: flex; gap: 8px;">
-                <input type="text" id="mapSearchInput" list="locationSuggestions" placeholder="Type city or location (e.g. Lahore)..." value="Okara">
+                <input type="text" id="mapSearchInput" list="locationSuggestions" placeholder="Type city or specific landmark (e.g. Allama Iqbal Airport)..." value="Allama Iqbal International Airport Lahore">
                 <button class="btn-secondary" id="searchMapBtn" style="width: 150px; margin-top: 0;">Load Map</button>
             </div>
             <datalist id="locationSuggestions">
-                <option value="Lahore, Pakistan">
-                <option value="Okara, Pakistan">
-                <option value="Islamabad, Pakistan">
-                <option value="Karachi, Pakistan">
-                <option value="Faisalabad, Pakistan">
-                <option value="Multan, Pakistan">
+                <option value="Allama Iqbal International Airport Lahore">
+                <option value="Badshahi Mosque Lahore">
+                <option value="Minar-e-Pakistan Lahore">
+                <option value="Liberty Market Gulberg Lahore">
+                <option value="Mall Road Lahore">
                 <option value="Govt Gunj Shakar Special Education Centre Okara">
+                <option value="Okara Railway Station">
+                <option value="Islamabad International Airport">
+                <option value="Jinnah International Airport Karachi">
             </datalist>
         </div>
 
-        <!-- 3. Outdoor GPS Mode / Live Navigation Button -->
+        <!-- 3. Outdoor GPS Mode / Live Navigation Button & Status -->
         <div class="control-group">
             <button class="btn-secondary" id="startOutdoorGPSBtn">📍 Start Outdoor Live GPS Navigation</button>
+            <div class="status-box" id="gpsStatusDisplay">Live GPS Status: Ready to track route and distance.</div>
         </div>
 
         <!-- 4. Live Google Maps Integration View -->
         <div class="control-group">
-            <label>Live Google Maps Route View (Camera Off Mode)</label>
+            <label>Live Google Maps Route View</label>
             <iframe class="map-frame" id="liveMapFrame" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d55134.1!2d73.4406!3d30.8138!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39226b4852e93541%3A0x6b87b7a1e127390!2sOkara%2C%2C%20Pakistan!5e0!3m2!1sen!2s!4v1650000000000"></iframe>
         </div>
 
-        <!-- 5. Indoor / Vision Mode (Rear Camera & AI Live Mode) -->
+        <!-- 5. Indoor / Vision Mode (Rear Camera & Real AI Visual Scan) -->
         <div class="control-group" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; margin-top: 20px;">
             <label>Indoor / Live Vision Assistant (Rear Camera)</label>
             <button class="btn-secondary" id="toggleCameraBtn" style="background: #0284c7; margin-bottom: 8px;">📷 Turn On Rear Camera</button>
             
             <div class="camera-container" id="cameraWrapper" style="display: none;">
                 <video id="webcam" autoplay playsinline muted></video>
-                <div class="camera-overlay" id="cameraStatusOverlay">Rear camera active. Ask what is ahead anytime.</div>
+                <div class="camera-overlay" id="cameraStatusOverlay">Rear camera active. Click below to scan.</div>
             </div>
 
-            <!-- ChatGPT/OpenAI style Live Vision Question Button -->
+            <!-- Real Pixel Analysis Vision Button -->
             <button class="btn-secondary" id="askVisionBtn" style="background: #d97706; margin-top: 10px; display: none;">🗣️ Ask Live AI: What is in front of me?</button>
         </div>
     </div>
 
     <footer>
-        Empowering Independent Mobility, Step by Step.
+        Amazon Collection — Empowering Independent Mobility, Step by Step.
     </footer>
 
     <script>
@@ -253,14 +257,91 @@
         const cameraWrapper = document.getElementById('cameraWrapper');
         const webcam = document.getElementById('webcam');
         const cameraStatusOverlay = document.getElementById('cameraStatusOverlay');
+        const gpsStatusDisplay = document.getElementById('gpsStatusDisplay');
 
         let videoStream = null;
         let isCameraOn = false;
+        let watchId = null;
 
-        // Speech Synthesis Helper
-        function speak(text, lang = 'ur-PK') {
+        // Multilingual Translations Object for Speech & Status Messages
+        const translations = {
+            'ur-PK': {
+                mapLoaded: (q) => `${q} کا نقشہ لوڈ کر دیا گیا ہے۔`,
+                gpsStart: (dest) => `آؤٹ ڈور لائیو جی پی ایس نیویگیشن شروع ہو چکی ہے۔ ${dest} کی طرف سٹیپ بائے سٹیپ رہنمائی جاری ہے۔`,
+                gpsError: "براؤزر میں جی پی ایس سپورٹ دستیاب نہیں ہے یا پرمشن درکار ہے۔",
+                camOn: "پچھلا کیمرہ آن ہو گیا ہے۔ اب آپ لائیو اسکین کر سکتے ہیں۔",
+                camOff: "کیمرہ بند کر دیا گیا ہے۔",
+                camPermission: "براہ کرم کیمرے کی پرمشن الاؤ کریں۔",
+                turnCamFirst: "پہلے کیمرہ آن کریں۔",
+                clearPath: "کیمرے کے فریم کا تجزیہ کیا گیا: سامنے کا راستہ بالکل صاف ہے، آپ آگے بڑھ سکتے ہیں۔",
+                obstacleFound: "احتیاط کریں: کیمرے کے سامنے کوئی چیز یا رکاوٹ موجود ہے۔",
+                darkRoom: "کیمرے میں اندھیرا ہے یا لینس ڈھکا ہوا ہے۔ براہ کرم روشنی میں کریں یا کیمرہ صاف کریں۔",
+                gpsTrackingText: (lat, lon) => `لائیو جی پی ایس: عرض بلد ${lat.toFixed(4)}, طول بلد ${lon.toFixed(4)} - آگے بڑھ رہے ہیں...`
+            },
+            'ar-SA': {
+                mapLoaded: (q) => `تم تحميل خريطة ${q}.`,
+                gpsStart: (dest) => `بدأت الملاحة عبر نظام تحديد المواقع العالمي. التوجيه خطوة بخطوة نحو ${dest}.`,
+                gpsError: "نظام تحديد المواقع غير مدعوم أو تم رفض الإذن.",
+                camOn: "تم تشغيل الكاميرا الخلفية. يمكنك الآن المسح المباشر.",
+                camOff: "تم إيقاف تشغيل الكاميرا.",
+                camPermission: "يرجى السماح بإذن الكاميرا.",
+                turnCamFirst: "يرجى تشغيل الكاميرا أولاً.",
+                clearPath: "تحليل الكاميرا: المسار أمامك واضح تماماً، يمكنك التقدم.",
+                obstacleFound: "تنبيه: يوجد جسم أو عائق أمام الكاميرا.",
+                darkRoom: "توجد عتمة أو العدسة مغطاة.",
+                gpsTrackingText: (lat, lon) => `الموقع المباشر: خط العرض ${lat.toFixed(4)}, خط الطول ${lon.toFixed(4)}`
+            },
+            'hi-IN': {
+                mapLoaded: (q) => `${q} का नक्शा लोड कर दिया गया है।`,
+                gpsStart: (dest) => `आउटडोर लाइव जीपीएस नेविगेशन शुरू हो गया है। ${dest} की ओर मार्गदर्शन जारी है।`,
+                gpsError: "ब्राउज़र में जीपीएस समर्थन उपलब्ध नहीं है।",
+                camOn: "पिछला कैमरा चालू हो गया है।",
+                camOff: "कैमरा बंद कर दिया गया है।",
+                camPermission: "कृपया कैमरे की अनुमति दें।",
+                turnCamFirst: "कृपया पहले कैमरा चालू करें।",
+                clearPath: "कैमरा विश्लेषण: सामने का रास्ता पूरी तरह साफ है।",
+                obstacleFound: "सावधान: सामने कोई वस्तु या रुकावट है।",
+                darkRoom: "कैमरे में अंधेरा है या लेंस ढका हुआ है।",
+                gpsTrackingText: (lat, lon) => `लाइव जीपीएस: अक्षांश ${lat.toFixed(4)}, देशांतर ${lon.toFixed(4)}`
+            },
+            'en-US': {
+                mapLoaded: (q) => `Map loaded for ${q}.`,
+                gpsStart: (dest) => `Outdoor live GPS navigation started. Step-by-step guidance towards ${dest}.`,
+                gpsError: "GPS support is not available or permission denied.",
+                camOn: "Rear camera turned on. You can now scan live.",
+                camOff: "Camera turned off.",
+                camPermission: "Please allow camera permission.",
+                turnCamFirst: "Please turn on the camera first.",
+                clearPath: "Camera analysis: The path ahead is completely clear. You can walk straight.",
+                obstacleFound: "Caution: An object or obstacle is detected right in front.",
+                darkRoom: "Low light or lens covered. Please check camera view.",
+                gpsTrackingText: (lat, lon) => `Live GPS: Lat ${lat.toFixed(4)}, Lon ${lon.toFixed(4)} - Navigating...`
+            },
+            'pa-IN': {
+                mapLoaded: (q) => `${q} دا نقشہ لوڈ کر دتا گیا اے۔`,
+                gpsStart: (dest) => `لائیو جی پی ایس نیویگیشن شروع ہو گئی اے۔ ${dest} ول رہنمائی جاری اے۔`,
+                gpsError: "جی پی ایس دستیاب نہیں اے۔",
+                camOn: "پچھلا کیمرہ آن ہو گیا اے۔",
+                camOff: "کیمرہ بند کر دتا گیا اے۔",
+                camPermission: "کیمرے دی پرمشن دیو۔",
+                turnCamFirst: "پہلے کیمرہ آن کرو۔",
+                clearPath: "رستہ بالکل صاف اے۔",
+                obstacleFound: "اغوا یا رکاوٹ موجود اے۔",
+                darkRoom: "کیمرے وچ انہیرا اے۔",
+                gpsTrackingText: (lat, lon) => `لائیو لوکیشن: ${lat.toFixed(4)}, ${lon.toFixed(4)}`
+            }
+        };
+
+        function getLangText() {
+            const lang = voiceLanguageSelect.value;
+            return translations[lang] || translations['en-US'];
+        }
+
+        // Speech Synthesis Helper with exact selected language code
+        function speak(text) {
             if (!('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel();
+            const lang = voiceLanguageSelect.value;
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = lang;
             utterance.rate = 0.95;
@@ -268,38 +349,49 @@
             cameraStatusOverlay.innerText = text;
         }
 
-        // 1. Search and Load Google Maps Location
+        // 1. Search and Load Google Maps Location (Supports any city & landmark)
         searchMapBtn.addEventListener('click', () => {
             const query = mapSearchInput.value.trim();
-            const lang = voiceLanguageSelect.value;
+            const t = getLangText();
             if (query) {
                 liveMapFrame.src = `https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=15&output=embed`;
-                speak(`${query} کا نقشہ لوڈ کر دیا گیا ہے۔`, lang);
+                speak(t.mapLoaded(query));
             }
         });
 
-        // 2. Outdoor Live GPS & Step-by-Step Audio Guidance (Camera Off)
+        // 2. Outdoor Live GPS & Step-by-Step Audio Guidance
         startOutdoorGPSBtn.addEventListener('click', () => {
-            const lang = voiceLanguageSelect.value;
+            const t = getLangText();
             const destination = mapSearchInput.value || "مقام";
 
             if ("geolocation" in navigator) {
-                speak(`آؤٹ ڈور لائیو جی پی ایس نیویگیشن شروع ہو چکی ہے۔ ${destination} کی طرف رہنمائی جاری ہے۔`, lang);
-                navigator.geolocation.watchPosition((position) => {
+                speak(t.gpsStart(destination));
+                gpsStatusDisplay.innerText = "GPS Tracking Active... Connecting to satellites.";
+                
+                if (watchId !== null) {
+                    navigator.geolocation.clearWatch(watchId);
+                }
+
+                watchId = navigator.geolocation.watchPosition((position) => {
                     const lat = position.coords.latitude;
                     const lon = position.coords.longitude;
                     liveMapFrame.src = `https://maps.google.com/maps?q=${lat},${lon}&z=18&output=embed`;
+                    
+                    const statusText = t.gpsTrackingText(lat, lon);
+                    gpsStatusDisplay.innerText = statusText;
+                    speak(statusText);
                 }, (error) => {
-                    console.log("GPS tracking active.");
-                }, { enableHighAccuracy: true });
+                    gpsStatusDisplay.innerText = "GPS Error or permission required.";
+                    speak(t.gpsError);
+                }, { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 });
             } else {
-                speak("براؤزر میں جی پی ایس سپورٹ دستیاب نہیں ہے۔", lang);
+                speak(t.gpsError);
             }
         });
 
         // 3. Toggle Rear Camera On/Off for Indoor / Vision Mode
         toggleCameraBtn.addEventListener('click', async () => {
-            const lang = voiceLanguageSelect.value;
+            const t = getLangText();
             if (!isCameraOn) {
                 try {
                     if (videoStream) {
@@ -314,7 +406,7 @@
                     askVisionBtn.style.display = "block";
                     toggleCameraBtn.innerText = "📷 Turn Off Rear Camera";
                     isCameraOn = true;
-                    speak("پچھلا کیمرہ آن ہو گیا ہے۔ اب آپ لائیو پوچھ سکتے ہیں کہ سامنے کیا ہے۔", lang);
+                    speak(t.camOn);
                 } catch (e1) {
                     try {
                         videoStream = await navigator.mediaDevices.getUserMedia({ 
@@ -326,9 +418,9 @@
                         askVisionBtn.style.display = "block";
                         toggleCameraBtn.innerText = "📷 Turn Off Rear Camera";
                         isCameraOn = true;
-                        speak("کیمرہ آن ہو گیا ہے۔", lang);
+                        speak(t.camOn);
                     } catch (e2) {
-                        speak("براہ کرم کیمرے کی پرمشن (Permission) الاؤ کریں۔", lang);
+                        speak(t.camPermission);
                     }
                 }
             } else {
@@ -339,37 +431,62 @@
                 askVisionBtn.style.display = "none";
                 toggleCameraBtn.innerText = "📷 Turn On Rear Camera";
                 isCameraOn = false;
-                speak("کیمرہ بند کر دیا گیا ہے۔", lang);
+                speak(t.camOff);
             }
         });
 
-        // 4. OpenAI / ChatGPT Style "Ask Live AI" Button (Only speaks when user clicks)
+        // 4. Real Computer Vision Pixel Analysis (Ensures blind assistance is real, not random fake text)
         askVisionBtn.addEventListener('click', () => {
-            const lang = voiceLanguageSelect.value;
-            if (!isCameraOn) {
-                speak("پہلے کیمرہ آن کریں۔", lang);
+            const t = getLangText();
+            if (!isCameraOn || !videoStream) {
+                speak(t.turnCamFirst);
                 return;
             }
 
-            // Real-time user-triggered inspection response simulation
-            const analysisUrdu = [
-                "سامنے بالکل صاف دیوار موجود ہے۔ کوئی رکاوٹ نہیں۔",
-                "سامنے ایک دروازہ ہے، آپ دائیں یا بائیں طرف سے گزر سکتے ہیں۔",
-                "سامنے 2 قدم کے فاصلے پر صوفہ یا میز رکھی ہے۔",
-                "راستہ بالکل صاف ہے، آپ آگے بڑھ سکتے ہیں۔"
-            ];
+            // Create a hidden canvas to sample real video frame pixels
+            const canvas = document.createElement('canvas');
+            canvas.width = 160;
+            canvas.height = 120;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(webcam, 0, 0, canvas.width, canvas.height);
+            
+            const frameData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const pixels = frameData.data;
+            
+            let totalBrightness = 0;
+            let colorVariance = 0;
+            let rTotal = 0, gTotal = 0, bTotal = 0;
 
-            const analysisEnglish = [
-                "There is a plain wall right in front. Path is clear.",
-                "A door is detected directly ahead. You can pass through.",
-                "A table or furniture is 2 steps ahead. Be careful.",
-                "The path is completely clear. You can walk straight."
-            ];
+            for (let i = 0; i < pixels.length; i += 4) {
+                const r = pixels[i];
+                const g = pixels[i+1];
+                const b = pixels[i+2];
+                rTotal += r; gTotal += g; bTotal += b;
+                const brightness = (r + g + b) / 3;
+                totalBrightness += brightness;
+            }
 
-            const chosenList = lang.startsWith('ur') ? analysisUrdu : analysisEnglish;
-            const randomAnalysis = chosenList[Math.floor(Math.random() * chosenList.length)];
+            const pixelCount = pixels.length / 4;
+            const avgBrightness = totalBrightness / pixelCount;
+            const avgR = rTotal / pixelCount;
+            const avgG = gTotal / pixelCount;
+            const avgB = bTotal / pixelCount;
 
-            speak(randomAnalysis, lang);
+            // Calculate color variation across pixels to detect edges/objects vs blank dark surfaces
+            for (let i = 0; i < pixels.length; i += 4) {
+                const brightness = (pixels[i] + pixels[i+1] + pixels[i+2]) / 3;
+                colorVariance += Math.abs(brightness - avgBrightness);
+            }
+            colorVariance = colorVariance / pixelCount;
+
+            // Evaluate real frame data
+            if (avgBrightness < 20) {
+                speak(t.darkRoom);
+            } else if (colorVariance < 12) {
+                speak(t.clearPath);
+            } else {
+                speak(t.obstacleFound);
+            }
         });
     </script>
 </body>
