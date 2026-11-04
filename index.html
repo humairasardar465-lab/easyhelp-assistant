@@ -79,7 +79,7 @@
             font-weight: 500;
         }
 
-        select, button {
+        select {
             width: 100%;
             padding: 14px 18px;
             border-radius: 12px;
@@ -91,38 +91,9 @@
             transition: all 0.3s ease;
         }
 
-        select:focus, button:focus {
+        select:focus {
             border-color: var(--accent);
             box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.25);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            margin-top: 12px;
-            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
-        }
-
-        .guidance-box {
-            background: rgba(30, 41, 59, 0.85);
-            border: 2px dashed rgba(56, 189, 248, 0.4);
-            border-radius: 14px;
-            padding: 22px;
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .guidance-box h3 {
-            font-size: 1.35rem;
-            color: #38bdf8;
-            margin-bottom: 8px;
-        }
-
-        .guidance-box p {
-            font-size: 1.1rem;
-            line-height: 1.6;
         }
 
         footer {
@@ -189,13 +160,6 @@
                 <option value="international">International GPS Satellite Mode</option>
             </select>
         </div>
-
-        <button class="btn-primary" id="startSetupBtn">Confirm Language & Venues</button>
-
-        <div class="guidance-box">
-            <h3>Selection Status</h3>
-            <p id="instructionDisplay">Select your preferred language, indoor venue, and outdoor mode, then click confirm to test native voice guidance.</p>
-        </div>
     </div>
 
     <footer>
@@ -203,41 +167,43 @@
     </footer>
 
     <script>
-        const startSetupBtn = document.getElementById('startSetupBtn');
-        const instructionDisplay = document.getElementById('instructionDisplay');
         const voiceLanguageSelect = document.getElementById('voiceLanguage');
         const indoorSelect = document.getElementById('indoorLocation');
         const outdoorSelect = document.getElementById('outdoorLocation');
 
-        function speakNative(textKey, lang) {
+        // AI Assistant Native Voice Greeting on Selection Change
+        function speakAI(textKey, lang) {
             if (!('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel();
 
-            const translations = {
-                'success': {
-                    'ur-PK': 'زبان اور مقامات کامیابی سے منتخب ہو گئے ہیں۔ اب سب کچھ بالکل درست کام کر رہا ہے۔',
-                    'en-US': 'Language and venues successfully selected. Everything is working correctly.',
-                    'hi-IN': 'भाषा और स्थान सफलतापूर्वक चुने गए। सब कुछ सही ढंग से काम कर रहा है।',
-                    'ar-SA': 'تم اختيار اللغة والأماكن بنجاح. كل شيء يعمل بشكل صحيح.',
-                    'pa-IN': 'ਭਾਸ਼ਾ ਅਤੇ ਥਾਵਾਂ ਸਫਲਤਾਪੂਰਵਕ ਚੁਣ ਲਈਆਂ ਗਈਆਂ ਹਨ।'
+            const aiMessages = {
+                'ready': {
+                    'ur-PK': 'ایزی ہیپ اے آئی اسسٹنٹ تیار ہے۔ آپ نے مطلوبہ مقام منتخب کر لیا ہے۔',
+                    'en-US': 'EasyHelp AI Assistant is ready. Your navigation venue is set.',
+                    'hi-IN': 'EasyHelp AI Assistant तैयार है। आपका नेविगेशन स्थान सेट है।',
+                    'ar-SA': 'مساعد الذكاء الاصطناعي جاهز. تم تعيين وجهتك.',
+                    'pa-IN': 'EasyHelp AI Assistant ਤਿਆਰ ਹੈ।'
                 }
             };
 
-            let spokenText = (translations[textKey] && translations[textKey][lang]) ? translations[textKey][lang] : textKey;
-            
+            let spokenText = (aiMessages[textKey] && aiMessages[textKey][lang]) ? aiMessages[textKey][lang] : textKey;
             const utterance = new SpeechSynthesisUtterance(spokenText);
             utterance.lang = lang;
             utterance.rate = 0.95;
             window.speechSynthesis.speak(utterance);
         }
 
-        startSetupBtn.addEventListener('click', () => {
-            const currentLang = voiceLanguageSelect.value;
-            const indoorVal = indoorSelect.options[indoorSelect.selectedIndex].text;
-            const outdoorVal = outdoorSelect.options[outdoorSelect.selectedIndex].text;
-            
-            speakNative('success', currentLang);
-            instructionDisplay.innerText = `Active Language: ${currentLang} | Indoor: ${indoorVal} | Outdoor: ${outdoorVal}`;
+        // Trigger AI Assistant voice feedback when user changes settings
+        voiceLanguageSelect.addEventListener('change', () => {
+            speakAI('ready', voiceLanguageSelect.value);
+        });
+
+        indoorSelect.addEventListener('change', () => {
+            speakAI('ready', voiceLanguageSelect.value);
+        });
+
+        outdoorSelect.addEventListener('change', () => {
+            speakAI('ready', voiceLanguageSelect.value);
         });
     </script>
 </body>
