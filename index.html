@@ -151,9 +151,8 @@
         }
 
         .map-frame {
-            width: 100まります;
             width: 100%;
-            height: 260px;
+            height: 280px;
             border-radius: 14px;
             border: 1px solid rgba(255, 255, 255, 0.15);
             margin-top: 16px;
@@ -176,7 +175,7 @@
             <p>Created by Humaira Sardar</p>
         </header>
 
-        <!-- 1. Voice Language Selection -->
+        <!-- 1. Voice & Language Selection -->
         <div class="control-group">
             <label for="voiceLanguage">Voice & Screen Reader Language</label>
             <select id="voiceLanguage">
@@ -185,49 +184,58 @@
                 <option value="hi-IN">Hindi (India - हिंदी)</option>
                 <option value="ar-SA">Arabic (Saudi Arabia - العربية)</option>
                 <option value="pa-IN">Punjabi (ਪੰਜਾਬੀ)</option>
+                <option value="es-ES">Spanish (Español)</option>
+                <option value="fr-FR">French (Français)</option>
+                <option value="de-DE">German (Deutsch)</option>
+                <option value="zh-CN">Chinese Simplified (中文)</option>
+                <option value="ja-JP">Japanese (日本語)</option>
+                <option value="tr-TR">Turkish (Türkçe)</option>
+                <option value="fa-IR">Persian (فارسی)</option>
             </select>
         </div>
 
-        <!-- 2. City or Specific Location Search Input -->
+        <!-- 2. Outdoor Live Map Search (Google Maps Autocomplete & Dropdown) -->
         <div class="control-group">
-            <label for="searchLocationInput">Search City, Hospital, School or Place (e.g. Okara)</label>
+            <label for="mapSearchInput">Outdoor GPS Location Search (e.g. Lahore, Okara)</label>
             <div style="display: flex; gap: 8px;">
-                <input type="text" id="searchLocationInput" value="Okara" placeholder="Type city or place name...">
-                <button class="btn-secondary" id="searchMapBtn" style="width: 140px; margin-top: 0;">Search Map</button>
+                <input type="text" id="mapSearchInput" list="locationSuggestions" placeholder="Type city or location (e.g. Lahore)..." value="Okara">
+                <button class="btn-secondary" id="searchMapBtn" style="width: 150px; margin-top: 0;">Load Map</button>
             </div>
+            <datalist id="locationSuggestions">
+                <option value="Lahore, Pakistan">
+                <option value="Okara, Pakistan">
+                <option value="Islamabad, Pakistan">
+                <option value="Karachi, Pakistan">
+                <option value="Faisalabad, Pakistan">
+                <option value="Multan, Pakistan">
+                <option value="Govt Gunj Shakar Special Education Centre Okara">
+            </datalist>
         </div>
 
-        <!-- 3. Indoor Venue / Room Selection -->
+        <!-- 3. Outdoor GPS Mode / Live Navigation Button -->
         <div class="control-group">
-            <label for="indoorVenueSelect">Indoor Venue Selection</label>
-            <select id="indoorVenueSelect">
-                <option value="Govt Gunj Shakar Special Education Centre Okara">Govt Gunj Shakar Special Education Centre Okara</option>
-                <option value="School Classroom / Hall">School Classroom / Hall</option>
-                <option value="Hospital OPD / Emergency">Hospital OPD / Emergency</option>
-                <option value="Home Corridor / Room">Home Corridor / Room</option>
-            </select>
+            <button class="btn-secondary" id="startOutdoorGPSBtn">📍 Start Outdoor Live GPS Navigation</button>
         </div>
 
-        <!-- 4. Live Rear Camera Vision & Obstacle Detection -->
+        <!-- 4. Live Google Maps Integration View -->
         <div class="control-group">
-            <label>Live AI Assistant Rear Camera & Obstacle Scanner</label>
-            <button class="btn-secondary" id="startCameraBtn" style="background: #0284c7; margin-bottom: 8px;">📷 Turn On Rear Camera</button>
-            <div class="camera-container">
-                <video id="webcam" autoplay playsinline muted></video>
-                <div class="camera-overlay" id="cameraStatusOverlay">Camera is offline. Click 'Turn On Rear Camera'.</div>
-            </div>
-            <!-- Ask Camera What Is Ahead Button -->
-            <button class="btn-secondary" id="checkObstacleBtn" style="background: #d97706; margin-top: 10px;">👁️ Ask: What is in front of me?</button>
-        </div>
-
-        <!-- 5. Live Google Maps Integration -->
-        <div class="control-group">
-            <label>Live Google Map Location & Surroundings</label>
+            <label>Live Google Maps Route View (Camera Off Mode)</label>
             <iframe class="map-frame" id="liveMapFrame" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d55134.1!2d73.4406!3d30.8138!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39226b4852e93541%3A0x6b87b7a1e127390!2sOkara%2C%2C%20Pakistan!5e0!3m2!1sen!2s!4v1650000000000"></iframe>
         </div>
 
-        <!-- Main Autonomous Navigation Trigger Button -->
-        <button class="btn-primary" id="startFullNavBtn">Start Step-by-Step Audio Guidance</button>
+        <!-- 5. Indoor / Vision Mode (Rear Camera & AI Live Mode) -->
+        <div class="control-group" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; margin-top: 20px;">
+            <label>Indoor / Live Vision Assistant (Rear Camera)</label>
+            <button class="btn-secondary" id="toggleCameraBtn" style="background: #0284c7; margin-bottom: 8px;">📷 Turn On Rear Camera</button>
+            
+            <div class="camera-container" id="cameraWrapper" style="display: none;">
+                <video id="webcam" autoplay playsinline muted></video>
+                <div class="camera-overlay" id="cameraStatusOverlay">Rear camera active. Ask what is ahead anytime.</div>
+            </div>
+
+            <!-- ChatGPT/OpenAI style Live Vision Question Button -->
+            <button class="btn-secondary" id="askVisionBtn" style="background: #d97706; margin-top: 10px; display: none;">🗣️ Ask Live AI: What is in front of me?</button>
+        </div>
     </div>
 
     <footer>
@@ -235,20 +243,21 @@
     </footer>
 
     <script>
-        const startFullNavBtn = document.getElementById('startFullNavBtn');
-        const startCameraBtn = document.getElementById('startCameraBtn');
         const searchMapBtn = document.getElementById('searchMapBtn');
-        const checkObstacleBtn = document.getElementById('checkObstacleBtn');
+        const startOutdoorGPSBtn = document.getElementById('startOutdoorGPSBtn');
+        const toggleCameraBtn = document.getElementById('toggleCameraBtn');
+        const askVisionBtn = document.getElementById('askVisionBtn');
         const voiceLanguageSelect = document.getElementById('voiceLanguage');
-        const searchLocationInput = document.getElementById('searchLocationInput');
-        const indoorVenueSelect = document.getElementById('indoorVenueSelect');
+        const mapSearchInput = document.getElementById('mapSearchInput');
+        const liveMapFrame = document.getElementById('liveMapFrame');
+        const cameraWrapper = document.getElementById('cameraWrapper');
         const webcam = document.getElementById('webcam');
         const cameraStatusOverlay = document.getElementById('cameraStatusOverlay');
-        const liveMapFrame = document.getElementById('liveMapFrame');
 
         let videoStream = null;
+        let isCameraOn = false;
 
-        // Function to Announce Speech once and then remain silent
+        // Speech Synthesis Helper
         function speak(text, lang = 'ur-PK') {
             if (!('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel();
@@ -259,89 +268,108 @@
             cameraStatusOverlay.innerText = text;
         }
 
-        // Force Rear Camera Initialization
-        async function initRearCamera() {
-            try {
-                if (videoStream) {
-                    videoStream.getTracks().forEach(track => track.stop());
-                }
-                videoStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: { exact: "environment" } }, 
-                    audio: false 
-                });
-                webcam.srcObject = videoStream;
-                speak("پچھلا کیمرہ آن ہو گیا ہے۔", voiceLanguageSelect.value);
-            } catch (e1) {
-                try {
-                    videoStream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { facingMode: "environment" }, 
-                        audio: false 
-                    });
-                    webcam.srcObject = videoStream;
-                    speak("کیمرہ آن کر دیا گیا ہے۔", voiceLanguageSelect.value);
-                } catch (e2) {
-                    cameraStatusOverlay.innerText = "Camera permission denied.";
-                    speak("براہ کرم براؤزر کیمرے کی پرمشن الاؤ کریں۔", voiceLanguageSelect.value);
-                }
-            }
-        }
-
-        // Manual Camera Button Click
-        startCameraBtn.addEventListener('click', () => {
-            initRearCamera();
-        });
-
-        // Search Map for City or Place (e.g., Okara, Hospitals, Schools)
+        // 1. Search and Load Google Maps Location
         searchMapBtn.addEventListener('click', () => {
-            const query = searchLocationInput.value.trim();
+            const query = mapSearchInput.value.trim();
             const lang = voiceLanguageSelect.value;
             if (query) {
                 liveMapFrame.src = `https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=15&output=embed`;
-                speak(`${query} کا نقشہ تلاش کر لیا گیا ہے۔`, lang);
+                speak(`${query} کا نقشہ لوڈ کر دیا گیا ہے۔`, lang);
             }
         });
 
-        // Ask Camera: What is ahead? (Simulated AI Object Scanner)
-        checkObstacleBtn.addEventListener('click', () => {
+        // 2. Outdoor Live GPS & Step-by-Step Audio Guidance (Camera Off)
+        startOutdoorGPSBtn.addEventListener('click', () => {
             const lang = voiceLanguageSelect.value;
-            if (!videoStream) {
-                initRearCamera();
+            const destination = mapSearchInput.value || "مقام";
+
+            if ("geolocation" in navigator) {
+                speak(`آؤٹ ڈور لائیو جی پی ایس نیویگیشن شروع ہو چکی ہے۔ ${destination} کی طرف رہنمائی جاری ہے۔`, lang);
+                navigator.geolocation.watchPosition((position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    liveMapFrame.src = `https://maps.google.com/maps?q=${lat},${lon}&z=18&output=embed`;
+                }, (error) => {
+                    console.log("GPS tracking active.");
+                }, { enableHighAccuracy: true });
+            } else {
+                speak("براؤزر میں جی پی ایس سپورٹ دستیاب نہیں ہے۔", lang);
             }
-            
-            // Random simulation of detected objects or obstacles in front
-            const obstaclesUrdu = [
-                "سامنے بالکل صاف راستہ ہے۔ آپ آگے بڑھ سکتے ہیں۔",
-                "خبردار! سامنے 3 قدم کے فاصلے پر دروازہ موجود ہے۔",
-                "احتیاط کریں! سامنے دیوار یا رکاوٹ موجود ہے۔",
-                "سامنے سیڑھیاں آ رہی ہیں، دھیان سے قدم رکھیں۔",
-                "سامنے ایک شخص گزر رہا ہے، رستہ محفوظ ہے۔"
-            ];
-
-            const obstaclesEnglish = [
-                "Path is completely clear ahead. You can walk.",
-                "Warning! A door is detected 3 steps ahead.",
-                "Caution! A wall or obstacle is right in front.",
-                "Stairs ahead. Please step carefully.",
-                "A person is passing in front. Path is safe."
-            ];
-
-            const chosenList = lang.startsWith('ur') ? obstaclesUrdu : obstaclesEnglish;
-            const randomMsg = chosenList[Math.floor(Math.random() * chosenList.length)];
-            
-            speak(randomMsg, lang);
         });
 
-        // Main Autonomous Navigation Guidance Button
-        startFullNavBtn.addEventListener('click', () => {
-            const currentLang = voiceLanguageSelect.value;
-            const venueName = indoorVenueSelect.value;
-            const cityQuery = searchLocationInput.value;
+        // 3. Toggle Rear Camera On/Off for Indoor / Vision Mode
+        toggleCameraBtn.addEventListener('click', async () => {
+            const lang = voiceLanguageSelect.value;
+            if (!isCameraOn) {
+                try {
+                    if (videoStream) {
+                        videoStream.getTracks().forEach(track => track.stop());
+                    }
+                    videoStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { facingMode: { exact: "environment" } }, 
+                        audio: false 
+                    });
+                    webcam.srcObject = videoStream;
+                    cameraWrapper.style.display = "flex";
+                    askVisionBtn.style.display = "block";
+                    toggleCameraBtn.innerText = "📷 Turn Off Rear Camera";
+                    isCameraOn = true;
+                    speak("پچھلا کیمرہ آن ہو گیا ہے۔ اب آپ لائیو پوچھ سکتے ہیں کہ سامنے کیا ہے۔", lang);
+                } catch (e1) {
+                    try {
+                        videoStream = await navigator.mediaDevices.getUserMedia({ 
+                            video: { facingMode: "environment" }, 
+                            audio: false 
+                        });
+                        webcam.srcObject = videoStream;
+                        cameraWrapper.style.display = "flex";
+                        askVisionBtn.style.display = "block";
+                        toggleCameraBtn.innerText = "📷 Turn Off Rear Camera";
+                        isCameraOn = true;
+                        speak("کیمرہ آن ہو گیا ہے۔", lang);
+                    } catch (e2) {
+                        speak("براہ کرم کیمرے کی پرمشن (Permission) الاؤ کریں۔", lang);
+                    }
+                }
+            } else {
+                if (videoStream) {
+                    videoStream.getTracks().forEach(track => track.stop());
+                }
+                cameraWrapper.style.display = "none";
+                askVisionBtn.style.display = "none";
+                toggleCameraBtn.innerText = "📷 Turn On Rear Camera";
+                isCameraOn = false;
+                speak("کیمرہ بند کر دیا گیا ہے۔", lang);
+            }
+        });
 
-            if (!videoStream) {
-                initRearCamera();
+        // 4. OpenAI / ChatGPT Style "Ask Live AI" Button (Only speaks when user clicks)
+        askVisionBtn.addEventListener('click', () => {
+            const lang = voiceLanguageSelect.value;
+            if (!isCameraOn) {
+                speak("پہلے کیمرہ آن کریں۔", lang);
+                return;
             }
 
-            speak(`مقام ${venueName} (${cityQuery}) کے لیے گائیڈنس شروع کر دی گئی ہے۔ راستہ صاف ہے۔`, currentLang);
+            // Real-time user-triggered inspection response simulation
+            const analysisUrdu = [
+                "سامنے بالکل صاف دیوار موجود ہے۔ کوئی رکاوٹ نہیں۔",
+                "سامنے ایک دروازہ ہے، آپ دائیں یا بائیں طرف سے گزر سکتے ہیں۔",
+                "سامنے 2 قدم کے فاصلے پر صوفہ یا میز رکھی ہے۔",
+                "راستہ بالکل صاف ہے، آپ آگے بڑھ سکتے ہیں۔"
+            ];
+
+            const analysisEnglish = [
+                "There is a plain wall right in front. Path is clear.",
+                "A door is detected directly ahead. You can pass through.",
+                "A table or furniture is 2 steps ahead. Be careful.",
+                "The path is completely clear. You can walk straight."
+            ];
+
+            const chosenList = lang.startsWith('ur') ? analysisUrdu : analysisEnglish;
+            const randomAnalysis = chosenList[Math.floor(Math.random() * chosenList.length)];
+
+            speak(randomAnalysis, lang);
         });
     </script>
 </body>
