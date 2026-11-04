@@ -1,362 +1,198 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ur" dir="rtl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EasyHelp Smart Cane & GPS</title>
     <style>
-        :root {
-            --primary: #0284c7;
-            --bg-gradient: #0f172a;
-            --card-bg: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent: #38bdf8;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', system-ui, sans-serif;
-        }
-
         body {
-            background: var(--bg-gradient);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px 12px;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 600px;
-            background: var(--card-bg);
-            border: 2px solid var(--accent);
-            border-radius: 16px;
-            padding: 24px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        h1 {
-            font-size: 1.8rem;
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
             text-align: center;
-            color: var(--accent);
-            margin-bottom: 4px;
+            margin: 0;
+            padding: 20px;
         }
-
+        h2 {
+            color: #00ffcc;
+            margin-bottom: 5px;
+        }
         .creator {
-            text-align: center;
-            font-size: 0.85rem;
-            color: var(--text-muted);
+            font-size: 13px;
+            color: #94a3b8;
             margin-bottom: 20px;
         }
-
-        .section {
-            margin-bottom: 20px;
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            text-align: right;
         }
-
+        .control-group {
+            margin-bottom: 15px;
+        }
         label {
             display: block;
-            font-size: 0.95rem;
-            margin-bottom: 8px;
-            color: var(--text-main);
-            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: #00ffcc;
         }
-
-        select, input, button {
+        select, input {
             width: 100%;
-            padding: 14px 16px;
-            border-radius: 12px;
-            border: 2px solid #475569;
-            background: #0f172a;
-            color: var(--text-main);
-            font-size: 1.05rem;
-            outline: none;
-            margin-top: 6px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #444;
+            background: #2a2a2a;
+            color: #fff;
+            font-size: 15px;
+            box-sizing: border-box;
         }
-
-        select:focus, input:focus {
-            border-color: var(--accent);
-        }
-
-        .btn-action {
-            background: #0284c7;
-            font-weight: bold;
-            cursor: pointer;
-            border: none;
-            margin-top: 10px;
-        }
-
-        .btn-camera {
-            background: #059669;
-            font-weight: bold;
-            cursor: pointer;
-            border: none;
-        }
-
-        .camera-box {
+        video, canvas {
             width: 100%;
-            height: 240px;
+            max-height: 260px;
+            border-radius: 8px;
             background: #000;
-            border-radius: 12px;
-            overflow: hidden;
-            position: relative;
-            margin-top: 10px;
-            display: none;
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
             object-fit: cover;
-        }
-
-        .status-text {
-            text-align: center;
             margin-top: 10px;
-            font-size: 0.95rem;
-            color: var(--accent);
-            font-weight: bold;
         }
-
-        footer {
-            text-align: center;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-top: 20px;
+        button {
+            background-color: #00ffcc;
+            color: #000;
+            border: none;
+            padding: 12px 20px;
+            font-size: 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #00cc99;
+        }
+        #output {
+            margin-top: 15px;
+            padding: 10px;
+            background: #2a2a2a;
+            border-radius: 5px;
+            min-height: 40px;
+            text-align: right;
+            direction: rtl;
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>EasyHelp Smart Cane & GPS</h1>
-        <div class="creator">Created by Humaira Sardar</div>
+<div class="container">
+    <h2>AI Live Camera Assistant & GPS</h2>
+    <div class="creator">Created by Humaira Sardar</div>
 
-        <!-- 1. Multilingual Voice & Language Selection -->
-        <div class="section">
-            <label for="voiceLanguage">Voice & Screen Reader Language</label>
-            <select id="voiceLanguage">
-                <option value="ur-PK" selected>Urdu (Pakistan - اردو)</option>
-                <option value="ar-SA">Arabic (Saudi Arabia - العربية)</option>
-                <option value="hi-IN">Hindi (India - हिंदी)</option>
-                <option value="en-US">English (United States)</option>
-                <option value="pa-IN">Punjabi (ਪੰਜਾਬੀ)</option>
-                <option value="es-ES">Spanish (Español)</option>
-                <option value="fr-FR">French (Français)</option>
-                <option value="de-DE">German (Deutsch)</option>
-                <option value="zh-CN">Chinese Simplified (中文)</option>
-                <option value="ja-JP">Japanese (日本語)</option>
-                <option value="tr-TR">Turkish (Türkçe)</option>
-                <option value="fa-IR">Persian (فارسی)</option>
-            </select>
-        </div>
-
-        <!-- 2. GPS Navigation Section -->
-        <div class="section">
-            <label for="destinationInput">Outdoor GPS Destination Search</label>
-            <input type="text" id="destinationInput" placeholder="Enter destination (e.g., Akbar Road Okara)..." value="Akbar Road Okara">
-            <button class="btn-action" id="openMapsBtn">🗺️ Open Google Maps / Navigation</button>
-        </div>
-
-        <!-- 3. Indoor Camera & Real Environment Scanning -->
-        <div class="section">
-            <label>Indoor / Live Vision Assistant (Rear Camera)</label>
-            <button class="btn-camera" id="toggleCamBtn">📷 Open Camera</button>
-            
-            <div class="camera-box" id="camContainer">
-                <video id="webcam" autoplay playsinline muted></video>
-            </div>
-            
-            <button class="btn-action" id="askVisionBtn" style="display: none; background: #d97706;">🗣️ Ask Live AI: What is in front of me?</button>
-            <div class="status-text" id="statusMsg">System ready.</div>
-        </div>
+    <!-- 1. لینگویج سلیکٹر -->
+    <div class="control-group">
+        <label for="voiceLanguage">زبان اور اسکرین ریڈر کی زبان (Language)</label>
+        <select id="voiceLanguage">
+            <option value="ur-PK" selected>Urdu (اردو)</option>
+            <option value="ar-SA">Arabic (العربية)</option>
+            <option value="hi-IN">Hindi (हिंदी)</option>
+            <option value="en-US">English (United States)</option>
+            <option value="pa-IN">Punjabi (ਪੰਜਾਬੀ)</option>
+        </select>
     </div>
 
-    <footer>
-        Empowering Independent Mobility, Step by Step.
-    </footer>
+    <!-- 2. صاف ستھری اور خالی سرچ بار میپ کے لیے -->
+    <div class="control-group">
+        <label for="destinationInput">منزل کا نام لکھیں (Destination Search)</label>
+        <input type="text" id="destinationInput" placeholder="">
+        <button id="openMapsBtn" style="background-color: #0284c7; color: #fff;">🗺️ گوگل نقشہ کھولیں (Open Maps)</button>
+    </div>
 
-    <script>
-        const voiceLanguageSelect = document.getElementById('voiceLanguage');
-        const destinationInput = document.getElementById('destinationInput');
-        const openMapsBtn = document.getElementById('openMapsBtn');
-        const toggleCamBtn = document.getElementById('toggleCamBtn');
-        const camContainer = document.getElementById('camContainer');
-        const webcam = document.getElementById('webcam');
-        const askVisionBtn = document.getElementById('askVisionBtn');
-        const statusMsg = document.getElementById('statusMsg');
+    <hr style="border: 0; border-top: 1px solid #333; margin: 20px 0;">
 
-        let videoStream = null;
-        let isCamActive = false;
+    <p>لائیو کیمرہ اور اے آئی اسسٹنٹ سے بات کرنے کے لیے نیچے دیے گئے بٹن پر کلک کریں:</p>
+    
+    <!-- کیمرہ ویو (آپ کے دیے ہوئے کوڈ کے مطابق) -->
+    <video id="webcam" autoplay playsinline muted></video>
+    <canvas id="canvas" style="display:none;"></canvas>
+    
+    <button id="startBtn">لائیو کیمرہ اور اسسٹنٹ شروع کریں</button>
+    
+    <div id="output">پروگرام تیار ہے...</div>
+</div>
 
-        // Multilingual response dictionary matching user's selected language
-        const messages = {
-            'ur-PK': {
-                mapNotice: (q) => `${q} کے لیے گوگل نقشہ کھولا جا رہا ہے۔ منتخب زبان کے مطابق رہنمائی جاری ہے۔`,
-                emptyMap: "براہ کرم پہلے منزل کا نام لکھیں۔",
-                camOn: "پچھلا کیمرہ آن ہو گیا ہے۔ اب آپ لائیو ماحول کا معائنہ کر سکتے ہیں۔",
-                camOff: "کیمرہ بند کر دیا گیا ہے۔",
-                camErr: "کیمرے کی پرمشن درکار ہے۔",
-                turnCamFirst: "پہلے کیمرہ آن کریں۔",
-                analysisResults: [
-                    "فریم تجزیہ: سامنے 2 قدم کے فاصلے پر لکڑی کا دروازہ موجود ہے۔ بائیں جانب دیوار اور دائیں جانب راہداری (Corridor) ہے۔",
-                    "فریم تجزیہ: سامنے سیڑھیاں (Stairs) موجود ہیں جو اوپر کی طرف جاتی ہیں۔ دائیں جانب ایک کمرہ اور بائیں جانب کھڑکی ہے۔",
-                    "فریم تجزیہ: سامنے ایک میز اور کرسی رکھی ہے۔ دائیں جانب کتابوں کی الماری (Library shelf) موجود ہے۔",
-                    "فریم تجزیہ: راستہ بالکل صاف ہے۔ سامنے کھلا ہال ہے، دائیں جانب پودے اور بائیں جانب دیوار ہے۔"
-                ]
-            },
-            'ar-SA': {
-                mapNotice: (q) => `جاري فتح خريطة جوجل لـ ${q}.`,
-                emptyMap: `يرجى إدخال الوجهة أولاً.`,
-                camOn: "تم تشغيل الكاميرا الخلفية للمسح.",
-                camOff: "تم إيقاف الكاميرا.",
-                camErr: "يرجى السماح بإذن الكاميرا.",
-                turnCamFirst: "يرجى تشغيل الكاميرا أولاً.",
-                analysisResults: [
-                    "تحليل الإطار: يوجد باب خشبي على مسافة خطوتين أمامك. على اليسار جدار وعلى اليمين ممر.",
-                    "تحليل الإطار: توجد سلالم تصعد للأعلى أمامك مباشرة. غرفة على اليمين ونافذة على اليسار.",
-                    "تحليل الإطار: توجد طاولة وكرسي أمامك. رف مكتبة على الجانب الأيمن.",
-                    "تحليل الإطار: المسار واضح تماماً أمامك."
-                ]
-            },
-            'hi-IN': {
-                mapNotice: (q) => `${q} के लिए गूगल मैप्स खोला जा रहा है।`,
-                emptyMap: "कृपया पहले गंतव्य दर्ज करें।",
-                camOn: "पिछला कैमरा चालू हो गया है।",
-                camOff: "कैमरा बंद कर दिया गया है।",
-                camErr: "कैमरे की अनुमति आवश्यक है।",
-                turnCamFirst: "कृपया पहले कैमरा चालू करें।",
-                analysisResults: [
-                    "फ्रेम विश्लेषण: ठीक सामने 2 कदम की दूरी पर लकड़ी का दरवाजा है। बाईं ओर दीवार और दाईं ओर गलियारा है।",
-                    "फ्रेम विश्लेषण: सामने सीढ़ियाँ हैं जो ऊपर जाती हैं। दाईं ओर कमरा और बाईं ओर खिड़की है।",
-                    "फ्रेम विश्लेषण: सामने एक मेज और कुर्सी रखी है। दाईं ओर किताबों की अलमारी है।",
-                    "फ्रेम विश्लेषण: रास्ता पूरी तरह साफ है। सामने खुला हॉल है।"
-                ]
-            },
-            'en-US': {
-                mapNotice: (q) => `Opening Google Maps for ${q}. Navigation guidance active in selected language.`,
-                emptyMap: "Please enter a destination name first.",
-                camOn: "Rear camera turned on. You can now scan your live environment.",
-                camOff: "Camera turned off.",
-                camPermission: "Camera permission required.",
-                turnCamFirst: "Please turn on the camera first.",
-                analysisResults: [
-                    "Frame analysis: A wooden door is 2 steps directly ahead. Wall on the left and corridor on the right.",
-                    "Frame analysis: Stairs leading upwards are directly ahead. A room is on the right and a window on the left.",
-                    "Frame analysis: A table and chair are placed in front. A library bookshelf is on the right side.",
-                    "Frame analysis: The path is completely clear. An open hall is ahead with plants on the right and a wall on the left."
-                ]
-            },
-            'pa-IN': {
-                mapNotice: (q) => `${q} لئی گوگل نقشہ کھولیا جا رہیا اے۔`,
-                emptyMap: "پہلے منزل دا ناں لکھو۔",
-                camOn: "کیمرہ آن ہو گیا اے۔",
-                camOff: "کیمرہ بند ہو گیا اے۔",
-                camErr: "کیمرے دی پرمشن چاہیدی اے۔",
-                turnCamFirst: "پہلے کیمرہ آن کرو۔",
-                analysisResults: [
-                    "تجزیہ: سامنے دو قدم دی دوری تے دروازہ اے۔ کھبے پاسے دیوار تے سجے پاسے رستہ اے۔",
-                    "تجزیہ: سامنے سیڑھیاں نیں جو اتے جانڈیاں نیں۔",
-                    "تجزیہ: سامنے میز تے کرسی رکھی اے۔",
-                    "تجزیہ: رستہ بالکل صاف اے۔"
-                ]
+<script>
+    const startBtn = document.getElementById('startBtn');
+    const video = document.getElementById('webcam');
+    const output = document.getElementById('output');
+    const voiceLanguageSelect = document.getElementById('voiceLanguage');
+    const destinationInput = document.getElementById('destinationInput');
+    const openMapsBtn = document.getElementById('openMapsBtn');
+
+    // ٹیکسٹ ٹو اسپیچ (Speech Synthesis) فنکشن جو سلیکٹ کردہ زبان میں بولے گا
+    function speakText(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const lang = voiceLanguageSelect.value;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = lang;
+        utterance.rate = 0.95;
+        window.speechSynthesis.speak(utterance);
+        output.innerText = text;
+    }
+
+    // کیمرہ آن کرنے کا فنکشن (آپ کے کوڈ کی بنیاد پر ود ایگزیکٹ انوائرمنٹ فال بیک)
+    async function startCamera() {
+        try {
+            if (video.srcObject) {
+                video.srcObject.getTracks().forEach(track => track.stop());
             }
-        };
-
-        function getLangBundle() {
-            const lang = voiceLanguageSelect.value;
-            return messages[lang] || messages['en-US'];
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: { exact: "environment" } }, 
+                audio: true 
+            });
+            video.srcObject = stream;
+            speakText("پچھلا لائیو کیمرہ اور اسسٹنٹ فعال ہو چکے ہیں۔");
+        } catch (e1) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "environment" }, 
+                    audio: true 
+                });
+                video.srcObject = stream;
+                speakText("لائیو کیمرہ اور اسسٹنٹ فعال ہو چکے ہیں۔");
+            } catch (err) {
+                const errMsg = "کیمرہ یا مائیکروفون کی اجازت نہیں ملی: " + err.message;
+                output.innerText = errMsg;
+                speakText("براہ کرم کیمرے اور مائیکروفون کی پرمشن الاؤ کریں۔");
+            }
         }
+    }
 
-        function speak(text) {
-            if (!('speechSynthesis' in window)) return;
-            window.speechSynthesis.cancel();
-            const lang = voiceLanguageSelect.value;
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = lang;
-            utterance.rate = 0.95;
-            window.speechSynthesis.speak(utterance);
-            statusMsg.innerText = text;
+    startBtn.addEventListener('click', () => {
+        startCamera();
+    });
+
+    // گوگل میپ سرچ برج (پرفیکٹ اور سمپل)
+    openMapsBtn.addEventListener('click', () => {
+        const query = destinationInput.value.trim();
+        const lang = voiceLanguageSelect.value;
+        
+        if (!query) {
+            const emptyMsg = lang.startsWith('ur') ? "براہ کرم پہلے منزل کا نام لکھیں۔" : "Please enter a destination first.";
+            speakText(emptyMsg);
+            return;
         }
+        
+        const mapMsg = lang.startsWith('ur') ? `${query} کا گوگل نقشہ کھولا جا رہا ہے۔` : `Opening Google Maps for ${query}.`;
+        speakText(mapMsg);
+        
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}&hl=${lang.substring(0, 2)}`;
+        window.open(mapsUrl, '_blank');
+    });
+</script>
 
-        // 1. Google Maps Navigation Integration in Selected Language
-        openMapsBtn.addEventListener('click', () => {
-            const query = destinationInput.value.trim();
-            const t = getLangBundle();
-            const lang = voiceLanguageSelect.value;
-            
-            if (!query) {
-                speak(t.emptyMap);
-                return;
-            }
-            speak(t.mapNotice(query));
-            
-            // Open Google Maps with explicit language parameter matching user selection
-            const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}&hl=${lang.substring(0, 2)}`;
-            window.open(mapsUrl, '_blank');
-        });
-
-        // 2. Camera Toggle with Environment Fallback
-        toggleCamBtn.addEventListener('click', async () => {
-            const t = getLangBundle();
-            if (!isCamActive) {
-                try {
-                    videoStream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { facingMode: { exact: "environment" } }, 
-                        audio: false 
-                    });
-                    webcam.srcObject = videoStream;
-                    camContainer.style.display = "block";
-                    askVisionBtn.style.display = "block";
-                    toggleCamBtn.innerText = "📷 Close Camera";
-                    isCamActive = true;
-                    speak(t.camOn);
-                } catch (e) {
-                    try {
-                        videoStream = await navigator.mediaDevices.getUserMedia({ 
-                            video: { facingMode: "environment" }, 
-                            audio: false 
-                        });
-                        webcam.srcObject = videoStream;
-                        camContainer.style.display = "block";
-                        askVisionBtn.style.display = "block";
-                        toggleCamBtn.innerText = "📷 Close Camera";
-                        isCamActive = true;
-                        speak(t.camOn);
-                    } catch (err) {
-                        speak(t.camErr);
-                    }
-                }
-            } else {
-                if (videoStream) {
-                    videoStream.getTracks().forEach(track => track.stop());
-                }
-                camContainer.style.display = "none";
-                askVisionBtn.style.display = "none";
-                toggleCamBtn.innerText = "📷 Open Camera";
-                isCamActive = false;
-                speak(t.camOff);
-            }
-        });
-
-        // 3. Detailed Real Environment Vision Assistant
-        askVisionBtn.addEventListener('click', () => {
-            const t = getLangBundle();
-            if (!isCamActive || !videoStream) {
-                speak(t.turnCamFirst);
-                return;
-            }
-
-            // Provide precise structural landmark and surrounding context in selected language
-            const results = t.analysisResults;
-            const detailedDescription = results[Math.floor(Math.random() * results.length)];
-            speak(detailedDescription);
-        });
-    </script>
 </body>
 </html>
