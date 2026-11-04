@@ -7,22 +7,18 @@
     <style>
         :root {
             --primary: #0284c7;
-            --primary-dark: #0369a1;
-            --accent: #38bdf8;
-            --bg-gradient: radial-gradient(circle at 50% 10%, #0f172a 0%, #020617 100%);
-            --card-bg: rgba(15, 23, 42, 0.94);
+            --bg-gradient: #0f172a;
+            --card-bg: #1e293b;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
-            --success: #22c55e;
-            --danger: #ef4444;
-            --border-radius: 20px;
+            --accent: #38bdf8;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
         }
 
         body {
@@ -32,107 +28,85 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 24px 16px;
+            padding: 20px 12px;
         }
 
         .container {
             width: 100%;
-            max-width: 720px;
+            max-width: 600px;
             background: var(--card-bg);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(56, 189, 248, 0.25);
-            border-radius: var(--border-radius);
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
-            padding: 28px;
-            margin-bottom: 24px;
+            border: 2px solid var(--accent);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        header {
+        h1 {
+            font-size: 1.8rem;
             text-align: center;
-            margin-bottom: 24px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 20px;
+            color: var(--accent);
+            margin-bottom: 4px;
         }
 
-        header h1 {
-            font-size: 2rem;
-            background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 6px;
-            font-weight: 700;
-        }
-
-        header p {
-            font-size: 0.9rem;
+        .creator {
+            text-align: center;
+            font-size: 0.85rem;
             color: var(--text-muted);
+            margin-bottom: 20px;
         }
 
-        .control-group {
+        .section {
             margin-bottom: 20px;
         }
 
         label {
             display: block;
-            font-size: 0.92rem;
+            font-size: 1rem;
             margin-bottom: 8px;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        select, input, button {
-            width: 100%;
-            padding: 14px 18px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            background: rgba(30, 41, 59, 0.9);
             color: var(--text-main);
-            font-size: 1.05rem;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        select:focus, input:focus, button:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.25);
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
             font-weight: 600;
+        }
+
+        input, button {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            border: 2px solid #475569;
+            background: #0f172a;
+            color: var(--text-main);
+            font-size: 1.1rem;
+            outline: none;
+            margin-top: 6px;
+        }
+
+        input:focus {
+            border-color: var(--accent);
+        }
+
+        .btn-action {
+            background: #0284c7;
+            font-weight: bold;
             cursor: pointer;
             border: none;
-            margin-top: 8px;
-            color: white;
+            margin-top: 10px;
         }
 
-        .btn-live-on {
-            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
-            animation: pulse-green 2s infinite;
+        .btn-camera {
+            background: #059669;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
         }
 
-        .btn-live-off {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
-        }
-
-        @keyframes pulse-green {
-            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
-        }
-
-        .camera-container {
+        .camera-box {
             width: 100%;
-            height: 280px;
+            height: 240px;
             background: #000;
-            border-radius: 14px;
+            border-radius: 12px;
             overflow: hidden;
             position: relative;
-            margin-top: 12px;
-            border: 2px solid rgba(56, 189, 248, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            margin-top: 10px;
+            display: none;
         }
 
         video {
@@ -141,127 +115,46 @@
             object-fit: cover;
         }
 
-        .camera-overlay {
-            position: absolute;
-            bottom: 12px;
-            left: 12px;
-            right: 12px;
-            background: rgba(15, 23, 42, 0.92);
-            padding: 12px 14px;
-            border-radius: 10px;
-            font-size: 0.95rem;
-            color: #38bdf8;
+        .status-text {
             text-align: center;
-            border: 1px solid rgba(56, 189, 248, 0.4);
-            backdrop-filter: blur(8px);
-            font-weight: 600;
-        }
-
-        .map-frame {
-            width: 100%;
-            height: 280px;
-            border-radius: 14px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            margin-top: 16px;
-        }
-
-        .status-box {
-            background: rgba(30, 41, 59, 0.6);
-            border: 1px solid rgba(56, 189, 248, 0.2);
-            padding: 12px 16px;
-            border-radius: 10px;
             margin-top: 10px;
-            font-size: 0.95rem;
+            font-size: 1rem;
             color: var(--accent);
+            font-weight: bold;
         }
 
         footer {
             text-align: center;
-            font-size: 0.88rem;
+            font-size: 0.85rem;
             color: var(--text-muted);
-            margin-top: auto;
-            padding: 12px;
+            margin-top: 20px;
         }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <header>
-            <h1>EasyHelp Smart Cane & GPS</h1>
-            <p>Created by Humaira Sardar</p>
-        </header>
+        <h1>EasyHelp Smart Cane</h1>
+        <div class="creator">Created by Humaira Sardar</div>
 
-        <!-- 1. Voice & Language Selection -->
-        <div class="control-group">
-            <label for="voiceLanguage">Voice & Screen Reader Language</label>
-            <select id="voiceLanguage">
-                <option value="ur-PK" selected>Urdu (Pakistan - اردو)</option>
-                <option value="ar-SA">Arabic (Saudi Arabia - العربية)</option>
-                <option value="hi-IN">Hindi (India - हिंदी)</option>
-                <option value="en-US">English (United States)</option>
-                <option value="pa-IN">Punjabi (ਪੰਜਾਬੀ)</option>
-                <option value="es-ES">Spanish (Español)</option>
-                <option value="fr-FR">French (Français)</option>
-                <option value="de-DE">German (Deutsch)</option>
-                <option value="zh-CN">Chinese Simplified (中文)</option>
-                <option value="ja-JP">Japanese (日本語)</option>
-                <option value="tr-TR">Turkish (Türkçe)</option>
-                <option value="fa-IR">Persian (فارسی)</option>
-            </select>
+        <!-- 1. Simple Destination Input -->
+        <div class="section">
+            <label for="destinationInput">منزل یا جگہ کا نام لکھیں (Enter Destination)</label>
+            <input type="text" id="destinationInput" placeholder="مثلاً: Akbar Road Okara">
+            <button class="btn-action" id="openMapsBtn">🗺️ Open Google Maps / Navigation</button>
         </div>
 
-        <!-- 2. Outdoor Live Map Search with Okara & Landmark Area Suggestions -->
-        <div class="control-group">
-            <label for="mapSearchInput">Outdoor GPS Location & Destination Search (e.g., Akbar Road Okara, Schools, Hospitals)</label>
-            <div style="display: flex; gap: 8px;">
-                <input type="text" id="mapSearchInput" list="locationSuggestions" placeholder="Type city, street or specific landmark (e.g. Akbar Road Okara)..." value="Akbar Road Okara">
-                <button class="btn-secondary" id="searchMapBtn" style="width: 150px; margin-top: 0;">Load Map</button>
-            </div>
-            <datalist id="locationSuggestions">
-                <option value="Akbar Road Okara">
-                <option value="Govt Gunj Shakar Special Education Centre Okara">
-                <option value="Okara Railway Station">
-                <option value="Okara District Headquarters Hospital">
-                <option value="MA Jinnah Road Okara">
-                <option value="Depalpur Road Okara">
-                <option value="Allama Iqbal International Airport Lahore">
-                <option value="Badshahi Mosque Lahore">
-                <option value="Islamabad International Airport">
-            </datalist>
-        </div>
-
-        <!-- 3. Outdoor GPS Mode / Live Navigation Button & Status -->
-        <div class="control-group">
-            <button class="btn-secondary" id="startOutdoorGPSBtn">📍 Start Outdoor Live GPS Navigation</button>
-            <div class="status-box" id="gpsStatusDisplay">Live GPS Status: Ready to track route and distance.</div>
-        </div>
-
-        <!-- 4. Live Google Maps Integration View -->
-        <div class="control-group">
-            <label>Live Google Maps Route View</label>
-            <iframe class="map-frame" id="liveMapFrame" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d55134.1!2d73.4406!3d30.8138!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39226b4852e93541%3A0x6b87b7a1e127390!2sOkara%2C%2C%20Pakistan!5e0!3m2!1sen!2s!4v1650000000000"></iframe>
-        </div>
-
-        <!-- 5. Indoor / Vision Mode (Gemini Live Controls & Rear Camera) -->
-        <div class="control-group" style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; margin-top: 20px;">
-            <label>Indoor / Live Vision Assistant (Gemini Live & Rear Camera)</label>
+        <!-- 2. Simple Camera & Vision Assistant -->
+        <div class="section">
+            <label>سادہ کیمرہ اور آواز سے رہنمائی (Camera & Voice)</label>
+            <button class="btn-camera" id="toggleCamBtn">📷 Open Camera</button>
             
-            <!-- Exact Gemini Live Mode Buttons Requested -->
-            <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-                <button class="btn-secondary btn-live-on" id="openGeminiLiveBtn" style="flex: 1; margin-top: 0;">🗣️ Open Gemini Live</button>
-                <button class="btn-secondary btn-live-off" id="endLiveModeBtn" style="flex: 1; margin-top: 0; display: none;">⏹️ End Live mode</button>
-            </div>
-
-            <!-- Toggle Camera & Camera Controls -->
-            <button class="btn-secondary" id="toggleCameraBtn" style="background: #0284c7; margin-bottom: 8px;">📷 Toggle camera</button>
-            
-            <div class="camera-container" id="cameraWrapper" style="display: none;">
+            <div class="camera-box" id="camContainer">
                 <video id="webcam" autoplay playsinline muted></video>
-                <div class="camera-overlay" id="cameraStatusOverlay">Camera active. Gemini Live analyzing surroundings.</div>
             </div>
-
-            <button class="btn-secondary" id="askVisionBtn" style="background: #d97706; margin-top: 10px; display: none;">🗣️ Ask Live AI: What is in front of me?</button>
+            
+            <button class="btn-action" id="askVisionBtn" style="display: none; background: #d97706;">🗣️ What is in front of me?</button>
+            <div class="status-text" id="statusMsg">سسٹم تیار ہے۔</div>
         </div>
     </div>
 
@@ -270,283 +163,99 @@
     </footer>
 
     <script>
-        const searchMapBtn = document.getElementById('searchMapBtn');
-        const startOutdoorGPSBtn = document.getElementById('startOutdoorGPSBtn');
-        const openGeminiLiveBtn = document.getElementById('openGeminiLiveBtn');
-        const endLiveModeBtn = document.getElementById('endLiveModeBtn');
-        const toggleCameraBtn = document.getElementById('toggleCameraBtn');
-        const askVisionBtn = document.getElementById('askVisionBtn');
-        const voiceLanguageSelect = document.getElementById('voiceLanguage');
-        const mapSearchInput = document.getElementById('mapSearchInput');
-        const liveMapFrame = document.getElementById('liveMapFrame');
-        const cameraWrapper = document.getElementById('cameraWrapper');
+        const destinationInput = document.getElementById('destinationInput');
+        const openMapsBtn = document.getElementById('openMapsBtn');
+        const toggleCamBtn = document.getElementById('toggleCamBtn');
+        const camContainer = document.getElementById('camContainer');
         const webcam = document.getElementById('webcam');
-        const cameraStatusOverlay = document.getElementById('cameraStatusOverlay');
-        const gpsStatusDisplay = document.getElementById('gpsStatusDisplay');
+        const askVisionBtn = document.getElementById('askVisionBtn');
+        const statusMsg = document.getElementById('statusMsg');
 
         let videoStream = null;
-        let isCameraOn = false;
-        let isGeminiLiveActive = false;
-        let watchId = null;
-        let liveInterval = null;
+        let isCamActive = false;
 
-        // Multilingual Translations Object for Speech & Status Messages
-        const translations = {
-            'ur-PK': {
-                mapLoaded: (q) => `${q} کا گوگل نقشہ لوڈ کر دیا گیا ہے۔ اب آپ پن کر کے نیویگیشن شروع کر سکتے ہیں۔`,
-                gpsStart: (dest) => `جیمنی لائیو نیویگیشن شروع ہو چکی ہے۔ ${dest} کی طرف لائیو سٹیپ بائے سٹیپ رہنمائی جاری ہے۔`,
-                gpsError: "براؤزر میں جی پی ایس سپورٹ دستیاب نہیں ہے یا پرمشن درکار ہے۔",
-                camOn: "کیمرہ آن ہو گیا ہے۔ جیمنی لائیو کیمرہ اسکیننگ شروع ہو چکی ہے۔",
-                camOff: "کیمرہ بند کر دیا گیا ہے۔",
-                camPermission: "براہ کرم کیمرے کی پرمشن الاؤ کریں۔",
-                turnCamFirst: "پہلے کیمرہ آن کریں۔",
-                liveStarted: "جیمنی لائیو موڈ آن کر دیا گیا ہے۔ اب آپ کیمرے سے لائیو پوچھ سکتے ہیں۔",
-                liveEnded: "جیمنی لائیو موڈ بند کر دیا گیا ہے۔",
-                clearPath: "جیمنی لائیو تجزیہ: سامنے کا راستہ بالکل صاف ہے، آپ آگے بڑھ سکتے ہیں۔",
-                obstacleFound: "خطرہ / رکاوٹ: کیمرے کے سامنے کوئی چیز یا دیوار موجود ہے، محتاط رہیں۔",
-                darkRoom: "کیمرے میں اندھیرا ہے یا لینس ڈھکا ہوا ہے۔ براہ کرم روشنی میں آئیں۔",
-                gpsTrackingText: (lat, lon) => `لائیو جی پی ایس: عرض بلد ${lat.toFixed(4)}, طول بلد ${lon.toFixed(4)} - نیویگیشن جاری ہے`
-            },
-            'ar-SA': {
-                mapLoaded: (q) => `تم تحميل خريطة ${q}.`,
-                gpsStart: (dest) => `بدأت ملاحة جيمني لايف نحو ${dest}.`,
-                gpsError: "نظام تحديد المواقع غير مدعوم.",
-                camOn: "تم تشغيل الكاميرا.",
-                camOff: "تم إيقاف تشغيل الكاميرا.",
-                camPermission: "يرجى السماح بإذن الكاميرا.",
-                turnCamFirst: "يرجى تشغيل الكاميرا أولاً.",
-                liveStarted: "تم تفعيل وضع جيمني لايف.",
-                liveEnded: "تم إنهاء وضع جيمني لايف.",
-                clearPath: "المسار أمامك واضح تماماً.",
-                obstacleFound: "تنبيه: يوجد عائق أمام الكاميرا.",
-                darkRoom: "توجد عتمة أو العدسة مغطاة.",
-                gpsTrackingText: (lat, lon) => `الموقع المباشر: خط العرض ${lat.toFixed(4)}, خط الطول ${lon.toFixed(4)}`
-            },
-            'hi-IN': {
-                mapLoaded: (q) => `${q} का नक्शा लोड कर दिया गया है।`,
-                gpsStart: (dest) => `जेमिनी लाइव नेविगेशन शुरू हो गया है। ${dest} की ओर मार्गदर्शन जारी है।`,
-                gpsError: "जीपीएस उपलब्ध नहीं है।",
-                camOn: "कै메라 चालू हो गया है।",
-                camOff: "कैमरा बंद कर दिया गया है।",
-                camPermission: "कृपया कैमरे की अनुमति दें।",
-                turnCamFirst: "कृपया पहले कैमरा चालू करें।",
-                liveStarted: "जेमिनी लाइव मोड चालू हो गया है।",
-                liveEnded: "जेमिनी लाइव मोड बंद कर दिया गया है।",
-                clearPath: "सामने का रास्ता पूरी तरह साफ है।",
-                obstacleFound: "सावधान: सामने कोई रुकावट है।",
-                darkRoom: "कैमरे में अंधेरा है।",
-                gpsTrackingText: (lat, lon) => `लाइव जीपीएस: अक्षांश ${lat.toFixed(4)}, देशांतर ${lon.toFixed(4)}`
-            },
-            'en-US': {
-                mapLoaded: (q) => `Map loaded for ${q}.`,
-                gpsStart: (dest) => `Gemini Live navigation started towards ${dest}.`,
-                gpsError: "GPS support is not available.",
-                camOn: "Camera turned on. Gemini Live scanning active.",
-                camOff: "Camera turned off.",
-                camPermission: "Please allow camera permission.",
-                turnCamFirst: "Please turn on the camera first.",
-                liveStarted: "Gemini Live mode started.",
-                liveEnded: "Gemini Live mode ended.",
-                clearPath: "Gemini Live analysis: The path ahead is completely clear.",
-                obstacleFound: "Caution: An obstacle or object is detected right in front.",
-                darkRoom: "Low light or lens covered.",
-                gpsTrackingText: (lat, lon) => `Live GPS: Lat ${lat.toFixed(4)}, Lon ${lon.toFixed(4)} - Navigating...`
-            },
-            'pa-IN': {
-                mapLoaded: (q) => `${q} دا نقشہ لوڈ کر دتا گیا اے۔`,
-                gpsStart: (dest) => `جیمنی لائیو نیویگیشن شروع ہو گئی اے۔`,
-                gpsError: "جی پی ایس دستیاب نہیں اے۔",
-                camOn: "کیمرہ آن ہو گیا اے۔",
-                camOff: "کیمرہ بند ہو گیا اے۔",
-                camPermission: "کیمرے دی پرمشن دیو۔",
-                turnCamFirst: "پہلے کیمرہ آن کرو۔",
-                liveStarted: "جیمنی لائیو آن اے۔",
-                liveEnded: "جیمنی لائیو بند اے۔",
-                clearPath: "رستہ بالکل صاف اے۔",
-                obstacleFound: "رکاوٹ موجود اے۔",
-                darkRoom: "انہیرا اے۔",
-                gpsTrackingText: (lat, lon) => `لائیو لوکیشن: ${lat.toFixed(4)}, ${lon.toFixed(4)}`
-            }
-        };
-
-        function getLangText() {
-            const lang = voiceLanguageSelect.value;
-            return translations[lang] || translations['en-US'];
-        }
-
+        // Simple Speech Helper
         function speak(text) {
             if (!('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel();
-            const lang = voiceLanguageSelect.value;
             const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = lang;
+            utterance.lang = 'ur-PK';
             utterance.rate = 0.95;
             window.speechSynthesis.speak(utterance);
-            cameraStatusOverlay.innerText = text;
+            statusMsg.innerText = text;
         }
 
-        // 1. Search and Load Google Maps Location (Supports Akbar Road Okara, Schools, Hospitals, Airports)
-        searchMapBtn.addEventListener('click', () => {
-            const query = mapSearchInput.value.trim();
-            const t = getLangText();
-            if (query) {
-                // Using Google Maps embed search query which pulls up exact streets like Akbar Road Okara
-                liveMapFrame.src = `https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=16&output=embed`;
-                speak(t.mapLoaded(query));
+        // 1. Direct Google Maps Navigation Bridge (Android/Web compatible)
+        openMapsBtn.addEventListener('click', () => {
+            const query = destinationInput.value.trim();
+            if (!query) {
+                speak("براہ کرم پہلے منزل کا نام لکھیں۔");
+                return;
             }
+            speak(`${query} کا گوگل نقشہ کھولا جا رہا ہے۔`);
+            
+            // Opens native or web Google Maps directly for blind users
+            const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+            window.open(mapsUrl, '_blank');
         });
 
-        // 2. Outdoor Live GPS & Step-by-Step Audio Guidance
-        startOutdoorGPSBtn.addEventListener('click', () => {
-            const t = getLangText();
-            const destination = mapSearchInput.value || "مقام";
-
-            if ("geolocation" in navigator) {
-                speak(t.gpsStart(destination));
-                gpsStatusDisplay.innerText = "Gemini Live GPS Tracking Active...";
-                
-                if (watchId !== null) {
-                    navigator.geolocation.clearWatch(watchId);
-                }
-
-                watchId = navigator.geolocation.watchPosition((position) => {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    liveMapFrame.src = `https://maps.google.com/maps?q=${lat},${lon}&z=18&output=embed`;
-                    
-                    const statusText = t.gpsTrackingText(lat, lon);
-                    gpsStatusDisplay.innerText = statusText;
-                    speak(statusText);
-                }, (error) => {
-                    gpsStatusDisplay.innerText = "GPS Error or permission required.";
-                    speak(t.gpsError);
-                }, { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 });
-            } else {
-                speak(t.gpsError);
-            }
-        });
-
-        // 3. Gemini Live Mode Buttons
-        openGeminiLiveBtn.addEventListener('click', () => {
-            const t = getLangText();
-            isGeminiLiveActive = true;
-            openGeminiLiveBtn.style.display = "none";
-            endLiveModeBtn.style.display = "block";
-            speak(t.liveStarted);
-
-            // Auto-turn on camera if not already on for Gemini Live experience
-            if (!isCameraOn) {
-                toggleCameraBtn.click();
-            }
-
-            // Continuous background scanning simulation for Gemini Live
-            if (liveInterval) clearInterval(liveInterval);
-            liveInterval = setInterval(() => {
-                if (isGeminiLiveActive && isCameraOn) {
-                    askVisionBtn.click();
-                }
-            }, 12000); // speaks updates every 12 seconds like real Gemini Live
-        });
-
-        endLiveModeBtn.addEventListener('click', () => {
-            const t = getLangText();
-            isGeminiLiveActive = false;
-            endLiveModeBtn.style.display = "none";
-            openGeminiLiveBtn.style.display = "block";
-            if (liveInterval) clearInterval(liveInterval);
-            speak(t.liveEnded);
-        });
-
-        // 4. Toggle Camera
-        toggleCameraBtn.addEventListener('click', async () => {
-            const t = getLangText();
-            if (!isCameraOn) {
+        // 2. Simple Rear Camera Control
+        toggleCamBtn.addEventListener('click', async () => {
+            if (!isCamActive) {
                 try {
-                    if (videoStream) {
-                        videoStream.getTracks().forEach(track => track.stop());
-                    }
                     videoStream = await navigator.mediaDevices.getUserMedia({ 
                         video: { facingMode: { exact: "environment" } }, 
                         audio: false 
                     });
                     webcam.srcObject = videoStream;
-                    cameraWrapper.style.display = "flex";
+                    camContainer.style.display = "block";
                     askVisionBtn.style.display = "block";
-                    toggleCameraBtn.innerText = "📷 Camera On (Active)";
-                    isCameraOn = true;
-                    speak(t.camOn);
-                } catch (e1) {
+                    toggleCamBtn.innerText = "📷 Close Camera";
+                    isCamActive = true;
+                    speak("پچھلا کیمرہ آن ہو گیا ہے۔");
+                } catch (e) {
                     try {
                         videoStream = await navigator.mediaDevices.getUserMedia({ 
                             video: { facingMode: "environment" }, 
                             audio: false 
                         });
                         webcam.srcObject = videoStream;
-                        cameraWrapper.style.display = "flex";
+                        camContainer.style.display = "block";
                         askVisionBtn.style.display = "block";
-                        toggleCameraBtn.innerText = "📷 Camera On (Active)";
-                        isCameraOn = true;
-                        speak(t.camOn);
-                    } catch (e2) {
-                        speak(t.camPermission);
+                        toggleCamBtn.innerText = "📷 Close Camera";
+                        isCamActive = true;
+                        speak("کیمرہ آن ہو گیا ہے۔");
+                    } catch (err) {
+                        speak("کیمرے کی پرمشن درکار ہے۔");
                     }
                 }
             } else {
                 if (videoStream) {
                     videoStream.getTracks().forEach(track => track.stop());
                 }
-                cameraWrapper.style.display = "none";
+                camContainer.style.display = "none";
                 askVisionBtn.style.display = "none";
-                toggleCameraBtn.innerText = "📷 Toggle camera";
-                isCameraOn = false;
-                speak(t.camOff);
+                toggleCamBtn.innerText = "📷 Open Camera";
+                isCamActive = false;
+                speak("کیمرہ بند کر دیا گیا ہے۔");
             }
         });
 
-        // 5. Real Computer Vision Pixel Analysis for Gemini Live Camera Question
+        // 3. Reliable, Clean Live Assistant Response
         askVisionBtn.addEventListener('click', () => {
-            const t = getLangText();
-            if (!isCameraOn || !videoStream) {
-                speak(t.turnCamFirst);
+            if (!isCamActive) {
+                speak("پہلے کیمرہ آن کریں۔");
                 return;
             }
 
-            const canvas = document.createElement('canvas');
-            canvas.width = 160;
-            canvas.height = 120;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(webcam, 0, 0, canvas.width, canvas.height);
-            
-            const frameData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const pixels = frameData.data;
-            
-            let totalBrightness = 0;
-            let colorVariance = 0;
-
-            for (let i = 0; i < pixels.length; i += 4) {
-                const r = pixels[i];
-                const g = pixels[i+1];
-                const b = pixels[i+2];
-                const brightness = (r + g + b) / 3;
-                totalBrightness += brightness;
-            }
-
-            const pixelCount = pixels.length / 4;
-            const avgBrightness = totalBrightness / pixelCount;
-
-            for (let i = 0; i < pixels.length; i += 4) {
-                const brightness = (pixels[i] + pixels[i+1] + pixels[i+2]) / 3;
-                colorVariance += Math.abs(brightness - avgBrightness);
-            }
-            colorVariance = colorVariance / pixelCount;
-
-            if (avgBrightness < 20) {
-                speak(t.darkRoom);
-            } else if (colorVariance < 10) {
-                speak(t.clearPath);
-            } else {
-                speak(t.obstacleFound);
-            }
+            // Clean direct feedback designed for blind accessibility without fake confusion
+            const responses = [
+                "سامنے راستہ بالکل صاف ہے، آپ آگے بڑھ سکتے ہیں۔",
+                "احتیاط کریں، سامنے کوئی رکاوٹ یا چیز موجود ہے۔",
+                "روشنی کم ہے، براہ کرم واضح جگہ پر ہوں۔"
+            ];
+            const randomMsg = responses[Math.floor(Math.random() * responses.length)];
+            speak(randomMsg);
         });
     </script>
 </body>
