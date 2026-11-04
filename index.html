@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EasyHelp Smart Cane & GPS Assistant</title>
+    <title>EasyHelp Smart Cane & GPS - Step 1: Language Engine</title>
     <style>
         :root {
             --primary: #0284c7;
@@ -13,7 +13,6 @@
             --card-bg: rgba(15, 23, 42, 0.94);
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
-            --danger: #ef4444;
             --success: #22c55e;
             --border-radius: 20px;
         }
@@ -40,10 +39,9 @@
             max-width: 720px;
             background: var(--card-bg);
             backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(56, 189, 248, 0.25);
             border-radius: var(--border-radius);
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 30px rgba(2, 132, 199, 0.15);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
             padding: 28px;
             margin-bottom: 24px;
         }
@@ -67,7 +65,6 @@
         header p {
             font-size: 0.9rem;
             color: var(--text-muted);
-            letter-spacing: 0.5px;
         }
 
         .control-group {
@@ -91,7 +88,7 @@
             color: var(--text-main);
             font-size: 1.05rem;
             outline: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
         }
 
         select:focus, button:focus {
@@ -106,65 +103,6 @@
             border: none;
             margin-top: 12px;
             box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
-        }
-
-        .btn-primary:active {
-            transform: scale(0.98);
-        }
-
-        .camera-container {
-            width: 100%;
-            height: 260px;
-            background: #000;
-            border-radius: 14px;
-            overflow: hidden;
-            position: relative;
-            margin-top: 12px;
-            border: 2px solid rgba(56, 189, 248, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .camera-overlay {
-            position: absolute;
-            bottom: 12px;
-            left: 12px;
-            right: 12px;
-            background: rgba(15, 23, 42, 0.88);
-            padding: 10px 14px;
-            border-radius: 10px;
-            font-size: 0.9rem;
-            color: #38bdf8;
-            text-align: center;
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            backdrop-filter: blur(8px);
-        }
-
-        .status-card {
-            background: rgba(15, 23, 42, 0.75);
-            border-radius: 14px;
-            padding: 16px 20px;
-            margin-top: 20px;
-            border-left: 5px solid var(--success);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .status-card.alert {
-            border-left-color: var(--danger);
-            animation: pulse 1.5s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
         }
 
         .guidance-box {
@@ -182,25 +120,9 @@
             margin-bottom: 8px;
         }
 
-        .step-counter {
-            font-size: 2.2rem;
-            font-weight: 700;
-            color: var(--accent);
-            margin: 8px 0;
-            text-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
-        }
-
         .guidance-box p {
             font-size: 1.1rem;
             line-height: 1.6;
-        }
-
-        .map-frame {
-            width: 100%;
-            height: 220px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            margin-top: 20px;
         }
 
         footer {
@@ -209,7 +131,6 @@
             color: var(--text-muted);
             margin-top: auto;
             padding: 12px;
-            letter-spacing: 0.5px;
         }
     </style>
 </head>
@@ -221,7 +142,7 @@
             <p>Created by Humaira Sardar</p>
         </header>
 
-        <!-- Voice & Translation Language Selection -->
+        <!-- Step 1: Language Selection -->
         <div class="control-group">
             <label for="voiceLanguage">Voice & Translation Language</label>
             <select id="voiceLanguage">
@@ -240,61 +161,12 @@
             </select>
         </div>
 
-        <!-- Indoor Destinations -->
-        <div class="control-group">
-            <label for="indoorLocation">Indoor Navigation Venue</label>
-            <select id="indoorLocation">
-                <optgroup label="Educational Institutes">
-                    <option value="school">School (Principal Office / Classrooms / Hall)</option>
-                    <option value="college">College (Admin / Labs / Library)</option>
-                    <option value="university">University (Departments / Lecture Halls)</option>
-                </optgroup>
-                <optgroup label="Healthcare">
-                    <option value="hospital">Hospital (Emergency / OPD / Pharmacy)</option>
-                </optgroup>
-                <optgroup label="Residential & Commercial">
-                    <option value="home">Home / Residential Rooms & Corridors</option>
-                    <option value="market">Market / Shopping Mall / Shop</option>
-                </optgroup>
-            </select>
-        </div>
+        <button class="btn-primary" id="testLangBtn">Test Native Language Voice</button>
 
-        <!-- Outdoor GPS & Live Google Maps Walking Modes -->
-        <div class="control-group">
-            <label for="outdoorLocation">Outdoor GPS & Street Walking Mode</label>
-            <select id="outdoorLocation">
-                <option value="street">Free Street Walking (Live Turn-by-Turn GPS)</option>
-                <option value="national">National City GPS (Local Roads & Markets)</option>
-                <option value="international">International GPS Satellite Mode</option>
-            </select>
-        </div>
-
-        <!-- Live Rear Camera Stream -->
-        <div class="control-group">
-            <label>Live AI Assistant Rear Camera</label>
-            <div class="camera-container">
-                <video id="webcam" autoplay playsinline muted></video>
-                <div class="camera-overlay" id="cameraStatusOverlay">Rear camera initializing...</div>
-            </div>
-        </div>
-
-        <!-- Smart Cane Sensor Status -->
-        <div class="status-card" id="sensorStatusCard">
-            <strong>Smart Cane Sensor:</strong> <span id="sensorText">Connected (BLE) - Path Clear</span>
-        </div>
-
-        <!-- Start Button -->
-        <button class="btn-primary" id="startNavBtn">Start Live Voice Navigation & AI Vision</button>
-
-        <!-- Live Step-By-Step Guidance & Counter Box -->
         <div class="guidance-box">
-            <h3>Live Assistant Guidance</h3>
-            <div class="step-counter" id="stepCounterDisplay">Step: 0</div>
-            <p id="instructionDisplay">Press 'Start Live Voice Navigation & AI Vision' to begin turn-by-turn GPS and rear camera assistance.</p>
+            <h3>Language Test Status</h3>
+            <p id="instructionDisplay">Select your language above and click the button to test native audio response.</p>
         </div>
-
-        <!-- Live Google Map Integration with Dynamic GPS Tracking -->
-        <iframe class="map-frame" id="liveMapFrame" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d13783.5!2d73.1114!3d30.8138!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzDCsDQ4JzQ5LjciTiA3M8KwMDYnNDEuMSJF!5e0!3m2!1sen!2s!4v1650000000000"></iframe>
     </div>
 
     <footer>
@@ -302,94 +174,21 @@
     </footer>
 
     <script>
-        const startNavBtn = document.getElementById('startNavBtn');
+        const testLangBtn = document.getElementById('testLangBtn');
         const instructionDisplay = document.getElementById('instructionDisplay');
-        const stepCounterDisplay = document.getElementById('stepCounterDisplay');
         const voiceLanguageSelect = document.getElementById('voiceLanguage');
-        const indoorSelect = document.getElementById('indoorLocation');
-        const outdoorSelect = document.getElementById('outdoorLocation');
-        const sensorStatusCard = document.getElementById('sensorStatusCard');
-        const sensorText = document.getElementById('sensorText');
-        const webcam = document.getElementById('webcam');
-        const cameraStatusOverlay = document.getElementById('cameraStatusOverlay');
-        const liveMapFrame = document.getElementById('liveMapFrame');
 
-        let cameraStream = null;
-
-        // 1. Force Rear Camera (Environment Facing)
-        async function initRearCamera() {
-            try {
-                if (cameraStream) {
-                    cameraStream.getTracks().forEach(track => track.stop());
-                }
-                cameraStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: { exact: "environment" } }, 
-                    audio: false 
-                });
-                webcam.srcObject = cameraStream;
-                cameraStatusOverlay.innerText = "Rear camera active. Scanning environment live.";
-            } catch (e) {
-                try {
-                    cameraStream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { facingMode: "environment" }, 
-                        audio: false 
-                    });
-                    webcam.srcObject = cameraStream;
-                    cameraStatusOverlay.innerText = "Rear camera active.";
-                } catch (err) {
-                    cameraStatusOverlay.innerText = "Camera access needed for AI vision.";
-                }
-            }
-        }
-        initRearCamera();
-
-        // 2. Strict Native Language Speech Synthesis (Guaranteed matching chosen language)
         function speakNative(textKey, lang) {
             if (!('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel();
 
             const translations = {
-                'start': {
-                    'ur-PK': 'نیویگیشن اور لائیو کیمرہ فعال ہو گیا ہے۔ اب آپ چلنا شروع کریں۔',
-                    'en-US': 'Navigation and live camera active. You may start walking.',
-                    'hi-IN': 'नेविगेशन और लाइव कैमरा सक्रिय हो गया है। अब चलना शुरू करें।',
-                    'ar-SA': 'تم تنشيط التنقل والكاميرا الحية. يمكنك البدء في المشي.',
-                    'pa-IN': 'ਨੇਵੀਗੇਸ਼ਨ ਅਤੇ ਲਾਈਵ ਕੈਮਰਾ ਚਾਲੂ ਹੋ ਗਏ ਹਨ। ਹੁਣ ਤੁਰਨਾ ਸ਼ੁਰੂ ਕਰੋ।'
-                },
-                'gps_guide': {
-                    'ur-PK': 'گوگل میپ جی پی ایس گائیڈ: دائیں جانب کھلا راستہ ہے، بائیں جانب عمارت ہے۔ آگے سیدھے چلیں۔',
-                    'en-US': 'Google Map GPS guide: Open path on right, building on left. Walk straight ahead.',
-                    'hi-IN': 'गूगल मैप जीपीएस गाइड: दाईं ओर खुला रास्ता है, बाईं ओर इमारत है। आगे सीधे चलें।',
-                    'ar-SA': 'دليل خرائط جوجل: طريق مفتوح على اليمين، مبنى على اليسار. امشِ إلى الأمام.',
-                    'pa-IN': 'ਗੂਗਲ ਮੈਪ ਜੀਪੀਐਸ ਗਾਈਡ: ਸੱਜੇ ਪਾਸੇ ਖੁੱਲ੍ਹਾ ਰਸਤਾ ਹੈ, ਖੱਬੇ ਪਾਸੇ ਇਮਾਰਤ ਹੈ। ਅੱਗੇ ਸਿੱਧੇ ਚੱਲੋ।'
-                },
-                'step': {
-                    'ur-PK': 'قدم آگے بڑھائیں۔ راستہ بالکل صاف ہے۔',
-                    'en-US': 'Step forward. Path is completely clear.',
-                    'hi-IN': 'कदम आगे बढ़ाएं। रास्ता बिल्कुल साफ है।',
-                    'ar-SA': 'خطوة إلى الأمام. الطريق واضح تماماً.',
-                    'pa-IN': 'ਕਦਮ ਅੱਗੇ ਵਧਾਓ। ਰਸਤਾ ਬਿਲकुल ਸਾਫ਼ ਹੈ।'
-                },
-                'human': {
-                    'ur-PK': 'تنبيه! کیمرے نے سامنے ایک شخص کو دیکھا ہے، احتیاط سے گزریں۔',
-                    'en-US': 'Caution! Camera detected a person ahead, proceed with care.',
-                    'hi-IN': 'सावधान! कैमरे ने सामने एक व्यक्ति को देखा है, सावधानी से गुजरें।',
-                    'ar-SA': 'تنبيه! الكاميرا رصدت شخصاً في الأمام، تقدم بحذر.',
-                    'pa-IN': 'ਸਾਵਧਾਨ! ਕੈਮਰੇ ਨੇ ਸਾਹਮਣੇ ਇੱਕ ਵਿਅਕਤੀ ਨੂੰ ਦੇਖਿਆ ਹੈ।'
-                },
-                'animal': {
-                    'ur-PK': 'خبردار! کیمرے نے سامنے جانور دیکھا ہے، رک جائیں۔',
-                    'en-US': 'Warning! Camera detected an animal ahead, please stop.',
-                    'hi-IN': 'चेतावनी! कैमरे ने सामने जानवर देखा है, कृपया रुक जाएं।',
-                    'ar-SA': 'تحذير! الكاميرا رصدت حيواناً في الأمام، توقف من فضلك.',
-                    'pa-IN': 'ਚੇਤਾਵਨੀ! ਕੈਮਰੇ ਨੇ ਸਾਹਮਣੇ ਜਾਨਵਰ ਦੇਖਿਆ ਹੈ, ਰੁਕ ਜਾਓ।'
-                },
-                'obstacle': {
-                    'ur-PK': 'خبردار! سامنے دیوار، دروازہ یا رکاوٹ موجود ہے۔',
-                    'en-US': 'Warning! Wall, door or obstacle detected ahead.',
-                    'hi-IN': 'चेतावनी! सामने दीवार, दरवाजा या बाधा मौजूद है।',
-                    'ar-SA': 'تحذير! جدار أو باب أو عائق موجود في الأمام.',
-                    'pa-IN': 'ਚੇਤਾਵਨੀ! ਸਾਹਮਣੇ ਦੀਵਾਰ, ਦਰਵਾਜ਼ਾ ਜਾਂ ਰੁਕਾਵਟ ਮੌਜੂਦ ਹੈ।'
+                'test': {
+                    'ur-PK': 'یہ زبان کا ٹیسٹ ہے۔ اب آواز بالکل اردو میں بول رہی ہے۔',
+                    'en-US': 'Language test successful. Audio is now speaking in English.',
+                    'hi-IN': 'भाषा परीक्षण सफल। अब आवाज हिंदी में बोल रही है।',
+                    'ar-SA': 'اختبار اللغة ناجح. الصوت يتحدث الآن باللغة العربية.',
+                    'pa-IN': 'ਭਾਸ਼ਾ ਟੈਸਟ ਸਫਲ। ਆਵਾਜ਼ ਹੁਣ ਪੰਜਾਬੀ ਵਿੱਚ ਬੋਲ ਰਹੀ ਹੈ।'
                 }
             };
 
@@ -401,63 +200,10 @@
             window.speechSynthesis.speak(utterance);
         }
 
-        // 3. Start Live Navigation with Google Maps & Camera Vision
-        startNavBtn.addEventListener('click', () => {
+        testLangBtn.addEventListener('click', () => {
             const currentLang = voiceLanguageSelect.value;
-            const indoorVal = indoorSelect.options[indoorSelect.selectedIndex].text;
-            const outdoorVal = outdoorSelect.options[outdoorSelect.selectedIndex].text;
-            
-            speakNative('start', currentLang);
-            instructionDisplay.innerText = `Active: ${indoorVal} | Outdoor Mode: ${outdoorVal}. Google Maps GPS & Rear Camera active in your chosen language.`;
-            
-            // Live Geolocation Tracking
-            if ("geolocation" in navigator) {
-                navigator.geolocation.watchPosition((position) => {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    liveMapFrame.src = `https://maps.google.com/maps?q=${lat},${lon}&z=18&output=embed`;
-                }, (error) => {
-                    console.log("GPS Location active.");
-                }, { enableHighAccuracy: true });
-            }
-
-            let currentStep = 1;
-            const maxSteps = 10;
-
-            const navInterval = setInterval(() => {
-                if (currentStep <= maxSteps) {
-                    stepCounterDisplay.innerText = `Step: ${currentStep}`;
-                    
-                    // Google Maps Turn-by-Turn Audio Style Callouts
-                    if (currentStep === 2 || currentStep === 6) {
-                        speakNative('gps_guide', currentLang);
-                    } else {
-                        speakNative('step', currentLang);
-                    }
-                    
-                    // Rear Camera AI Visual Detection Callouts
-                    if (currentStep === 4) {
-                        cameraStatusOverlay.innerText = "AI Vision: Person detected in camera frame.";
-                        speakNative('human', currentLang);
-                    } else if (currentStep === 7) {
-                        cameraStatusOverlay.innerText = "AI Vision: Animal detected nearby.";
-                        speakNative('animal', currentLang);
-                    } else if (currentStep === 9) {
-                        cameraStatusOverlay.innerText = "AI Vision: Door or obstacle ahead.";
-                        speakNative('obstacle', currentLang);
-                    } else {
-                        cameraStatusOverlay.innerText = "Rear camera active: Path clear.";
-                    }
-
-                    currentStep++;
-                } else {
-                    clearInterval(navInterval);
-                    stepCounterDisplay.innerText = "Destination Reached";
-                    instructionDisplay.innerText = "You have safely arrived at your destination.";
-                    sensorStatusCard.classList.add('alert');
-                    sensorText.innerText = "Destination reached successfully.";
-                }
-            }, 4000);
+            speakNative('test', currentLang);
+            instructionDisplay.innerText = `Testing language code: ${currentLang}. Listen to the audio output.`;
         });
     </script>
 </body>
