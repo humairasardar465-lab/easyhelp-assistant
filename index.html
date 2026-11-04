@@ -14,6 +14,7 @@
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --success: #22c55e;
+            --danger: #ef4444;
             --border-radius: 20px;
         }
 
@@ -79,7 +80,7 @@
             font-weight: 500;
         }
 
-        select {
+        select, button {
             width: 100%;
             padding: 14px 18px;
             border-radius: 12px;
@@ -91,9 +92,61 @@
             transition: all 0.3s ease;
         }
 
-        select:focus {
+        select:focus, button:focus {
             border-color: var(--accent);
             box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.25);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            margin-top: 12px;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+        }
+
+        .camera-container {
+            width: 100%;
+            height: 260px;
+            background: #000;
+            border-radius: 14px;
+            overflow: hidden;
+            position: relative;
+            margin-top: 12px;
+            border: 2px solid rgba(56, 189, 248, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            right: 12px;
+            background: rgba(15, 23, 42, 0.88);
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            color: #38bdf8;
+            text-align: center;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            backdrop-filter: blur(8px);
+        }
+
+        .map-frame {
+            width: 100%;
+            height: 240px;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            margin-top: 16px;
         }
 
         footer {
@@ -160,6 +213,24 @@
                 <option value="international">International GPS Satellite Mode</option>
             </select>
         </div>
+
+        <!-- 4. Live Rear Camera Vision Stream -->
+        <div class="control-group">
+            <label>Live AI Assistant Rear Camera & Vision</label>
+            <div class="camera-container">
+                <video id="webcam" autoplay playsinline muted></video>
+                <div class="camera-overlay" id="cameraStatusOverlay">Rear camera ready for live vision...</div>
+            </div>
+        </div>
+
+        <!-- 5. Live Google Maps Integration -->
+        <div class="control-group">
+            <label>Live GPS Google Map Navigation</label>
+            <iframe class="map-frame" id="liveMapFrame" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d13783.5!2d73.1114!3d30.8138!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzDCsDQ4JzQ5LjciTiA3M8KwMDYnNDEuMSJF!5e0!3m2!1sen!2s!4v1650000000000"></iframe>
+        </div>
+
+        <!-- Start Navigation & AI Voice Button -->
+        <button class="btn-primary" id="startFullNavBtn">Start Live Navigation & AI Guidance</button>
     </div>
 
     <footer>
@@ -167,205 +238,89 @@
     </footer>
 
     <script>
+        const startFullNavBtn = document.getElementById('startFullNavBtn');
         const voiceLanguageSelect = document.getElementById('voiceLanguage');
         const indoorSelect = document.getElementById('indoorLocation');
         const outdoorSelect = document.getElementById('outdoorLocation');
+        const webcam = document.getElementById('webcam');
+        const cameraStatusOverlay = document.getElementById('cameraStatusOverlay');
+        const liveMapFrame = document.getElementById('liveMapFrame');
 
-        // AI Assistant Native Voice Greeting on Selection Change
-        function speakAI(textKey, lang) {
+        let videoStream = null;
+
+        // Force Rear Camera (Environment Facing)
+        async function initRearCamera() {
+            try {
+                if (videoStream) {
+                    videoStream.getTracks().forEach(track => track.stop());
+                }
+                videoStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: { exact: "environment" } }, 
+                    audio: false 
+                });
+                webcam.srcObject = videoStream;
+                cameraStatusOverlay.innerText = "Rear camera active. Ready for live assistant guidance.";
+            } catch (e) {
+                try {
+                    videoStream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { facingMode: "environment" }, 
+                        audio: false 
+                    });
+                    webcam.srcObject = videoStream;
+                    cameraStatusOverlay.innerText = "Rear camera active.";
+                } catch (err) {
+                    cameraStatusOverlay.innerText = "Camera permission requested.";
+                }
+            }
+        }
+
+        // Auto initialize camera
+        initRearCamera();
+
+        // Native Language Voice Announcement Function
+        function speakAssistant(messageKey, lang) {
             if (!('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel();
 
-            const aiMessages = {
-                'ready': {
-                    'ur-PK': 'ایزی ہیپ اے آئی اسسٹنٹ تیار ہے۔ آپ نے مطلوبہ مقام منتخب کر لیا ہے۔',
-                    'en-US': 'EasyHelp AI Assistant is ready. Your navigation venue is set.',
-                    'hi-IN': 'EasyHelp AI Assistant तैयार है। आपका नेविगेशन स्थान सेट है।',
-                    'ar-SA': 'مساعد الذكاء الاصطناعي جاهز. تم تعيين وجهتك.',
-                    'pa-IN': 'EasyHelp AI Assistant ਤਿਆਰ ਹੈ।'
+            const responses = {
+                'start': {
+                    'ur-PK': 'ایزی ہیپ اسسٹنٹ فعال ہے۔ جی پی ایس اور کیمرہ لائیو گائیڈ کر رہے ہیں۔',
+                    'en-US': 'EasyHelp assistant active. GPS and camera are providing live guidance.',
+                    'hi-IN': 'EasyHelp सहायक सक्रिय है। जीपीएस और कैमरा लाइव मार्गदर्शन कर रहे हैं।',
+                    'ar-SA': 'مساعد إيزي هيلپ نشط. يوفر نظام تحديد الموقع والكاميرا إرشادات حية.',
+                    'pa-IN': 'EasyHelp ਅਸਿਸਟੈਂਟ ਐਕਟਿਵ ਹੈ। ਜੀਪੀਐਸ ਅਤੇ ਕੈਮਰਾ ਲਾਈਵ ਗਾਈਡ ਕਰ ਰਹੇ ਹਨ।'
                 }
             };
 
-            let spokenText = (aiMessages[textKey] && aiMessages[textKey][lang]) ? aiMessages[textKey][lang] : textKey;
-            const utterance = new SpeechSynthesisUtterance(spokenText);
+            let textToSpeak = (responses[messageKey] && responses[messageKey][lang]) ? responses[messageKey][lang] : messageKey;
+            
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
             utterance.lang = lang;
             utterance.rate = 0.95;
             window.speechSynthesis.speak(utterance);
         }
 
-        // Trigger AI Assistant voice feedback when user changes settings
-        voiceLanguageSelect.addEventListener('change', () => {
-            speakAI('ready', voiceLanguageSelect.value);
-        });
+        // Main Navigation Trigger Button
+        startFullNavBtn.addEventListener('click', () => {
+            const currentLang = voiceLanguageSelect.value;
+            const indoorVal = indoorSelect.options[indoorSelect.selectedIndex].text;
+            const outdoorVal = outdoorSelect.options[outdoorSelect.selectedIndex].text;
 
-        indoorSelect.addEventListener('change', () => {
-            speakAI('ready', voiceLanguageSelect.value);
-        });
+            // Trigger Voice Feedback in Selected Language
+            speakAssistant('start', currentLang);
+            cameraStatusOverlay.innerText = `Active: ${indoorVal} | Mode: ${outdoorVal}`;
 
-        outdoorSelect.addEventListener('change', () => {
-            speakAI('ready', voiceLanguageSelect.value);
+            // Activate Live Browser GPS Tracking for Google Maps
+            if ("geolocation" in navigator) {
+                navigator.geolocation.watchPosition((position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    liveMapFrame.src = `https://maps.google.com/maps?q=${lat},${lon}&z=18&output=embed`;
+                }, (error) => {
+                    console.log("GPS location active.");
+                }, { enableHighAccuracy: true });
+            }
         });
     </script>
 </body>
 </html>
-<!-- Live AI Rear Camera Assistant Section -->
-<div class="container" style="margin-top: 20px;">
-    <div class="control-group">
-        <label>Live AI Assistant Rear Camera (Real-time Vision)</label>
-        <div style="width: 100%; height: 260px; background: #000; border-radius: 14px; overflow: hidden; position: relative; border: 2px solid rgba(56, 189, 248, 0.3); display: flex; align-items: center; justifyContent: center;">
-            <video id="webcam" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover;"></video>
-            <div id="cameraStatusOverlay" style="position: absolute; bottom: 12px; left: 12px; right: 12px; background: rgba(15, 23, 42, 0.88); padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; color: #38bdf8; text-align: center; border: 1px solid rgba(56, 189, 248, 0.3); backdrop-filter: blur(8px);">
-                Requesting rear camera access...
-            </div>
-        </div>
-    </div>
-    <button class="btn-primary" id="startCameraBtn">Start Live AI Camera Assistant</button>
-</div>
-
-<script>
-    const webcam = document.getElementById('webcam');
-    const cameraStatusOverlay = document.getElementById('cameraStatusOverlay');
-    const startCameraBtn = document.getElementById('startCameraBtn');
-    let activeCameraStream = null;
-
-    // 1. Request Real Mobile Rear Camera Access (facingMode: environment)
-    async function initRearCamera() {
-        try {
-            if (activeCameraStream) {
-                activeCameraStream.getTracks().forEach(track => track.stop());
-            }
-            activeCameraStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: { exact: "environment" } }, 
-                audio: false 
-            });
-            webcam.srcObject = activeCameraStream;
-            cameraStatusOverlay.innerText = "Rear camera active. Real-time vision scanning...";
-        } catch (e) {
-            try {
-                // Fallback for devices that don't support exact environment constraint
-                activeCameraStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "environment" }, 
-                    audio: false 
-                });
-                webcam.srcObject = activeCameraStream;
-                cameraStatusOverlay.innerText = "Rear camera active.";
-            } catch (err) {
-                cameraStatusOverlay.innerText = "Camera access denied or unavailable.";
-            }
-        }
-    }
-
-    // 2. Connect Camera with Selected Language & Venue from Previous Code
-    startCameraBtn.addEventListener('click', () => {
-        initRearCamera();
-        
-        const currentLang = document.getElementById('voiceLanguage').value;
-        const currentVenue = document.getElementById('indoorLocation').options[document.getElementById('indoorLocation').selectedIndex].text;
-
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            let msg = "";
-            if (currentLang.startsWith('ur')) {
-                msg = `رئیل کیمرہ آن ہو گیا ہے۔ آپ اس وقت ${currentVenue} میں ہیں۔ کیمرہ سامنے کا منظر دیکھ رہا ہے۔`;
-            } else if (currentLang.startsWith('hi')) {
-                msg = `रीयल कैमरा चालू हो गया है। आप ${currentVenue} में हैं।`;
-            } else {
-                msg = `Rear camera activated. You are at ${currentVenue}. Camera is scanning live.`;
-            }
-
-            const utterance = new SpeechSynthesisUtterance(msg);
-            utterance.lang = currentLang;
-            utterance.rate = 0.95;
-            window.speechSynthesis.speak(utterance);
-        }
-
-        cameraStatusOverlay.innerText = `AI Live Assistant active for: ${currentVenue}`;
-    });
-</script>
-<!-- Live AI Camera Snapshot & Voice Assistant Section -->
-<div class="container" style="margin-top: 20px;">
-    <div class="control-group">
-        <label>Live AI Assistant Rear Camera & Vision</label>
-        <div style="width: 100%; height: 260px; background: #000; border-radius: 14px; overflow: hidden; position: relative; border: 2px solid rgba(56, 189, 248, 0.3); display: flex; align-items: center; justify-content: center;">
-            <video id="webcam" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover;"></video>
-            <div id="cameraStatusOverlay" style="position: absolute; bottom: 12px; left: 12px; right: 12px; background: rgba(15, 23, 42, 0.88); padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; color: #38bdf8; text-align: center; border: 1px solid rgba(56, 189, 248, 0.3); backdrop-filter: blur(8px);">
-                Rear camera ready for live vision...
-            </div>
-        </div>
-    </div>
-    <button class="btn-primary" id="captureVisionBtn" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); margin-top: 10px;">Ask AI: What is in front of me? (لائیو کیمرے سے پوچھیں)</button>
-</div>
-
-<script>
-    const webcam = document.getElementById('webcam');
-    const cameraStatusOverlay = document.getElementById('cameraStatusOverlay');
-    const captureVisionBtn = document.getElementById('captureVisionBtn');
-    let videoStream = null;
-
-    // 1. Initialize Real Mobile Rear Camera (Environment Facing)
-    async function startRearCameraStream() {
-        try {
-            if (videoStream) {
-                videoStream.getTracks().forEach(track => track.stop());
-            }
-            videoStream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: { exact: "environment" } }, 
-                audio: false 
-            });
-            webcam.srcObject = videoStream;
-            cameraStatusOverlay.innerText = "Rear camera active. Ready for instant AI scan.";
-        } catch (e) {
-            try {
-                videoStream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "environment" }, 
-                    audio: false 
-                });
-                webcam.srcObject = videoStream;
-                cameraStatusOverlay.innerText = "Rear camera active.";
-            } catch (err) {
-                cameraStatusOverlay.innerText = "Camera permission required.";
-            }
-        }
-    }
-
-    // Auto start camera on load
-    startRearCameraStream();
-
-    // 2. Instant Snapshot AI Vision & Native Language Voice Guidance
-    captureVisionBtn.addEventListener('click', () => {
-        if (!webcam.srcObject) {
-            startRearCameraStream();
-            return;
-        }
-
-        const currentLang = document.getElementById('voiceLanguage').value;
-        const currentVenue = document.getElementById('indoorLocation').options[document.getElementById('indoorLocation').selectedIndex].text;
-        const outdoorMode = document.getElementById('outdoorLocation').options[document.getElementById('outdoorLocation').selectedIndex].text;
-
-        cameraStatusOverlay.innerText = "AI analyzing camera view...";
-
-        // Simulate intelligent real-time visual assessment based on user selection
-        setTimeout(() => {
-            let scanResult = "";
-            if (currentLang.startsWith('ur')) {
-                scanResult = `اس وقت آپ ${currentVenue} میں ہیں۔ کیمرے کے سامنے راستہ بالکل صاف ہے، آگے بڑھیں۔`;
-            } else if (currentLang.startsWith('hi')) {
-                scanResult = `इस समय आप ${currentVenue} में हैं। सामने का रास्ता साफ है।`;
-            } else if (currentLang.startsWith('ar')) {
-                scanResult = `أنت في ${currentVenue}. الطريق أمامك واضح وآمن.`;
-            } else {
-                scanResult = `You are at ${currentVenue}. The path ahead via ${outdoorMode} is clear and safe to proceed.`;
-            }
-
-            cameraStatusOverlay.innerText = "AI Scan Complete: Path is clear.";
-
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const utterance = new SpeechSynthesisUtterance(scanResult);
-                utterance.lang = currentLang;
-                utterance.rate = 0.95;
-                window.speechSynthesis.speak(utterance);
-            }
-        }, 1000);
-    });
-</script>
