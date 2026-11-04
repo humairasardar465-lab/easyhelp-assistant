@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EasyHelp Smart Cane & GPS - Step 1: Language Engine</title>
+    <title>EasyHelp Smart Cane & GPS Assistant</title>
     <style>
         :root {
             --primary: #0284c7;
@@ -142,7 +142,7 @@
             <p>Created by Humaira Sardar</p>
         </header>
 
-        <!-- Step 1: Language Selection -->
+        <!-- 1. Voice & Translation Language Selection -->
         <div class="control-group">
             <label for="voiceLanguage">Voice & Translation Language</label>
             <select id="voiceLanguage">
@@ -161,200 +161,9 @@
             </select>
         </div>
 
-        <button class="btn-primary" id="testLangBtn">Test Native Language Voice</button>
-
-        <div class="guidance-box">
-            <h3>Language Test Status</h3>
-            <p id="instructionDisplay">Select your language above and click the button to test native audio response.</p>
-        </div>
-    </div>
-
-    <footer>
-        Empowering Independent Mobility, Step by Step.
-    </footer>
-
-    <script>
-        const testLangBtn = document.getElementById('testLangBtn');
-        const instructionDisplay = document.getElementById('instructionDisplay');
-        const voiceLanguageSelect = document.getElementById('voiceLanguage');
-
-        function speakNative(textKey, lang) {
-            if (!('speechSynthesis' in window)) return;
-            window.speechSynthesis.cancel();
-
-            const translations = {
-                'test': {
-                    'ur-PK': 'یہ زبان کا ٹیسٹ ہے۔ اب آواز بالکل اردو میں بول رہی ہے۔',
-                    'en-US': 'Language test successful. Audio is now speaking in English.',
-                    'hi-IN': 'भाषा परीक्षण सफल। अब आवाज हिंदी में बोल रही है।',
-                    'ar-SA': 'اختبار اللغة ناجح. الصوت يتحدث الآن باللغة العربية.',
-                    'pa-IN': 'ਭਾਸ਼ਾ ਟੈਸਟ ਸਫਲ। ਆਵਾਜ਼ ਹੁਣ ਪੰਜਾਬੀ ਵਿੱਚ ਬੋਲ ਰਹੀ ਹੈ।'
-                }
-            };
-
-            let spokenText = (translations[textKey] && translations[textKey][lang]) ? translations[textKey][lang] : textKey;
-            
-            const utterance = new SpeechSynthesisUtterance(spokenText);
-            utterance.lang = lang;
-            utterance.rate = 0.95;
-            window.speechSynthesis.speak(utterance);
-        }
-
-        testLangBtn.addEventListener('click', () => {
-            const currentLang = voiceLanguageSelect.value;
-            speakNative('test', currentLang);
-            instructionDisplay.innerText = `Testing language code: ${currentLang}. Listen to the audio output.`;
-        });
-    </script>
-</body>
-</html>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EasyHelp Smart Cane & GPS - Indoor & Outdoor Venues</title>
-    <style>
-        :root {
-            --primary: #0284c7;
-            --primary-dark: #0369a1;
-            --accent: #38bdf8;
-            --bg-gradient: radial-gradient(circle at 50% 10%, #0f172a 0%, #020617 100%);
-            --card-bg: rgba(15, 23, 42, 0.94);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --success: #22c55e;
-            --border-radius: 20px;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-        }
-
-        body {
-            background: var(--bg-gradient);
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 24px 16px;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 720px;
-            background: var(--card-bg);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(56, 189, 248, 0.25);
-            border-radius: var(--border-radius);
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
-            padding: 28px;
-            margin-bottom: 24px;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 24px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 20px;
-        }
-
-        header h1 {
-            font-size: 2rem;
-            background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 6px;
-            font-weight: 700;
-        }
-
-        header p {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-        }
-
-        .control-group {
-            margin-bottom: 20px;
-        }
-
-        label {
-            display: block;
-            font-size: 0.92rem;
-            margin-bottom: 8px;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        select, button {
-            width: 100%;
-            padding: 14px 18px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            background: rgba(30, 41, 59, 0.9);
-            color: var(--text-main);
-            font-size: 1.05rem;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        select:focus, button:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.25);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            margin-top: 12px;
-            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
-        }
-
-        .guidance-box {
-            background: rgba(30, 41, 59, 0.85);
-            border: 2px dashed rgba(56, 189, 248, 0.4);
-            border-radius: 14px;
-            padding: 22px;
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .guidance-box h3 {
-            font-size: 1.35rem;
-            color: #38bdf8;
-            margin-bottom: 8px;
-        }
-
-        .guidance-box p {
-            font-size: 1.1rem;
-            line-height: 1.6;
-        }
-
-        footer {
-            text-align: center;
-            font-size: 0.88rem;
-            color: var(--text-muted);
-            margin-top: auto;
-            padding: 12px;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="container">
-        <header>
-            <h1>EasyHelp Smart Cane & GPS</h1>
-            <p>Created by Humaira Sardar</p>
-        </header>
-
-        <!-- Indoor Destinations (Grouped Dropdowns) -->
+        <!-- 2. Indoor Destinations (Grouped Dropdown) -->
         <div class="control-group">
-            <label for="indoorLocation">Indoor Navigation Venue (عمارت کا انتخاب)</label>
+            <label for="indoorLocation">Indoor Navigation Venue</label>
             <select id="indoorLocation">
                 <optgroup label="Educational Institutes">
                     <option value="school">School (Principal Office / Classrooms / Hall)</option>
@@ -371,7 +180,7 @@
             </select>
         </div>
 
-        <!-- Outdoor GPS Modes -->
+        <!-- 3. Outdoor GPS Modes -->
         <div class="control-group">
             <label for="outdoorLocation">Outdoor GPS & Street Walking Mode</label>
             <select id="outdoorLocation">
@@ -381,11 +190,11 @@
             </select>
         </div>
 
-        <button class="btn-primary" id="confirmVenueBtn">Confirm Venue Selection</button>
+        <button class="btn-primary" id="startSetupBtn">Confirm Language & Venues</button>
 
         <div class="guidance-box">
-            <h3>Selected Venue Status</h3>
-            <p id="venueStatusDisplay">Please choose your indoor venue and outdoor mode, then click confirm.</p>
+            <h3>Selection Status</h3>
+            <p id="instructionDisplay">Select your preferred language, indoor venue, and outdoor mode, then click confirm to test native voice guidance.</p>
         </div>
     </div>
 
@@ -394,16 +203,41 @@
     </footer>
 
     <script>
-        const confirmVenueBtn = document.getElementById('confirmVenueBtn');
-        const venueStatusDisplay = document.getElementById('venueStatusDisplay');
+        const startSetupBtn = document.getElementById('startSetupBtn');
+        const instructionDisplay = document.getElementById('instructionDisplay');
+        const voiceLanguageSelect = document.getElementById('voiceLanguage');
         const indoorSelect = document.getElementById('indoorLocation');
         const outdoorSelect = document.getElementById('outdoorLocation');
 
-        confirmVenueBtn.addEventListener('click', () => {
+        function speakNative(textKey, lang) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+
+            const translations = {
+                'success': {
+                    'ur-PK': 'زبان اور مقامات کامیابی سے منتخب ہو گئے ہیں۔ اب سب کچھ بالکل درست کام کر رہا ہے۔',
+                    'en-US': 'Language and venues successfully selected. Everything is working correctly.',
+                    'hi-IN': 'भाषा और स्थान सफलतापूर्वक चुने गए। सब कुछ सही ढंग से काम कर रहा है।',
+                    'ar-SA': 'تم اختيار اللغة والأماكن بنجاح. كل شيء يعمل بشكل صحيح.',
+                    'pa-IN': 'ਭਾਸ਼ਾ ਅਤੇ ਥਾਵਾਂ ਸਫਲਤਾਪੂਰਵਕ ਚੁਣ ਲਈਆਂ ਗਈਆਂ ਹਨ।'
+                }
+            };
+
+            let spokenText = (translations[textKey] && translations[textKey][lang]) ? translations[textKey][lang] : textKey;
+            
+            const utterance = new SpeechSynthesisUtterance(spokenText);
+            utterance.lang = lang;
+            utterance.rate = 0.95;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        startSetupBtn.addEventListener('click', () => {
+            const currentLang = voiceLanguageSelect.value;
             const indoorVal = indoorSelect.options[indoorSelect.selectedIndex].text;
             const outdoorVal = outdoorSelect.options[outdoorSelect.selectedIndex].text;
             
-            venueStatusDisplay.innerText = `Successfully Selected Indoor Venue: [ ${indoorVal} ] | Outdoor Mode: [ ${outdoorVal} ]`;
+            speakNative('success', currentLang);
+            instructionDisplay.innerText = `Active Language: ${currentLang} | Indoor: ${indoorVal} | Outdoor: ${outdoorVal}`;
         });
     </script>
 </body>
