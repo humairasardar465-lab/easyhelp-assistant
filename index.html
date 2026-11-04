@@ -208,3 +208,203 @@
     </script>
 </body>
 </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EasyHelp Smart Cane & GPS - Indoor & Outdoor Venues</title>
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-dark: #0369a1;
+            --accent: #38bdf8;
+            --bg-gradient: radial-gradient(circle at 50% 10%, #0f172a 0%, #020617 100%);
+            --card-bg: rgba(15, 23, 42, 0.94);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #22c55e;
+            --border-radius: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 24px 16px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 720px;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-radius: var(--border-radius);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 20px;
+        }
+
+        header h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+
+        header p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.92rem;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        select, button {
+            width: 100%;
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(30, 41, 59, 0.9);
+            color: var(--text-main);
+            font-size: 1.05rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        select:focus, button:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.25);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            margin-top: 12px;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+        }
+
+        .guidance-box {
+            background: rgba(30, 41, 59, 0.85);
+            border: 2px dashed rgba(56, 189, 248, 0.4);
+            border-radius: 14px;
+            padding: 22px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .guidance-box h3 {
+            font-size: 1.35rem;
+            color: #38bdf8;
+            margin-bottom: 8px;
+        }
+
+        .guidance-box p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            margin-top: auto;
+            padding: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>EasyHelp Smart Cane & GPS</h1>
+            <p>Created by Humaira Sardar</p>
+        </header>
+
+        <!-- Indoor Destinations (Grouped Dropdowns) -->
+        <div class="control-group">
+            <label for="indoorLocation">Indoor Navigation Venue (عمارت کا انتخاب)</label>
+            <select id="indoorLocation">
+                <optgroup label="Educational Institutes">
+                    <option value="school">School (Principal Office / Classrooms / Hall)</option>
+                    <option value="college">College (Admin / Labs / Library)</option>
+                    <option value="university">University (Departments / Lecture Halls)</option>
+                </optgroup>
+                <optgroup label="Healthcare">
+                    <option value="hospital">Hospital (Emergency / OPD / Pharmacy)</option>
+                </optgroup>
+                <optgroup label="Residential & Commercial">
+                    <option value="home">Home / Residential Rooms & Corridors</option>
+                    <option value="market">Market / Shopping Mall / Shop</option>
+                </optgroup>
+            </select>
+        </div>
+
+        <!-- Outdoor GPS Modes -->
+        <div class="control-group">
+            <label for="outdoorLocation">Outdoor GPS & Street Walking Mode</label>
+            <select id="outdoorLocation">
+                <option value="street">Free Street Walking (Live Sidewalk GPS)</option>
+                <option value="national">National City GPS (Local Roads & Markets)</option>
+                <option value="international">International GPS Satellite Mode</option>
+            </select>
+        </div>
+
+        <button class="btn-primary" id="confirmVenueBtn">Confirm Venue Selection</button>
+
+        <div class="guidance-box">
+            <h3>Selected Venue Status</h3>
+            <p id="venueStatusDisplay">Please choose your indoor venue and outdoor mode, then click confirm.</p>
+        </div>
+    </div>
+
+    <footer>
+        Empowering Independent Mobility, Step by Step.
+    </footer>
+
+    <script>
+        const confirmVenueBtn = document.getElementById('confirmVenueBtn');
+        const venueStatusDisplay = document.getElementById('venueStatusDisplay');
+        const indoorSelect = document.getElementById('indoorLocation');
+        const outdoorSelect = document.getElementById('outdoorLocation');
+
+        confirmVenueBtn.addEventListener('click', () => {
+            const indoorVal = indoorSelect.options[indoorSelect.selectedIndex].text;
+            const outdoorVal = outdoorSelect.options[outdoorSelect.selectedIndex].text;
+            
+            venueStatusDisplay.innerText = `Successfully Selected Indoor Venue: [ ${indoorVal} ] | Outdoor Mode: [ ${outdoorVal} ]`;
+        });
+    </script>
+</body>
+</html>
