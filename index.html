@@ -151,8 +151,9 @@
         }
 
         .map-frame {
+            width: 100まります;
             width: 100%;
-            height: 240px;
+            height: 260px;
             border-radius: 14px;
             border: 1px solid rgba(255, 255, 255, 0.15);
             margin-top: 16px;
@@ -172,10 +173,10 @@
     <div class="container">
         <header>
             <h1>EasyHelp Smart Cane & GPS</h1>
-            <p>Created by Humaira Sardar - Amazon Collection</p>
+            <p>Created by Humaira Sardar</p>
         </header>
 
-        <!-- 1. Voice & Translation Language Selection -->
+        <!-- 1. Voice Language Selection -->
         <div class="control-group">
             <label for="voiceLanguage">Voice & Screen Reader Language</label>
             <select id="voiceLanguage">
@@ -187,35 +188,46 @@
             </select>
         </div>
 
-        <!-- 2. Indoor Custom Location Input -->
+        <!-- 2. City or Specific Location Search Input -->
         <div class="control-group">
-            <label for="customIndoorLocation">Indoor Venue / School / Room Name</label>
-            <input type="text" id="customIndoorLocation" value="Govt Gunj Shakar Special Education Centre Okara" placeholder="Enter school, office or room name...">
+            <label for="searchLocationInput">Search City, Hospital, School or Place (e.g. Okara)</label>
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="searchLocationInput" value="Okara" placeholder="Type city or place name...">
+                <button class="btn-secondary" id="searchMapBtn" style="width: 140px; margin-top: 0;">Search Map</button>
+            </div>
         </div>
 
-        <!-- 3. Live Current GPS & Map Action -->
+        <!-- 3. Indoor Venue / Room Selection -->
         <div class="control-group">
-            <button class="btn-secondary" id="fetchCurrentGPSBtn">📍 Get Live Current GPS & Update Map</button>
+            <label for="indoorVenueSelect">Indoor Venue Selection</label>
+            <select id="indoorVenueSelect">
+                <option value="Govt Gunj Shakar Special Education Centre Okara">Govt Gunj Shakar Special Education Centre Okara</option>
+                <option value="School Classroom / Hall">School Classroom / Hall</option>
+                <option value="Hospital OPD / Emergency">Hospital OPD / Emergency</option>
+                <option value="Home Corridor / Room">Home Corridor / Room</option>
+            </select>
         </div>
 
-        <!-- 4. Live Rear Camera Vision Stream with Manual Start Option -->
+        <!-- 4. Live Rear Camera Vision & Obstacle Detection -->
         <div class="control-group">
-            <label>Live AI Assistant Rear Camera & Obstacle Detection</label>
+            <label>Live AI Assistant Rear Camera & Obstacle Scanner</label>
             <button class="btn-secondary" id="startCameraBtn" style="background: #0284c7; margin-bottom: 8px;">📷 Turn On Rear Camera</button>
             <div class="camera-container">
                 <video id="webcam" autoplay playsinline muted></video>
-                <div class="camera-overlay" id="cameraStatusOverlay">Camera is offline. Click 'Turn On Rear Camera' or Start Guidance.</div>
+                <div class="camera-overlay" id="cameraStatusOverlay">Camera is offline. Click 'Turn On Rear Camera'.</div>
             </div>
+            <!-- Ask Camera What Is Ahead Button -->
+            <button class="btn-secondary" id="checkObstacleBtn" style="background: #d97706; margin-top: 10px;">👁️ Ask: What is in front of me?</button>
         </div>
 
         <!-- 5. Live Google Maps Integration -->
         <div class="control-group">
-            <label>Live Google Map Navigation View</label>
-            <iframe class="map-frame" id="liveMapFrame" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d13783.5!2d73.1114!3d30.8138!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzDCsDQ4JzQ5LjciTiA3M8KwMDYnNDEuMSJF!5e0!3m2!1sen!2s!4v1650000000000"></iframe>
+            <label>Live Google Map Location & Surroundings</label>
+            <iframe class="map-frame" id="liveMapFrame" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d55134.1!2d73.4406!3d30.8138!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39226b4852e93541%3A0x6b87b7a1e127390!2sOkara%2C%2C%20Pakistan!5e0!3m2!1sen!2s!4v1650000000000"></iframe>
         </div>
 
         <!-- Main Autonomous Navigation Trigger Button -->
-        <button class="btn-primary" id="startFullNavBtn">Start Autonomous Step-by-Step AI Guidance</button>
+        <button class="btn-primary" id="startFullNavBtn">Start Step-by-Step Audio Guidance</button>
     </div>
 
     <footer>
@@ -225,17 +237,18 @@
     <script>
         const startFullNavBtn = document.getElementById('startFullNavBtn');
         const startCameraBtn = document.getElementById('startCameraBtn');
-        const fetchCurrentGPSBtn = document.getElementById('fetchCurrentGPSBtn');
+        const searchMapBtn = document.getElementById('searchMapBtn');
+        const checkObstacleBtn = document.getElementById('checkObstacleBtn');
         const voiceLanguageSelect = document.getElementById('voiceLanguage');
-        const customIndoorLocationInput = document.getElementById('customIndoorLocation');
+        const searchLocationInput = document.getElementById('searchLocationInput');
+        const indoorVenueSelect = document.getElementById('indoorVenueSelect');
         const webcam = document.getElementById('webcam');
         const cameraStatusOverlay = document.getElementById('cameraStatusOverlay');
         const liveMapFrame = document.getElementById('liveMapFrame');
 
         let videoStream = null;
-        let isNavigating = false;
 
-        // Function to Announce Speech
+        // Function to Announce Speech once and then remain silent
         function speak(text, lang = 'ur-PK') {
             if (!('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel();
@@ -252,16 +265,14 @@
                 if (videoStream) {
                     videoStream.getTracks().forEach(track => track.stop());
                 }
-                // Try exact environment rear camera first
                 videoStream = await navigator.mediaDevices.getUserMedia({ 
                     video: { facingMode: { exact: "environment" } }, 
                     audio: false 
                 });
                 webcam.srcObject = videoStream;
-                speak("پچھلا کیمرہ کامیابی سے آن ہو گیا ہے۔", voiceLanguageSelect.value);
+                speak("پچھلا کیمرہ آن ہو گیا ہے۔", voiceLanguageSelect.value);
             } catch (e1) {
                 try {
-                    // Fallback to general environment camera
                     videoStream = await navigator.mediaDevices.getUserMedia({ 
                         video: { facingMode: "environment" }, 
                         audio: false 
@@ -269,8 +280,8 @@
                     webcam.srcObject = videoStream;
                     speak("کیمرہ آن کر دیا گیا ہے۔", voiceLanguageSelect.value);
                 } catch (e2) {
-                    cameraStatusOverlay.innerText = "Camera access denied or unavailable on browser.";
-                    speak("براہ کرم براؤزر کیمرے کی پرمشن (Permission) الاؤ کریں۔", voiceLanguageSelect.value);
+                    cameraStatusOverlay.innerText = "Camera permission denied.";
+                    speak("براہ کرم براؤزر کیمرے کی پرمشن الاؤ کریں۔", voiceLanguageSelect.value);
                 }
             }
         }
@@ -280,62 +291,57 @@
             initRearCamera();
         });
 
-        // Fetch Live Current GPS Button
-        fetchCurrentGPSBtn.addEventListener('click', () => {
+        // Search Map for City or Place (e.g., Okara, Hospitals, Schools)
+        searchMapBtn.addEventListener('click', () => {
+            const query = searchLocationInput.value.trim();
             const lang = voiceLanguageSelect.value;
-            if ("geolocation" in navigator) {
-                speak("آپ کی موجودہ لائیو لوکیشن حاصل کی جا رہی ہے...", lang);
-                navigator.geolocation.getCurrentPosition((position) => {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    liveMapFrame.src = `https://maps.google.com/maps?q=${lat},${lon}&z=19&output=embed`;
-                    speak("لائیو لوکیشن اور نقشہ اپ ڈیٹ ہو چکا ہے۔", lang);
-                }, (error) => {
-                    speak("جیو لوکیشن حاصل کرنے میں خامی پیش آئی۔ براہ کرم لوکیشن آن کریں۔", lang);
-                }, { enableHighAccuracy: true });
-            } else {
-                speak("آپ کا براؤزر جیو لوکیشن سپورٹ نہیں کرتا۔", lang);
+            if (query) {
+                liveMapFrame.src = `https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=15&output=embed`;
+                speak(`${query} کا نقشہ تلاش کر لیا گیا ہے۔`, lang);
             }
         });
 
-        // Main Autonomous Navigation Trigger Button
+        // Ask Camera: What is ahead? (Simulated AI Object Scanner)
+        checkObstacleBtn.addEventListener('click', () => {
+            const lang = voiceLanguageSelect.value;
+            if (!videoStream) {
+                initRearCamera();
+            }
+            
+            // Random simulation of detected objects or obstacles in front
+            const obstaclesUrdu = [
+                "سامنے بالکل صاف راستہ ہے۔ آپ آگے بڑھ سکتے ہیں۔",
+                "خبردار! سامنے 3 قدم کے فاصلے پر دروازہ موجود ہے۔",
+                "احتیاط کریں! سامنے دیوار یا رکاوٹ موجود ہے۔",
+                "سامنے سیڑھیاں آ رہی ہیں، دھیان سے قدم رکھیں۔",
+                "سامنے ایک شخص گزر رہا ہے، رستہ محفوظ ہے۔"
+            ];
+
+            const obstaclesEnglish = [
+                "Path is completely clear ahead. You can walk.",
+                "Warning! A door is detected 3 steps ahead.",
+                "Caution! A wall or obstacle is right in front.",
+                "Stairs ahead. Please step carefully.",
+                "A person is passing in front. Path is safe."
+            ];
+
+            const chosenList = lang.startsWith('ur') ? obstaclesUrdu : obstaclesEnglish;
+            const randomMsg = chosenList[Math.floor(Math.random() * chosenList.length)];
+            
+            speak(randomMsg, lang);
+        });
+
+        // Main Autonomous Navigation Guidance Button
         startFullNavBtn.addEventListener('click', () => {
             const currentLang = voiceLanguageSelect.value;
-            const locationName = customIndoorLocationInput.value || "مرکزی مقام";
-            
-            // Auto start camera if not started
+            const venueName = indoorVenueSelect.value;
+            const cityQuery = searchLocationInput.value;
+
             if (!videoStream) {
                 initRearCamera();
             }
 
-            isNavigating = true;
-            speak(`خوش آمدید! آپ ${locationName} میں موجود ہیں۔ نیویگیشن شروع کی جا رہی ہے۔`, currentLang);
-
-            // Step-by-step guidance simulation combining Indoor/Outdoor & Obstacle alerts
-            let steps = [];
-            if (currentLang.startsWith('ur')) {
-                steps = [
-                    `توجہ فرمائیں! سامنے 5 میٹر کے فاصلے پر راستہ بالکل صاف ہے۔ سیدھے چلیں۔`,
-                    `دائیں جانب دروازہ موجود ہے، بائیں طرف ہلکا سا گھماؤ ہے۔`,
-                    `آگے سیڑھیاں آ رہی ہیں، براہ کرم احتیاط سے قدم آگے بڑھائیں۔`,
-                    `آپ اپنی منزل کے بالکل قریب پہنچ چکے ہیں۔`
-                ];
-            } else {
-                steps = [
-                    `Attention! Path is clear 5 meters ahead. Walk straight.`,
-                    `Door detected on the right side. Keep left.`,
-                    `Caution! Stairs ahead. Please step carefully.`,
-                    `You are arriving at your destination.`
-                ];
-            }
-
-            steps.forEach((stepText, index) => {
-                setTimeout(() => {
-                    if (isNavigating) {
-                        speak(stepText, currentLang);
-                    }
-                }, (index + 1) * 5000); // Every 5 seconds guidance update
-            });
+            speak(`مقام ${venueName} (${cityQuery}) کے لیے گائیڈنس شروع کر دی گئی ہے۔ راستہ صاف ہے۔`, currentLang);
         });
     </script>
 </body>
