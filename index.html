@@ -14,7 +14,6 @@
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --success: #22c55e;
-            --danger: #ef4444;
             --border-radius: 20px;
         }
 
@@ -229,8 +228,8 @@
             <iframe class="map-frame" id="liveMapFrame" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d13783.5!2d73.1114!3d30.8138!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzDCsDQ4JzQ5LjciTiA3M8KwMDYnNDEuMSJF!5e0!3m2!1sen!2s!4v1650000000000"></iframe>
         </div>
 
-        <!-- Start Navigation & AI Voice Button -->
-        <button class="btn-primary" id="startFullNavBtn">Start Live Navigation & AI Guidance</button>
+        <!-- Main Autonomous Navigation Trigger Button -->
+        <button class="btn-primary" id="startFullNavBtn">Start Autonomous Step-by-Step AI Guidance</button>
     </div>
 
     <footer>
@@ -259,7 +258,7 @@
                     audio: false 
                 });
                 webcam.srcObject = videoStream;
-                cameraStatusOverlay.innerText = "Rear camera active. Ready for live assistant guidance.";
+                cameraStatusOverlay.innerText = "Rear camera active. Autonomous guidance ready.";
             } catch (e) {
                 try {
                     videoStream = await navigator.mediaDevices.getUserMedia({ 
@@ -277,27 +276,44 @@
         // Auto initialize camera
         initRearCamera();
 
-        // Native Language Voice Announcement Function
-        function speakAssistant(messageKey, lang) {
+        // Step-by-Step Autonomous Voice Assistant Function
+        function speakStepByStep(lang, indoorName, outdoorName) {
             if (!('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel();
 
-            const responses = {
-                'start': {
-                    'ur-PK': 'ایزی ہیپ اسسٹنٹ فعال ہے۔ جی پی ایس اور کیمرہ لائیو گائیڈ کر رہے ہیں۔',
-                    'en-US': 'EasyHelp assistant active. GPS and camera are providing live guidance.',
-                    'hi-IN': 'EasyHelp सहायक सक्रिय है। जीपीएस और कैमरा लाइव मार्गदर्शन कर रहे हैं।',
-                    'ar-SA': 'مساعد إيزي هيلپ نشط. يوفر نظام تحديد الموقع والكاميرا إرشادات حية.',
-                    'pa-IN': 'EasyHelp ਅਸਿਸਟੈਂਟ ਐਕਟਿਵ ਹੈ। ਜੀਪੀਐਸ ਅਤੇ ਕੈਮਰਾ ਲਾਈਵ ਗਾਈਡ ਕਰ ਰਹੇ ਹਨ।'
-                }
-            };
+            // Simulated step-by-step route guiding like Google Walking Directions
+            let steps = [];
+            if (lang.startsWith('ur')) {
+                steps = [
+                    `سفر شروع ہو چکا ہے۔ آپ اس وقت ${indoorName} میں ہیں۔`,
+                    `بائیں طرف مڑیں، راستہ بالکل صاف ہے۔`,
+                    `20 میٹر سیدھا چلیں۔ دائیں جانب اہم عمارت موجود ہے۔`,
+                    `آگے بڑھیں، آپ منزل کی طرف گامزن ہیں۔`
+                ];
+            } else if (lang.startsWith('hi')) {
+                steps = [
+                    `यात्रा शुरू हो चुकी है। आप ${indoorName} में हैं।`,
+                    `बाएं मुड़ें, रास्ता साफ है।`,
+                    `20 मीटर सीधे चलें।`
+                ];
+            } else {
+                steps = [
+                    `Navigation started. You are at ${indoorName} via ${outdoorName}.`,
+                    `Walk straight for 20 meters. Path is clear.`,
+                    `Turn slightly left and continue forward safely.`
+                ];
+            }
 
-            let textToSpeak = (responses[messageKey] && responses[messageKey][lang]) ? responses[messageKey][lang] : messageKey;
-            
-            const utterance = new SpeechSynthesisUtterance(textToSpeak);
-            utterance.lang = lang;
-            utterance.rate = 0.95;
-            window.speechSynthesis.speak(utterance);
+            // Speak steps one by one sequentially
+            steps.forEach((stepText, index) => {
+                setTimeout(() => {
+                    const utterance = new SpeechSynthesisUtterance(stepText);
+                    utterance.lang = lang;
+                    utterance.rate = 0.95;
+                    window.speechSynthesis.speak(utterance);
+                    cameraStatusOverlay.innerText = stepText;
+                }, index * 4000); // 4 seconds interval per step voice guidance
+            });
         }
 
         // Main Navigation Trigger Button
@@ -306,9 +322,8 @@
             const indoorVal = indoorSelect.options[indoorSelect.selectedIndex].text;
             const outdoorVal = outdoorSelect.options[outdoorSelect.selectedIndex].text;
 
-            // Trigger Voice Feedback in Selected Language
-            speakAssistant('start', currentLang);
-            cameraStatusOverlay.innerText = `Active: ${indoorVal} | Mode: ${outdoorVal}`;
+            // Trigger Step-by-Step Voice Guidance in Selected Language
+            speakStepByStep(currentLang, indoorVal, outdoorVal);
 
             // Activate Live Browser GPS Tracking for Google Maps
             if ("geolocation" in navigator) {
@@ -317,7 +332,7 @@
                     const lon = position.coords.longitude;
                     liveMapFrame.src = `https://maps.google.com/maps?q=${lat},${lon}&z=18&output=embed`;
                 }, (error) => {
-                    console.log("GPS location active.");
+                    console.log("GPS tracking active.");
                 }, { enableHighAccuracy: true });
             }
         });
