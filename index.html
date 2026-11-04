@@ -208,3 +208,77 @@
     </script>
 </body>
 </html>
+<!-- Live AI Rear Camera Assistant Section -->
+<div class="container" style="margin-top: 20px;">
+    <div class="control-group">
+        <label>Live AI Assistant Rear Camera (Real-time Vision)</label>
+        <div style="width: 100%; height: 260px; background: #000; border-radius: 14px; overflow: hidden; position: relative; border: 2px solid rgba(56, 189, 248, 0.3); display: flex; align-items: center; justifyContent: center;">
+            <video id="webcam" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover;"></video>
+            <div id="cameraStatusOverlay" style="position: absolute; bottom: 12px; left: 12px; right: 12px; background: rgba(15, 23, 42, 0.88); padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; color: #38bdf8; text-align: center; border: 1px solid rgba(56, 189, 248, 0.3); backdrop-filter: blur(8px);">
+                Requesting rear camera access...
+            </div>
+        </div>
+    </div>
+    <button class="btn-primary" id="startCameraBtn">Start Live AI Camera Assistant</button>
+</div>
+
+<script>
+    const webcam = document.getElementById('webcam');
+    const cameraStatusOverlay = document.getElementById('cameraStatusOverlay');
+    const startCameraBtn = document.getElementById('startCameraBtn');
+    let activeCameraStream = null;
+
+    // 1. Request Real Mobile Rear Camera Access (facingMode: environment)
+    async function initRearCamera() {
+        try {
+            if (activeCameraStream) {
+                activeCameraStream.getTracks().forEach(track => track.stop());
+            }
+            activeCameraStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: { exact: "environment" } }, 
+                audio: false 
+            });
+            webcam.srcObject = activeCameraStream;
+            cameraStatusOverlay.innerText = "Rear camera active. Real-time vision scanning...";
+        } catch (e) {
+            try {
+                // Fallback for devices that don't support exact environment constraint
+                activeCameraStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "environment" }, 
+                    audio: false 
+                });
+                webcam.srcObject = activeCameraStream;
+                cameraStatusOverlay.innerText = "Rear camera active.";
+            } catch (err) {
+                cameraStatusOverlay.innerText = "Camera access denied or unavailable.";
+            }
+        }
+    }
+
+    // 2. Connect Camera with Selected Language & Venue from Previous Code
+    startCameraBtn.addEventListener('click', () => {
+        initRearCamera();
+        
+        const currentLang = document.getElementById('voiceLanguage').value;
+        const currentVenue = document.getElementById('indoorLocation').options[document.getElementById('indoorLocation').selectedIndex].text;
+
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            let msg = "";
+            if (currentLang.startsWith('ur')) {
+                msg = `رئیل کیمرہ آن ہو گیا ہے۔ آپ اس وقت ${currentVenue} میں ہیں۔ کیمرہ سامنے کا منظر دیکھ رہا ہے۔`;
+            } else if (currentLang.startsWith('hi')) {
+                msg = `रीयल कैमरा चालू हो गया है। आप ${currentVenue} में हैं।`;
+            } else {
+                msg = `Rear camera activated. You are at ${currentVenue}. Camera is scanning live.`;
+            }
+
+            const utterance = new SpeechSynthesisUtterance(msg);
+            utterance.lang = currentLang;
+            utterance.rate = 0.95;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        cameraStatusOverlay.innerText = `AI Live Assistant active for: ${currentVenue}`;
+    });
+</script>
