@@ -1,278 +1,154 @@
 <!DOCTYPE html>
-<html lang="ur" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EasyHelp Smart Cane & GPS</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #121212;
-            color: #ffffff;
-            text-align: center;
-            margin: 0;
-            padding: 20px;
-        }
-        h2 {
-            color: #00ffcc;
-            margin-bottom: 5px;
-        }
-        .creator {
-            font-size: 13px;
-            color: #94a3b8;
-            margin-bottom: 20px;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            background: #1e1e1e;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-            text-align: right;
-        }
-        .control-group {
-            margin-bottom: 15px;
-        }
-        /* 2 سے 3 الفاظ کی مختصر انگلش ہیڈنگز */
-        label {
-            display: block;
-            font-size: 14px;
-            margin-bottom: 5px;
-            color: #00ffcc;
-            text-align: left;
-            direction: ltr;
-            font-weight: bold;
-        }
-        select, input {
-            width: 100%;
-            padding: 10px;
-            border-radius: 5px;
-            border: 1px solid #444;
-            background: #2a2a2a;
-            color: #fff;
-            font-size: 15px;
-            box-sizing: border-box;
-            margin-bottom: 8px;
-        }
-        video, canvas {
-            width: 100%;
-            max-height: 260px;
-            border-radius: 8px;
-            background: #000;
-            object-fit: cover;
-            margin-top: 10px;
-        }
-        button {
-            background-color: #00ffcc;
-            color: #000;
-            border: none;
-            padding: 12px 20px;
-            font-size: 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 10px;
-            font-weight: bold;
-            width: 100%;
-        }
-        button:hover {
-            background-color: #00cc99;
-        }
-        #output {
-            margin-top: 15px;
-            padding: 10px;
-            background: #2a2a2a;
-            border-radius: 5px;
-            min-height: 50px;
-            text-align: right;
-            direction: rtl;
-            font-size: 14px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart King Assistant</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#0a0f1e;color:#fff;text-align:center;margin:0;padding:16px}
+.top{max-width:620px;margin:auto;background:#111827;padding:22px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.5);text-align:left}
+h2{text-align:center;color:#00ffcc;margin:0;font-size:24px;letter-spacing:.5px}
+.creator{text-align:center;font-size:12px;color:#94a3b8;margin:6px 0 16px}
+label{display:block;color:#00ffcc;font-size:13px;font-weight:700;margin:14px 0 6px;letter-spacing:.3px;text-transform:uppercase}
+select,input{width:100%;padding:12px;border-radius:10px;border:1px solid #374151;background:#1f2937;color:#fff;font-size:15px;outline:none}
+video{width:100%;height:280px;border-radius:12px;background:#000;object-fit:cover;margin-top:12px}
+button{border:none;padding:13px;font-size:15px;border-radius:10px;cursor:pointer;margin-top:10px;font-weight:700;width:100%}
+.btn-main{background:#00ffcc;color:#000}
+.btn-map{background:#0284c7;color:#fff}
+.btn-voice{background:#d97706;color:#fff}
+.btn-stop{background:#ef4444;color:#fff}
+#output{margin-top:14px;padding:12px;background:#1f2937;border-radius:10px;min-height:48px;font-size:14px;text-align:right}
+.status{text-align:center;margin:10px 0;font-size:13px;font-weight:700}
+.dot{display:inline-block;width:10px;height:10px;background:#ef4444;border-radius:50%;animation:blink 1s infinite}
+@keyframes blink{50%{opacity:0}}
+hr{border:0;border-top:1px solid #374151;margin:18px 0}
+</style>
 </head>
 <body>
+<div class="top">
+<h2>👑 SMART KING ASSISTANT</h2>
+<div class="creator">Created by Humaira Sardar | EasyHelp Smart Cane & GPS</div>
+<div class="status"><span class="dot"></span> <span id="liveStatus">OFF</span></div>
 
-<div class="container">
-    <h2>AI Live Camera Assistant & GPS</h2>
-    <div class="creator">Created by Humaira Sardar</div>
+<label>Select Language</label>
+<select id="voiceLanguage">
+<option value="ur-PK" selected>Urdu</option>
+<option value="en-US">English</option>
+<option value="ar-SA">Arabic</option>
+<option value="hi-IN">Hindi</option>
+<option value="pa-IN">Punjabi</option>
+</select>
 
-    <!-- 1. سلیکٹ لینگویج (مختصر انگلش ہیڈنگ) -->
-    <div class="control-group">
-        <label for="voiceLanguage">Select Language</label>
-        <select id="voiceLanguage">
-            <option value="ur-PK" selected>Urdu (اردو)</option>
-            <option value="ar-SA">Arabic (العربية)</option>
-            <option value="hi-IN">Hindi (हिंदी)</option>
-            <option value="en-US">English (United States)</option>
-            <option value="pa-IN">Punjabi (ਪੰਜਾਬੀ)</option>
-        </select>
-    </div>
+<label>Destination Search</label>
+<input type="text" id="destinationInput" placeholder="Enter destination...">
+<button id="openMapsBtn" class="btn-map">Open Maps</button>
 
-    <!-- 2. ڈیسٹینیشن سرچ (مختصر انگلش ہیڈنگ) -->
-    <div class="control-group">
-        <label for="destinationInput">Destination Search</label>
-        <input type="text" id="destinationInput" placeholder="">
-        <button id="openMapsBtn" style="background-color: #0284c7; color: #fff;">Open Google Maps</button>
-    </div>
+<hr>
 
-    <hr style="border: 0; border-top: 1px solid #333; margin: 20px 0;">
+<label>Live Camera</label>
+<button id="startBtn" class="btn-main">Start Live Mode</button>
+<button id="voiceBtn" class="btn-voice">Voice Command</button>
+<button id="stopBtn" class="btn-stop" style="display:none;">Stop Live</button>
 
-    <div class="control-group">
-        <label for="startBtn">Live Camera</label>
-        <button id="startBtn">Start Live Camera</button>
-    </div>
-    
-    <!-- کیمرہ اور لائیو ویو -->
-    <video id="webcam" autoplay playsinline muted></video>
-    <canvas id="canvas" style="display:none;"></canvas>
-    
-    <button id="askAiBtn" style="background-color: #d97706; color: #fff; display:none;">Ask Live AI</button>
-    
-    <div id="output">System ready...</div>
+<video id="webcam" autoplay playsinline muted></video>
+<canvas id="canvas" style="display:none;"></canvas>
+<div id="output"></div>
 </div>
 
 <script>
-    const startBtn = document.getElementById('startBtn');
-    const askAiBtn = document.getElementById('askAiBtn');
-    const video = document.getElementById('webcam');
-    const canvas = document.getElementById('canvas');
-    const output = document.getElementById('output');
-    const voiceLanguageSelect = document.getElementById('voiceLanguage');
-    const destinationInput = document.getElementById('destinationInput');
-    const openMapsBtn = document.getElementById('openMapsBtn');
+const video=document.getElementById('webcam');
+const canvas=document.getElementById('canvas');
+const output=document.getElementById('output');
+const voiceLanguageSelect=document.getElementById('voiceLanguage');
+const startBtn=document.getElementById('startBtn');
+const stopBtn=document.getElementById('stopBtn');
+const liveStatus=document.getElementById('liveStatus');
+let autoTimer=null, stream=null, isLive=false, isPaused=false, isThinking=false;
 
-    // مستقل اٹیچ کردہ اے پی آئی کی
-    const EMBEDDED_API_KEY = "AIzaSyDI5btsG8Wu77sAj8gI9Ug8E_9Lr_FvN5A";
+// Key Attached
+const API_KEY = "AIzaSyDI5btsG8Wu77sAj8gI9Ug8E_9Lr_FvN5A";
 
-    const systemIdentity = "You are Smart Cane Assistant, an advanced AI camera and mobility guide for blind individuals. Never mention Google, Gemini, or underlying models. Always reply concisely in the exact language requested by the user.";
+const systemIdentity = "You are Smart King Assistant, created by Smart King. Never mention Google, Gemini. Reply concisely in the requested language.";
 
-    function speakText(text) {
-        if (!('speechSynthesis' in window)) return;
-        window.speechSynthesis.cancel();
-        const lang = voiceLanguageSelect.value;
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = lang;
-        utterance.rate = 0.95;
-        window.speechSynthesis.speak(utterance);
-        output.innerText = text;
+function speakText(text){
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang=voiceLanguageSelect.value; u.rate=1.0;
+  window.speechSynthesis.speak(u);
+  output.innerText=text;
+}
+
+async function analyzeCamera(){
+  if(!isLive || isPaused || isThinking || !video.srcObject) return;
+  isThinking=true;
+  canvas.width=video.videoWidth||640;
+  canvas.height=video.videoHeight||480;
+  const ctx=canvas.getContext('2d');
+  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+  const base64Image=canvas.toDataURL('image/jpeg',0.5).split(',')[1];
+  const lang=voiceLanguageSelect.value;
+  try{
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[
+        {text:`${systemIdentity} This is a LIVE camera frame for a blind person. Tell in ONLY 1 short line what is in front RIGHT NOW. Describe ANY object - person, bike, car, wall, stairs, dog, hole, table, tree, shop, road, anything you see. If obstacle is close say STOP. If path is clear say CLEAR. Reply STRICTLY in language code ${lang}. Very short.`},
+        {inline_data:{mime_type:"image/jpeg",data:base64Image}}
+      ]}]})
+    });
+    const data=await res.json();
+    if(data.candidates && data.candidates[0].content){
+      speakText(data.candidates[0].content.parts[0].text);
     }
+  }catch(e){ console.log(e); }
+  isThinking=false;
+}
 
-    // لائیو کیمرہ آن کرنے کا فنکشن
-    async function startCamera() {
-        try {
-            if (video.srcObject) {
-                video.srcObject.getTracks().forEach(track => track.stop());
-            }
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: { exact: "environment" } }, 
-                audio: true 
-            });
-            video.srcObject = stream;
-            askAiBtn.style.display = "block";
-            
-            const lang = voiceLanguageSelect.value;
-            let welcomeMsg = "I am Smart Cane Assistant. Live camera is active.";
-            if (lang.startsWith('ur')) welcomeMsg = "میں اسمارٹ کین اسسٹنٹ ہوں۔ لائیو کیمرہ فعال ہو گیا ہے۔";
-            else if (lang.startsWith('hi')) welcomeMsg = "मैं स्मार्ट केन असिस्टेंट हूँ। लाइव कैमरा चालू है।";
-            else if (lang.startsWith('ar')) welcomeMsg = "أنا مساعد العصا الذكية. الكاميرا الحية نشطة.";
-            
-            speakText(welcomeMsg);
-        } catch (e1) {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: "environment" }, 
-                    audio: true 
-                });
-                video.srcObject = stream;
-                askAiBtn.style.display = "block";
-                speakText("Smart Cane Assistant is active.");
-            } catch (err) {
-                const errMsg = "Camera or microphone permission denied: " + err.message;
-                output.innerText = errMsg;
-                speakText("Please allow camera and microphone permissions.");
-            }
-        }
-    }
+async function startAutoLive(){
+  if(isLive) return;
+  try{
+    try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false}); }
+    catch(e){ stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }
+    video.srcObject=stream;
+    isLive=true; isPaused=false;
+    liveStatus.innerText="LIVE - 1 SEC MODE";
+    startBtn.style.display="none"; stopBtn.style.display="block";
+    speakText("میں سمارٹ کنگ اسسٹنٹ ہوں، لائیو آن ہو گیا ہے، اب میں ہر سیکنڈ کیمرے سے دیکھ کر بتاؤں گی کہ سامنے کیا ہے۔");
+    autoTimer=setInterval(analyzeCamera, 1000);
+    setTimeout(analyzeCamera, 500);
+  }catch(err){ speakText("براہ کرم کیمرہ کی اجازت دیں۔"); }
+}
 
-    startBtn.addEventListener('click', () => {
-        startCamera();
-    });
+function stopLive(){
+  isLive=false; if(autoTimer) clearInterval(autoTimer);
+  if(stream) stream.getTracks().forEach(t=>t.stop());
+  window.speechSynthesis.cancel();
+  liveStatus.innerText="OFF";
+  startBtn.style.display="block"; stopBtn.style.display="none";
+  output.innerText="";
+}
+startBtn.addEventListener('click', startAutoLive);
+stopBtn.addEventListener('click', stopLive);
 
-    // اے آئی کے ذریعے لائیو کیمرے کی تصویر کا تجزیہ اور سلیکٹ کردہ زبان میں جواب
-    askAiBtn.addEventListener('click', async () => {
-        if (!video.srcObject) {
-            speakText("Please start the live camera first.");
-            return;
-        }
+document.getElementById('voiceBtn').addEventListener('click', ()=>{
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){ speakText("Chrome استعمال کریں۔"); return; }
+  const rec=new SR(); rec.lang=voiceLanguageSelect.value;
+  rec.onresult=(e)=>{
+    const q=e.results[0][0].transcript.toLowerCase();
+    if(q.includes("رک")||q.includes("stop")){ isPaused=true; speakText("ٹھیک ہے، میں رک گئی ہوں۔"); }
+    else if(q.includes("چلو")||q.includes("start")){ isPaused=false; speakText("ٹھیک ہے، پھر چلتے ہیں۔"); analyzeCamera(); }
+    else{ speakText("رکیں، میں کیمرے سے دیکھ کر بتاتی ہوں۔"); analyzeCamera(); }
+  };
+  rec.start();
+  speakText("جی بولیں، میں سن رہی ہوں۔");
+});
 
-        const lang = voiceLanguageSelect.value;
-        let analyzingMsg = "Analyzing surroundings...";
-        if (lang.startsWith('ur')) analyzingMsg = "گرد و پیش کا جائزہ لیا جا رہا ہے...";
-        else if (lang.startsWith('hi')) analyzingMsg = "आसपास के दृश्य की जाँच की जा रही है...";
-        else if (lang.startsWith('ar')) analyzingMsg = "جاري تحليل البيئة المحيطة...";
-        
-        speakText(analyzingMsg);
-
-        canvas.width = video.videoWidth || 640;
-        canvas.height = video.videoHeight || 480;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
-        const base64Image = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
-
-        try {
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${EMBEDDED_API_KEY}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    contents: [
-                        {
-                            parts: [
-                                { text: `${systemIdentity} Look at this live camera image for a blind user. Describe what is directly in front, obstacles, doors, or pathways clearly. Reply STRICTLY in this language code: ${lang}. Keep it short, direct, and helpful.` },
-                                {
-                                    inline_data: {
-                                        mime_type: "image/jpeg",
-                                        data: base64Image
-                                    }
-                                }
-                            ]
-                        }
-                    ]
-                })
-            });
-
-            const data = await response.json();
-            if (data.candidates && data.candidates[0].content) {
-                const aiResponse = data.candidates[0].content.parts[0].text;
-                speakText(aiResponse);
-            } else {
-                speakText("Could not fetch response from assistant.");
-            }
-        } catch (error) {
-            speakText("Network error occurred.");
-        }
-    });
-
-    // گوگل میپ سرچ برج
-    openMapsBtn.addEventListener('click', () => {
-        const query = destinationInput.value.trim();
-        const lang = voiceLanguageSelect.value;
-        
-        if (!query) {
-            const emptyMsg = lang.startsWith('ur') ? "براہ کرم پہلے منزل کا نام لکھیں۔" : "Please enter a destination first.";
-            speakText(emptyMsg);
-            return;
-        }
-        
-        const mapMsg = lang.startsWith('ur') ? `${query} کا گوگل نقشہ کھولا جا رہا ہے۔` : `Opening Google Maps for ${query}.`;
-        speakText(mapMsg);
-        
-        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}&hl=${lang.substring(0, 2)}`;
-        window.open(mapsUrl, '_blank');
-    });
+document.getElementById('openMapsBtn').addEventListener('click', ()=>{
+  const q=document.getElementById('destinationInput').value.trim();
+  if(!q){ speakText("براہ کرم پہلے منزل کا نام لکھیں۔"); return; }
+  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`,'_blank');
+});
 </script>
-
 </body>
 </html>
