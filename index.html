@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Cane - Mobile Is Your Eye - Humaira Sardar</title>
+<title>Smart Cane - Mobile Is Your Eye - Created by Humaira Sardar</title>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@latest"></script>
 <style>
@@ -25,7 +25,7 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 <body>
 <div class="top">
 <h2>SMART CANE</h2>
-<div class="sub">MOBILE IS YOUR EYE - AMAZON COLLECTION</div>
+<div class="sub">MOBILE IS YOUR EYE - CREATED BY HUMAIRA SARDAR</div>
 
 <label>SELECT LANGUAGE</label>
 <select id="voiceLanguage">
@@ -152,7 +152,7 @@ const video=document.getElementById('webcam');
 const statusEl=document.getElementById('status');
 const langSel=document.getElementById('voiceLanguage');
 let stream=null, isLive=false, model=null, lastSpoken="", lastSpeakTime=0, audioCtx=null, lastAvg=0, rememberedObj=null, rememberedTime=0;
-let lastAnnouncedCategory = null; // Track stability of announcement to avoid repetitive flapping
+let lastAnnouncedCategory = null; 
 
 const translations = {
   'ur-PK': {
@@ -215,7 +215,7 @@ const translations = {
     farClose: 'ਸਾਹਮਣੇ ਰੁਕਾਵਟ ਹੈ, 2 ਮੀਟਰ ਦੂਰ ਹੈ, ਹੌਲੀ ਚੱلو।',
     wallClose: 'ਰੁਕ ਜਾਓ, ਸਾਹਮਣੇ ਵੱਡੀ ਰੁਕਾਵਟ ਬਹੁਤ ਨੇੜੇ ਹੈ, ਅੱਧਾ ਮੀਟਰ ਦੂਰ।',
     rememberedClose: 'ਉਹ ਰੁਕਾਵਟ ਹੁਣ ਨੇੜੇ ਆ ਗਈ ਹੈ, 1 ਮੀਟਰ ਤੇ ਹੈ, ਰੁਕ ਜਾਓ।',
-    suddenClose: 'ਰੁਕ ਜਾਓ, ਸਾਹਮਣੇ اچانک ਰੁਕਾਵਟ ਆਈ ਹੈ, 1 ਮੀਟਰ ਤੇ ਹੈ।',
+    suddenClose: 'ਰੁਕ ਜਾਓ, ਸਾਹਮਣੇ अचानक ਰੁਕਾਵਟ ਆਈ ਹੈ, 1 ਮੀਟਰ ਤੇ ਹੈ।',
     clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਹੌਲੀ-ਹੌਲੀ ਸਿੱਧੇ ਚਲਦੇ ਜਾਓ।',
     camError: 'ਕਿਰਪਾ ਕਰਕੇ ਕੈਮਰੇ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ',
     netError: 'ਇੰਟਰਨੈਟ ਚਾਲੂ ਕਰੋ, ਮਾਡਲ ਲੋਡ ਨਹੀਂ ਹੋਇਆ।'
@@ -242,7 +242,7 @@ const translations = {
     wallClose: 'بيهي وڃو، سامهون وڏي رڪاوٽ بلڪل ويجھو آهي، اڌ ميٽر تي.',
     rememberedClose: 'اها رڪاوٽ هاڻي ويجھو اچي وئي آهي، 1 ميٽر تي آهي، بيهي وڃو.',
     suddenClose: 'بيهي وڃو، سامهون اڻڄاتل رڪاوٽ آئي آهي، 1 ميٽر تي.',
-    clearPath: 'رستو صاف آهي، آهستي سڌو هلبو وڃو.',
+    clearPath: 'رستو صاف آهي، آهستي سڌو هلبو وجو.',
     camError: 'مهرباني ڪري ڪمري جي اجازت ڏيو',
     netError: 'انٽرنيٽ چالو ڪريو، ماڊل لوڊ نه ٿيو.'
   }
@@ -273,6 +273,20 @@ function playTone(){
     g.gain.setValueAtTime(0.18, audioCtx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.3);
     o.start(); o.stop(audioCtx.currentTime+0.3);
+  }catch(e){}
+}
+
+// Distinct pleasant notification tone for safe/clear path
+function playClearTone(){
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    const o=audioCtx.createOscillator(); const g=audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.frequency.value=523.25; // C5 note
+    o.type='triangle';
+    g.gain.setValueAtTime(0.12, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.2);
+    o.start(); o.stop(audioCtx.currentTime+0.2);
   }catch(e){}
 }
 
@@ -352,17 +366,19 @@ async function detectLoop(){
     speakMsg = getMsg('clearPath'); level = 0; currentCategory = "clear";
   }
 
-  // Stability control: Do not spam/flap announcements if the scene hasn't substantially changed or distance category remains stable
   const isCategoryChanged = (currentCategory !== lastAnnouncedCategory);
   const timeElapsed = now - lastSpeakTime;
 
-  // Speak immediately if category changed (e.g. state went from steady to close, or clear to obstacle), 
-  // OR repeat the same status only if stable and at least 5 seconds have passed without flapping.
   if(isCategoryChanged || (speakMsg === lastSpoken && timeElapsed > 5000)) {
     lastAnnouncedCategory = currentCategory;
     lastSpoken = speakMsg; 
     lastSpeakTime = now;
-    if(level > 0){ playTone(); vibrateLevel(level); }
+    if(level > 0){ 
+      playTone(); 
+      vibrateLevel(level); 
+    } else {
+      playClearTone(); // Sound indicator for clear path
+    }
     speakText(speakMsg);
   }
 
@@ -395,7 +411,6 @@ document.getElementById('stopBtn').addEventListener('click', ()=>{
   document.getElementById('stopBtn').style.display="none";
 });
 
-// Map functionality remains untouched as requested
 document.getElementById('openMapsBtn').addEventListener('click', ()=>{
   const q = document.getElementById('destinationInput').value.trim();
   if(!q){ speakText('Pehle upar likhen kahan jana hai.'); return; }
