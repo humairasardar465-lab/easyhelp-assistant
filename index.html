@@ -153,6 +153,7 @@ const statusEl=document.getElementById('status');
 const langSel=document.getElementById('voiceLanguage');
 let stream=null, isLive=false, model=null, lastSpoken="", lastSpeakTime=0, audioCtx=null, lastAvg=0, rememberedObj=null, rememberedTime=0;
 let lastAnnouncedCategory = null; 
+let consecutiveMatches = 0; // Requires consistent readings before changing state to prevent fluttering
 
 const translations = {
   'ur-PK': {
@@ -242,7 +243,7 @@ const translations = {
     wallClose: 'بيهي وڃو، سامهون وڏي رڪاوٽ بلڪل ويجھو آهي، اڌ ميٽر تي.',
     rememberedClose: 'اها رڪاوٽ هاڻي ويجھو اچي وئي آهي، 1 ميٽر تي آهي، بيهي وڃو.',
     suddenClose: 'بيهي وڃو، سامهون اڻڄاتل رڪاوٽ آئي آهي، 1 ميٽر تي.',
-    clearPath: 'رستو صاف آهي، آهستي سڌو هلبو وجو.',
+    clearPath: 'رستو صاف آهي، آهستي سڌو هلبو وڃو.',
     camError: 'مهرباني ڪري ڪمري جي اجازت ڏيو',
     netError: 'انٽرنيٽ چالو ڪريو، ماڊل لوڊ نه ٿيو.'
   }
@@ -276,17 +277,17 @@ function playTone(){
   }catch(e){}
 }
 
-// Distinct pleasant notification tone for safe/clear path
+// Louder and sharper distinct beep sound for clear path
 function playClearTone(){
   try{
     if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
     const o=audioCtx.createOscillator(); const g=audioCtx.createGain();
     o.connect(g); g.connect(audioCtx.destination);
-    o.frequency.value=523.25; // C5 note
-    o.type='triangle';
-    g.gain.setValueAtTime(0.12, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.2);
-    o.start(); o.stop(audioCtx.currentTime+0.2);
+    o.frequency.value=660; // Sharper dual tone frequency
+    o.type='sine';
+    g.gain.setValueAtTime(0.35, audioCtx.currentTime); // Increased volume / loudness
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.35);
+    o.start(); o.stop(audioCtx.currentTime+0.35);
   }catch(e){}
 }
 
@@ -366,18 +367,26 @@ async function detectLoop(){
     speakMsg = getMsg('clearPath'); level = 0; currentCategory = "clear";
   }
 
-  const isCategoryChanged = (currentCategory !== lastAnnouncedCategory);
+  // Strict anti-flutter check: Category must persist for consecutive checks before speaking or changing state
+  if (currentCategory === lastAnnouncedCategory) {
+    consecutiveMatches++;
+  } else {
+    consecutiveMatches = 1;
+    lastAnnouncedCategory = currentCategory;
+  }
+
   const timeElapsed = now - lastSpeakTime;
 
-  if(isCategoryChanged || (speakMsg === lastSpoken && timeElapsed > 5000)) {
-    lastAnnouncedCategory = currentCategory;
+  // Only announce if the same category is stable for consecutive reads (at least 2 consecutive detections),
+  // OR if enough time has elapsed to repeat current stable status safely without random flapping.
+  if(consecutiveMatches >= 2 && (speakMsg !== lastSpoken || timeElapsed > 6000)) {
     lastSpoken = speakMsg; 
     lastSpeakTime = now;
     if(level > 0){ 
       playTone(); 
       vibrateLevel(level); 
     } else {
-      playClearTone(); // Sound indicator for clear path
+      playClearTone(); // Louder distinct sound indicator for clear path
     }
     speakText(speakMsg);
   }
