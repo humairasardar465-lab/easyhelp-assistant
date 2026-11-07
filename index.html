@@ -25,7 +25,7 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 <body>
 <div class="top">
 <h2>SMART CANE</h2>
-<div class="sub">MOBILE IS YOUR EYE - CREATED BY HUMAIRA SARDAR</div>
+<div class="sub">MOBILE IS YOUR EYE - CREated by humaira sardar</div>
 
 <label>SELECT LANGUAGE</label>
 <select id="voiceLanguage">
@@ -153,7 +153,6 @@ const statusEl=document.getElementById('status');
 const langSel=document.getElementById('voiceLanguage');
 let stream=null, isLive=false, model=null, lastSpoken="", lastSpeakTime=0, audioCtx=null, lastAvg=0, rememberedObj=null, rememberedTime=0;
 let lastAnnouncedCategory = null; 
-let consecutiveMatches = 0; // Requires consistent readings before changing state to prevent fluttering
 
 const translations = {
   'ur-PK': {
@@ -217,7 +216,7 @@ const translations = {
     wallClose: 'ਰੁਕ ਜਾਓ, ਸਾਹਮਣੇ ਵੱਡੀ ਰੁਕਾਵਟ ਬਹੁਤ ਨੇੜੇ ਹੈ, ਅੱਧਾ ਮੀਟਰ ਦੂਰ।',
     rememberedClose: 'ਉਹ ਰੁਕਾਵਟ ਹੁਣ ਨੇੜੇ ਆ ਗਈ ਹੈ, 1 ਮੀਟਰ ਤੇ ਹੈ, ਰੁਕ ਜਾਓ।',
     suddenClose: 'ਰੁਕ ਜਾਓ, ਸਾਹਮਣੇ अचानक ਰੁਕਾਵਟ ਆਈ ਹੈ, 1 ਮੀਟਰ ਤੇ ਹੈ।',
-    clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਹੌਲੀ-ਹੌਲੀ ਸਿੱਧੇ ਚਲਦੇ ਜਾਓ।',
+    clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਹੌਲੀ-ਹੌਲੀ ਸਿੱਧੇ ਚਲते ਜਾਓ।',
     camError: 'ਕਿਰਪਾ ਕਰਕੇ ਕੈਮਰੇ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ',
     netError: 'ਇੰਟਰਨੈਟ ਚਾਲੂ ਕਰੋ, ਮਾਡਲ ਲੋਡ ਨਹੀਂ ਹੋਇਆ।'
   },
@@ -245,7 +244,7 @@ const translations = {
     suddenClose: 'بيهي وڃو، سامهون اڻڄاتل رڪاوٽ آئي آهي، 1 ميٽر تي.',
     clearPath: 'رستو صاف آهي، آهستي سڌو هلبو وڃو.',
     camError: 'مهرباني ڪري ڪمري جي اجازت ڏيو',
-    netError: 'انٽرنيٽ چالو ڪريو، ماڊل لوڊ نه ٿيو.'
+    netError: 'انٽرنيٽ چالو ڪريو، ماਡل لوڊ نه ٿيو.'
   }
 };
 
@@ -277,17 +276,17 @@ function playTone(){
   }catch(e){}
 }
 
-// Louder and sharper distinct beep sound for clear path
+// Maximum loud, high-gain clear path alert tone (very prominent beep)
 function playClearTone(){
   try{
     if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
     const o=audioCtx.createOscillator(); const g=audioCtx.createGain();
     o.connect(g); g.connect(audioCtx.destination);
-    o.frequency.value=660; // Sharper dual tone frequency
-    o.type='sine';
-    g.gain.setValueAtTime(0.35, audioCtx.currentTime); // Increased volume / loudness
-    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.35);
-    o.start(); o.stop(audioCtx.currentTime+0.35);
+    o.frequency.value=750; // Clear high-frequency tone
+    o.type='triangle';
+    g.gain.setValueAtTime(0.7, audioCtx.currentTime); // Very loud gain/volume
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.4);
+    o.start(); o.stop(audioCtx.currentTime+0.4);
   }catch(e){}
 }
 
@@ -367,32 +366,26 @@ async function detectLoop(){
     speakMsg = getMsg('clearPath'); level = 0; currentCategory = "clear";
   }
 
-  // Strict anti-flutter check: Category must persist for consecutive checks before speaking or changing state
-  if (currentCategory === lastAnnouncedCategory) {
-    consecutiveMatches++;
-  } else {
-    consecutiveMatches = 1;
-    lastAnnouncedCategory = currentCategory;
-  }
-
+  // Instant response on window/category change: zero unnecessary frame delay when scene changes
+  const isCategoryChanged = (currentCategory !== lastAnnouncedCategory);
   const timeElapsed = now - lastSpeakTime;
 
-  // Only announce if the same category is stable for consecutive reads (at least 2 consecutive detections),
-  // OR if enough time has elapsed to repeat current stable status safely without random flapping.
-  if(consecutiveMatches >= 2 && (speakMsg !== lastSpoken || timeElapsed > 6000)) {
+  // Speak instantly when status/category changes, or repeat safely after 5 seconds if unchanged
+  if(isCategoryChanged || (speakMsg === lastSpoken && timeElapsed > 5000)) {
+    lastAnnouncedCategory = currentCategory;
     lastSpoken = speakMsg; 
     lastSpeakTime = now;
     if(level > 0){ 
       playTone(); 
       vibrateLevel(level); 
     } else {
-      playClearTone(); // Louder distinct sound indicator for clear path
+      playClearTone(); // Extremely loud, sharp sound notification for clear path
     }
     speakText(speakMsg);
   }
 
   if(isLive) {
-    setTimeout(() => requestAnimationFrame(detectLoop), 1000);
+    setTimeout(() => requestAnimationFrame(detectLoop), 800); // Faster loop check for instant window change response
   }
 }
 
