@@ -151,150 +151,65 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 const video=document.getElementById('webcam');
 const statusEl=document.getElementById('status');
 const langSel=document.getElementById('voiceLanguage');
-let stream=null, isLive=false, model=null, audioCtx=null, lastAvg=0;
-let lastSpokenTime = 0;
+let stream=null, isLive=false, model=null, lastSpoken="", lastSpeakTime=0, audioCtx=null, lastAvg=0;
+let lastAnnouncedCategory = null; 
 
-let stairMode = false;
-let stairStepCount = 0;
-let stairDirection = 'up';
-let lastStairCheckTime = 0;
-
-const dict = {
+const translations = {
   'ur-PK': {
     loading: 'سنسور آن ہو رہا ہے۔',
-    started: 'اسمارٹ کین آن ہو گیا ہے۔ تمام چھوٹے، بڑے ابجیکٹس اور راستے کی رکاوٹوں کی شناخت جاری ہے۔',
+    started: 'اسمارٹ کین آن ہو گیا ہے۔ اب میں بتاتی رہوں گی راستہ کیسا ہے۔',
+    stopClose: 'رک جائیں، سامنے رکاوٹ موجود ہے۔',
+    clearPath: 'رستہ صاف ہے، آگے بڑھیں۔',
     camError: 'کیمرہ کی اجازت دیں',
-    netError: 'انٹرنیٹ آن کریں، ماڈل لوڈ نہیں ہوا۔',
-    clear: 'رستہ صاف ہے، آگے بڑھیں۔',
-    stairsStart: 'سیڑھیاں شروع ہو چکی ہیں۔',
-    stairsEnd: 'سیڑھیاں ختم ہو گئی ہیں، اب یہاں رک جائیں۔',
-    stairUpMsg: 'اوپر کی طرف سیڑھی نمبر',
-    stairDownMsg: 'نیچے کی طرف سیڑھی نمبر',
-    objects: {
-      'person': 'آدمی یا انسان', 'bicycle': 'سائیکل', 'car': 'کار یا گاڑی', 'motorcycle': 'موٹر سائیکل',
-      'airplane': 'ہوائی جہاز', 'bus': 'بس', 'train': 'ٹرین', 'truck': 'ٹرک', 'boat': 'کشتی',
-      'traffic light': 'ٹریفک سگنل', 'fire hydrant': 'فائر ہائیڈرنٹ', 'stop sign': 'اسٹاپ سائن',
-      'parking meter': 'پارکنگ میٹر', 'bench': 'بینچ', 'bird': 'پرندہ', 'cat': 'بلی',
-      'dog': 'کتا', 'horse': 'گھوڑا', 'sheep': 'بھیڑ', 'cow': 'गाय', 'elephant': 'ہاتھی',
-      'bear': 'ریچھ', 'zebra': 'زیبرا', 'giraffe': 'زرافہ', 'backpack': 'بیک بیگ',
-      'umbrella': 'چھتری', 'handbag': 'هینڈ بیگ', 'tie': 'ٹائی', 'suitcase': 'سوئٹ کیس',
-      'frisbee': 'فرسبی', 'skis': 'اسکی بورڈ', 'snowboard': 'اسنو بورڈ', 'sports ball': 'اسپورٹس بال',
-      'kite': 'پتنگ', 'baseball bat': 'بیس بال بیٹ', 'baseball glove': 'بیس بال دستانے',
-      'skateboard': 'اسکیٹ بورڈ', 'surfboard': 'سرف بورڈ', 'tennis racket': 'ٹینس ریکٹ',
-      'bottle': 'بوتل', 'wine glass': 'وائن گلاس', 'cup': 'کپ', 'fork': 'کانٹا',
-      'knife': 'چھری', 'spoon': 'چمچ', 'bowl': 'پیالہ', 'banana': 'کیلا', 'apple': 'سیب',
-      'sandwich': 'سینڈوچ', 'orange': 'ترنج یا کینو', 'broccoli': 'بروکولی', 'carrot': 'گاجر',
-      'hot dog': 'ہاٹ ڈاگ', 'pizza': 'پیزا', 'donut': 'ڈونٹ', 'cake': 'کیک', 'chair': 'کرسی',
-      'couch': 'صوفہ', 'potted plant': 'گملہ', 'bed': 'بیڈ', 'dining table': 'کھانے کی میز',
-      'toilet': 'ٹوائلٹ', 'tv': 'ٹی وی', 'laptop': 'لیپ ٹاپ', 'mouse': 'ماؤس', 'remote': 'رِموٹ',
-      'keyboard': 'کی بورڈ', 'cell phone': 'موبایل فون', 'microwave': 'مائیکرو ویو', 'oven': 'اوون',
-      'toaster': 'ٹوسٹر', 'sink': 'سنک', 'refrigerator': 'فریج', 'book': 'کتاب',
-      'clock': 'گھڑی', 'vase': 'پھولدان', 'scissors': 'قچی', 'teddy bear': 'ٹیڈی ریچھ',
-      'hair drier': 'ہیئر ڈرائر', 'toothbrush': 'ٹوتھ برش',
-      'wall': 'دیوار', 'door': 'دروازہ', 'shoe': 'جوتا یا سلیپر', 'pothole': 'کھڈا یا گڑھا', 'pillar': 'پلر یا ستون', 'tree': 'درخت', 'stone': 'پتھر'
-    }
+    netError: 'انٹرنیٹ آن کریں، ماڈل لوڈ نہیں ہوا۔'
   },
   'en-US': {
     loading: 'Sensor is turning on.',
-    started: 'Smart Cane is on. All small/large objects, walls, doors, and path obstacles will now be recognized.',
+    started: 'Smart Cane is on. I will keep informing you about the path.',
+    stopClose: 'Stop, obstacle ahead.',
+    clearPath: 'Path is clear, move ahead.',
     camError: 'Please allow camera permissions',
-    netError: 'Turn on internet, model failed to load.',
-    clear: 'Path is clear, move ahead.',
-    stairsStart: 'Stairs have started.',
-    stairsEnd: 'Stairs have ended, stop here.',
-    stairUpMsg: 'Going up, step number',
-    stairDownMsg: 'Going down, step number',
-    objects: {
-      'person': 'person', 'bicycle': 'bicycle', 'car': 'car', 'motorcycle': 'motorcycle',
-      'airplane': 'airplane', 'bus': 'bus', 'train': 'train', 'truck': 'truck', 'boat': 'boat',
-      'traffic light': 'traffic light', 'fire hydrant': 'fire hydrant', 'stop sign': 'stop sign',
-      'parking meter': 'parking meter', 'bench': 'bench', 'bird': 'bird', 'cat': 'cat',
-      'dog': 'dog', 'horse': 'horse', 'sheep': 'sheep', 'cow': 'cow', 'elephant': 'elephant',
-      'bear': 'bear', 'zebra': 'zebra', 'giraffe': 'giraffe', 'backpack': 'backpack',
-      'umbrella': 'umbrella', 'handbag': 'handbag', 'tie': 'tie', 'suitcase': 'suitcase',
-      'frisbee': 'frisbee', 'skis': 'skis', 'snowboard': 'snowboard', 'sports ball': 'sports ball',
-      'kite': 'kite', 'baseball bat': 'baseball bat', 'baseball glove': 'baseball glove',
-      'skateboard': 'skateboard', 'surfboard': 'surfboard', 'tennis racket': 'tennis racket',
-      'bottle': 'bottle', 'wine glass': 'wine glass', 'cup': 'cup', 'fork': 'fork',
-      'knife': 'knife', 'spoon': 'spoon', 'bowl': 'bowl', 'banana': 'banana', 'apple': 'apple',
-      'sandwich': 'sandwich', 'orange': 'orange', 'broccoli': 'broccoli', 'carrot': 'carrot',
-      'hot dog': 'hot dog', 'pizza': 'pizza', 'donut': 'donut', 'cake': 'cake', 'chair': 'chair',
-      'couch': 'couch', 'potted plant': 'potted plant', 'bed': 'bed', 'dining table': 'dining table',
-      'toilet': 'toilet', 'tv': 'tv', 'laptop': 'laptop', 'mouse': 'mouse', 'remote': 'remote',
-      'keyboard': 'keyboard', 'cell phone': 'cell phone', 'microwave': 'microwave', 'oven': 'oven',
-      'toaster': 'toaster', 'sink': 'sink', 'refrigerator': 'refrigerator', 'book': 'book',
-      'clock': 'clock', 'vase': 'vase', 'scissors': 'scissors', 'teddy bear': 'teddy bear',
-      'hair drier': 'hair drier', 'toothbrush': 'toothbrush',
-      'wall': 'wall', 'door': 'door', 'shoe': 'shoe or slipper', 'pothole': 'pothole or pit', 'pillar': 'pillar', 'tree': 'tree', 'stone': 'stone'
-    }
+    netError: 'Turn on internet, model failed to load.'
   },
   'hi-IN': {
     loading: 'सेंसर चालू हो रहा है।',
-    started: 'स्मार्ट केन चालू हो गया है। सभी छोटे-बड़े ऑब्जेक्ट्स, दीवारें, दरवाज़े और बाधाओं को पहचाना जाएगा।',
+    started: 'स्मार्ट केन चालू हो गया है। अब मैं रास्ते के बारे में बताती रहूंगी।',
+    stopClose: 'रुक जाइए, सामने रुकावट है।',
+    clearPath: 'रास्ता साफ़ है, आगे बढ़ें।',
     camError: 'कृपया कैमरे की अनुमति दें',
-    netError: 'इंटरनेट चालू करें, मॉडल लोड नहीं हुआ।',
-    clear: 'रास्ता साफ़ है, आगे बढ़ें।',
-    stairsStart: 'सीढ़ियाँ शुरू हो चुकी हैं।',
-    stairsEnd: 'सीढ़ियाँ समाप्त हो गई हैं, यहाँ रुक जाइए।',
-    stairUpMsg: 'ऊपर जाते हुए, सीढ़ी संख्या',
-    stairDownMsg: 'नीचे आते हुए, सीढ़ी संख्या',
-    objects: {
-      'person': 'व्यक्ति', 'bicycle': 'साइकिल', 'car': 'कार', 'motorcycle': 'मोटरसाइकिल',
-      'airplane': 'हवाई जहाज', 'bus': 'बस', 'train': 'ट्रेन', 'truck': 'ट्रक', 'boat': 'नाव',
-      'traffic light': 'ट्रैफिक लाइट', 'fire hydrant': 'फायर हाइड्रेंट', 'stop sign': 'स्टॉप साइन',
-      'parking meter': 'पार्किंग मीटर', 'bench': 'बेंच', 'bird': 'पक्षी', 'cat': 'बिल्ली',
-      'dog': 'कुत्ता', 'horse': 'घोड़ा', 'sheep': 'भेड़', 'cow': 'गाय', 'elephant': 'हाथी',
-      'bear': 'भालू', 'zebra': 'जेबरा', 'giraffe': 'जिराफ', 'backpack': 'बैग',
-      'umbrella': 'छतरी', 'handbag': 'हैंडबैग', 'tie': 'टाई', 'suitcase': 'सूटकेस',
-      'frisbee': 'फ्रिस्बी', 'skis': 'स्की', 'snowboard': 'स्नोबोर्ड', 'sports ball': 'स्पोर्ट्स बॉल',
-      'kite': 'पतंग', 'baseball bat': 'बेसबॉल बैट', 'baseball glove': 'बेसबॉल दस्ताना',
-      'skateboard': 'स्केेटबोर्ड', 'surfboard': 'सर्फबोर्ड', 'tennis racket': 'टेनिस रैकेट',
-      'bottle': 'बोतल', 'wine glass': 'वाइन ग्लास', 'cup': 'कप', 'fork': 'कांटा',
-      'knife': 'चाकू', 'spoon': 'चम्मच', 'bowl': 'कटोरा', 'banana': 'केला', 'apple': 'सेब',
-      'sandwich': 'सैंडविच', 'orange': 'संतरा', 'broccoli': 'ब्रोकोली', 'carrot': 'गाजर',
-      'hot dog': 'हॉट डॉग', 'pizza': 'पिज़्ज़ा', 'donut': 'डोनट', 'cake': 'केक', 'chair': 'कुर्सी',
-      'couch': 'सोफा', 'potted plant': 'गमला', 'bed': 'बिस्तर', 'dining table': 'डाइनिंग टेबल',
-      'toilet': 'शौचालय', 'tv': 'टीवी', 'laptop': 'लैपटॉप', 'mouse': 'माउस', 'remote': 'रिमोट',
-      'keyboard': 'कीबोर्ड', 'cell phone': 'मोबाइल फोन', 'microwave': 'माइक्रोवेव', 'oven': 'ओवन',
-      'toaster': 'टोस्टर', 'sink': 'सिंक', 'refrigerator': 'फ्रिज', 'book': 'किताब',
-      'clock': 'घड़ी', 'vase': 'फूलदान', 'scissors': 'कैंची', 'teddy bear': 'टेडी बियर',
-      'hair drier': 'हेयर ड्रायर', 'toothbrush': 'टूथब्रश',
-      'wall': 'दीवार', 'door': 'दरवाजा', 'shoe': 'जूता', 'pothole': 'गड्डा', 'pillar': 'पिलर', 'tree': 'पेड़', 'stone': 'पत्थर'
-    }
+    netError: 'इंटरनेट चालू करें, मॉडल लोड नहीं हुआ।'
   },
   'ar-SA': {
     loading: 'جاري تشغيل المستشعر.',
-    started: 'تم تشغيل العصا الذكية. سيتم التعرف على جميع الكائنات، الجدران، الأبواب والعوائق.',
+    started: 'تم تشغيل العصا الذكية. سأستمر في إعلامك بالطريق.',
+    stopClose: 'توقف، توجد عقبة أمامك.',
+    clearPath: 'الطريق نظيف، تقدم للأمام.',
     camError: 'يرجى السماح بإذن الكاميرا',
-    netError: 'قم بتشغيل الإنترنت، لم يتم تحميل النموذج.',
-    clear: 'الطريق نظيف، تقدم للأمام.',
-    stairsStart: 'بدأت السلالم.',
-    stairsEnd: 'انتهت السلالم، توقف هنا.',
-    stairUpMsg: 'صعود، رقم الدرجة',
-    stairDownMsg: 'نزول، رقم الدرجة',
-    objects: {
-      'person': 'شخص', 'bicycle': 'دراجة هوائية', 'car': 'سيارة', 'motorcycle': 'دراجة نارية',
-      'airplane': 'طائرة', 'bus': 'حافلة', 'train': 'قطار', 'truck': 'شاحنة', 'boat': 'قارب',
-      'traffic light': 'إشارة مرور', 'fire hydrant': 'صنبور إطفاء الحريق', 'stop sign': 'علامة توقف',
-      'parking meter': 'عداد وقوف السيارات', 'bench': 'مقعد', 'bird': 'طائر', 'cat': 'قطة',
-      'dog': 'كلب', 'horse': 'حصان', 'sheep': 'خروف', 'cow': 'بقرة', 'elephant': 'فيل',
-      'bear': 'دب', 'zebra': 'حمار وحشي', 'giraffe': 'زرافة', 'backpack': 'حقيبة ظهر',
-      'umbrella': 'مظلة', 'handbag': 'حقيبة يد', 'tie': 'ربطة عنق', 'suitcase': 'حقيبة سفر',
-      'frisbee': 'قرص طائر', 'skis': 'زلاجات', 'snowboard': 'لوح التزلج', 'sports ball': 'كرة رياضية',
-      'kite': 'طائرة ورقية', 'baseball bat': 'مضرب بيسبول', 'baseball glove': 'قفاز بيسبول',
-      'skateboard': 'لوح التزلج', 'surfboard': 'لوح ركوب الأمواج', 'tennis racket': 'مضرب تنس',
-      'bottle': 'زجاجة', 'wine glass': 'كأس نبيذ', 'cup': 'فنجان', 'fork': 'شوكة',
-      'knife': 'سكين', 'spoon': 'ملعقة', 'bowl': 'وعاء', 'banana': 'موز', 'apple': 'تفاحة',
-      'sandwich': 'شطيرة', 'orange': 'برتقال', 'broccoli': 'بروكلي', 'carrot': 'جزر',
-      'hot dog': 'هوت دوج', 'pizza': 'بيتزا', 'donut': 'دونتس', 'cake': 'كعكة', 'chair': 'كرسي',
-      'couch': 'أريكة', 'potted plant': 'نبتة في أصيص', 'bed': 'سرير', 'dining table': 'طاولة طعام',
-      'toilet': 'مرحاض', 'tv': 'تلفزيون', 'laptop': 'جهاز محمول', 'mouse': 'فأرة', 'remote': 'جهاز تحكم',
-      'keyboard': 'لوحة مفاتيح', 'cell phone': 'هاتف محمول', 'microwave': 'ميكروويف', 'oven': 'فرن',
-      'toaster': 'محمصة خبز', 'sink': 'حوض غسيل', 'refrigerator': 'ثلاجة', 'book': 'كتاب',
-      'clock': 'ساعة', 'vase': 'مزهرية', 'scissors': 'مقص', 'teddy bear': 'دب محشو',
-      'hair drier': 'مجفف شعر', 'toothbrush': 'فرشاة أسنان',
-      'wall': 'جدار', 'door': 'باب', 'shoe': 'حذاء', 'pothole': 'حفرة', 'pillar': 'عمود', 'tree': 'شجرة', 'stone': 'حجر'
-    }
+    netError: 'قم بتشغيل الإنترنت، لم يتم تحميل النموذج.'
+  },
+  'pa-IN': {
+    loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ਹੈ।',
+    started: 'ਸਮਾਰਟ ਕੈਨ ਚਾਲੂ ਹੋ ਗਿਆ ਹੈ। ਮੈਂ ਰਸਤੇ ਬਾਰੇ ਦੱਸਦੀ ਰਹਾਂਗੀ।',
+    stopClose: 'ਰੁਕ ਜਾਓ, ਸਾਹਮਣੇ ਰੁਕਾਵਟ ਹੈ।',
+    clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਅੱਗੇ ਵਧੋ।',
+    camError: 'ਕਿਰਪਾ ਕਰਕੇ ਕੈਮਰੇ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ',
+    netError: 'ਇੰਟਰਨੈਟ ਚਾਲੂ ਕਰੋ, ਮਾਡਲ ਲੋਡ ਨਹੀਂ ਹੋਇਆ।'
+  },
+  'ps-PK': {
+    loading: 'سنډر چالان کیږي.',
+    started: 'سمارټ کین چالان شو. زه به تاسو ته د لارې په اړه خبر درکړم.',
+    stopClose: 'وګرځئ، مخکې خنډ شته.',
+    clearPath: 'لاره پاکه ده، مخکې لاړ شئ.',
+    camError: 'مهرباني وکړئ د کامرې اجازه ورکړئ',
+    netError: 'انټرنیټ چالان کړئ، ماډل بار نشو.'
+  },
+  'sd-PK': {
+    loading: 'سينسر چالو ٿي رهيو آهي.',
+    started: 'سمارٽ ڪين چالو ٿي ويو آهي. مان توهان کي رستي بابت ٻڌائيندي رهندس.',
+    stopClose: 'بيهي وڃو، سامهون رڪاوٽ آهي.',
+    clearPath: 'رستو صاف آهي، اڳيان وڌو.',
+    camError: 'مهرباني ڪري ڪمري جي اجازت ڏيو',
+    netError: 'انٽرنيٽ چالو ڪريو، ماڊل لوڊ نه ٿيو.'
   }
 };
 
@@ -304,17 +219,6 @@ function getMsg(key) {
     return translations[lang][key];
   }
   return translations['en-US'][key] || key;
-}
-
-function getObjName(objKey) {
-  const lang = langSel.value;
-  if(translations[lang] && translations[lang].objects && translations[lang].objects[objKey]) {
-    return translations[lang].objects[objKey];
-  }
-  if(translations['en-US'].objects[objKey]) {
-    return translations['en-US'].objects[objKey];
-  }
-  return objKey;
 }
 
 function speakText(t){
@@ -337,6 +241,7 @@ function playHurdleTone(){
   }catch(e){}
 }
 
+// Extremely loud, sharp high-gain beep for clear path alert
 function playClearTone(){
   try{
     if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
@@ -344,7 +249,7 @@ function playClearTone(){
     o.connect(g); g.connect(audioCtx.destination);
     o.frequency.value=750;
     o.type='triangle';
-    g.gain.setValueAtTime(0.85, audioCtx.currentTime);
+    g.gain.setValueAtTime(0.85, audioCtx.currentTime); // Maximum volume loudness
     g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.45);
     o.start(); o.stop(audioCtx.currentTime+0.45);
   }catch(e){}
@@ -379,31 +284,14 @@ async function ensureCamera(){
 }
 
 function getScreenInfo(){
-  if(!video.videoWidth) return {variance:100, change:0, verticalTilt:0};
+  if(!video.videoWidth) return {variance:100, change:0};
   const c=document.createElement('canvas'); c.width=60; c.height=45;
   const ctx=c.getContext('2d'); ctx.drawImage(video,0,0,60,45);
   const d=ctx.getImageData(0,0,60,45).data;
   let avg=0; for(let i=0;i<d.length;i+=4){ avg+=(d[i]+d[i+1]+d[i+2])/3; } avg=avg/(60*45);
   let variance=0; for(let i=0;i<d.length;i+=4){ variance+=Math.abs((d[i]+d[i+1]+d[i+2])/3 - avg); } variance=variance/(60*45);
   let change=Math.abs(avg - lastAvg); lastAvg=avg;
-
-  let topSum = 0, bottomSum = 0;
-  const halfPixels = (60 * 22);
-  for(let y=0; y<22; y++){
-    for(let x=0; x<60; x++){
-      let idx = (y * 60 + x) * 4;
-      topSum += (d[idx] + d[idx+1] + d[idx+2])/3;
-    }
-  }
-  for(let y=23; y<45; y++){
-    for(let x=0; x<60; x++){
-      let idx = (y * 60 + x) * 4;
-      bottomSum += (d[idx] + d[idx+1] + d[idx+2])/3;
-    }
-  }
-  let verticalTilt = (topSum / halfPixels) - (bottomSum / halfPixels);
-
-  return {variance, change, verticalTilt};
+  return {variance, change};
 }
 
 async function detectLoop(){
@@ -415,81 +303,39 @@ async function detectLoop(){
   let found = [];
   try{
     const preds = await model.detect(video);
-    found = preds.filter(p => p.score > 0.25);
+    found = preds.filter(p => p.score > 0.35);
   }catch(e){}
 
   const info = getScreenInfo();
-  let now = Date.now();
+  const isWall = info.variance < 20;
+  let speakMsg = "", currentCategory = "clear", hasHurdle = false;
 
-  let potentialStairCondition = (info.change > 4 && info.change < 18 && Math.abs(info.verticalTilt) > 8);
-
-  if (potentialStairCondition) {
-    if (!stairMode) {
-      stairMode = true;
-      stairStepCount = 1;
-      stairDirection = info.verticalTilt > 0 ? 'up' : 'down';
-      let startText = getMsg('stairsStart');
-      speakText(startText);
-      statusEl.innerText = "STAIRS STARTED (" + stairDirection.toUpperCase() + ")";
-    } else {
-      if (now - lastStairCheckTime > 2000) {
-        stairStepCount++;
-        lastStairCheckTime = now;
-        let stepText = (stairDirection === 'up' ? getMsg('stairUpMsg') : getMsg('stairDownMsg')) + " " + stairStepCount;
-        speakText(stepText);
-        statusEl.innerText = "STAIRS " + stairDirection.toUpperCase() + ": STEP " + stairStepCount;
-      }
-    }
+  if(found.length > 0 || isWall || info.change > 15){
+    speakMsg = getMsg('stopClose');
+    currentCategory = "hurdle";
+    hasHurdle = true;
   } else {
-    if (stairMode) {
-      stairMode = false;
-      let endText = getMsg('stairsEnd');
-      speakText(endText);
-      statusEl.innerText = "STAIRS ENDED - STOP";
-      stairStepCount = 0;
-    }
+    speakMsg = getMsg('clearPath');
+    currentCategory = "clear";
+    hasHurdle = false;
   }
 
-  if (!stairMode && now - lastSpokenTime > 3000) {
-    if (found.length > 0) {
-      let names = found.map(p => getObjName(p.class));
-      let uniqueNames = [...new Set(names)].join(', ');
-      
-      let alertText = "";
-      const lang = langSel.value;
-      if (lang.startsWith('ur')) {
-        alertText = `محتاط رہیں، سامنے رکاوٹ ہے: ${uniqueNames}۔`;
-      } else if (lang.startsWith('hi')) {
-        alertText = `सावधान, सामने बाधा है: ${uniqueNames}।`;
-      } else if (lang.startsWith('ar')) {
-        alertText = `تنبيه، عقبة في الأمام: ${uniqueNames}.`;
-      } else {
-        alertText = `Warning, obstacle ahead: ${uniqueNames}.`;
-      }
-
-    lastSpokenTime = now;
-    playHurdleTone();
-    vibrateHurdle();
-    speakText(alertText);
-    statusEl.innerText = "OBSTACLE: " + uniqueNames.toUpperCase();
-    } else if (info.variance < 20 || info.change > 15) {
-      let wallText = getMsg('stopClose') || 'رک جائیں، سامنے رکاوٹ ہے۔';
-      lastSpokenTime = now;
+  // Instant response as soon as window/category changes (hurdle <-> clear path)
+  if (currentCategory !== lastAnnouncedCategory) {
+    lastAnnouncedCategory = currentCategory;
+    lastSpoken = speakMsg;
+    
+    if(hasHurdle){
       playHurdleTone();
       vibrateHurdle();
-      speakText(wallText);
-      statusEl.innerText = "OBSTACLE DETECTED";
     } else {
-      let clearText = getMsg('clear');
-      lastSpokenTime = now;
-      playClearTone();
-      speakText(clearText);
-      statusEl.innerText = "STATUS: GO AHEAD - CLEAR";
+      playClearTone(); // Extremely loud distinct tone for clear path
     }
+    speakText(speakMsg);
   }
 
   if(isLive) {
-    setTimeout(() => requestAnimationFrame(detectLoop), 250);
+    setTimeout(() => requestAnimationFrame(detectLoop), 250); // Ultra-fast loop for immediate detection update
   }
 }
 
@@ -512,8 +358,6 @@ document.getElementById('stopBtn').addEventListener('click', ()=>{
   if(stream) stream.getTracks().forEach(t => t.stop());
   stream = null; video.srcObject = null;
   window.speechSynthesis.cancel();
-  stairMode = false;
-  stairStepCount = 0;
   statusEl.innerText="STATUS: OFF";
   document.getElementById('startBtn').style.display="block";
   document.getElementById('stopBtn').style.display="none";
