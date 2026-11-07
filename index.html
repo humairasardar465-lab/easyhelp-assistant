@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Cane - Mobile Is Your Eye - Created by Humaira Sardar</title>
+<title>Your eyes smart cane created by Humaira Sardar</title>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@latest"></script>
 <style>
@@ -25,7 +25,7 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 <body>
 <div class="top">
 <h2>SMART CANE</h2>
-<div class="sub">MOBILE IS YOUR EYE - CREated by humaira sardar</div>
+<div class="sub">Your eyes smart cane created by Humaira Sardar</div>
 
 <label>SELECT LANGUAGE</label>
 <select id="voiceLanguage">
@@ -153,6 +153,8 @@ const statusEl=document.getElementById('status');
 const langSel=document.getElementById('voiceLanguage');
 let stream=null, isLive=false, model=null, lastSpoken="", lastSpeakTime=0, audioCtx=null, lastAvg=0, rememberedObj=null, rememberedTime=0;
 let lastAnnouncedCategory = null; 
+let consecutiveMatches = 0; 
+let stableBoxSize = 0; // Locks distance tier so static objects don't jump between meter sizes when still
 
 const translations = {
   'ur-PK': {
@@ -228,7 +230,7 @@ const translations = {
     farClose: 'مخکې خنډ شته، ۲ متره واټن لري، په کراره روان شئ.',
     wallClose: 'وګرځئ، مخکې لوی خنډ ډیر نږدې دی، نیم متر.',
     rememberedClose: 'هغه خنډ اوس نږدې شوی، ۱ متر واټن لري، ودریږئ.',
-    suddenClose: 'وګرځئ، مخکې ناڅاپه خنډ راغلی، ۱ متر.',
+    suddenClose: 'وګرځئ, مخکې ناڅاپه خنډ راغلی، ۱ متر.',
     clearPath: 'لاره پاکه ده، په کراره سیده روان شئ.',
     camError: 'مهرباني وکړئ د کامرې اجازه ورکړئ',
     netError: 'انټرنیټ چالان کړئ، ماډل بار نشو.'
@@ -239,12 +241,12 @@ const translations = {
     stopClose: 'بيهي وڃو، رڪاوٽ تمام ويجھو آهي، اڌ ميٽر جي فاصلي تي.',
     midClose: 'سامهون رڪاوٽ آهي، 1 ميٽر پري آهي، آهستي کاٻي پاسي ٿيو.',
     farClose: 'سامهون رڪاوٽ آهي، 2 ميٽر پري آهي، آهستي هلو.',
-    wallClose: 'بيهي وڃو، سامهون وڏي رڪاوٽ بلڪل ويجھو آهي، اڌ ميٽر تي.',
+    wallClose: 'بيهي وڃو, سامهون وڏي رڪاوٽ بلڪل ويجھو آهي، اڌ ميٽر تي.',
     rememberedClose: 'اها رڪاوٽ هاڻي ويجھو اچي وئي آهي، 1 ميٽر تي آهي، بيهي وڃو.',
     suddenClose: 'بيهي وڃو، سامهون اڻڄاتل رڪاوٽ آئي آهي، 1 ميٽر تي.',
     clearPath: 'رستو صاف آهي، آهستي سڌو هلبو وڃو.',
     camError: 'مهرباني ڪري ڪمري جي اجازت ڏيو',
-    netError: 'انٽرنيٽ چالو ڪريو، ماਡل لوڊ نه ٿيو.'
+    netError: 'انٽرنيٽ چالو ڪريو، ماڊل لوڊ نه ٿيو.'
   }
 };
 
@@ -276,17 +278,17 @@ function playTone(){
   }catch(e){}
 }
 
-// Maximum loud, high-gain clear path alert tone (very prominent beep)
+// Very loud, extremely prominent high-gain beep for clear path alert
 function playClearTone(){
   try{
     if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
     const o=audioCtx.createOscillator(); const g=audioCtx.createGain();
     o.connect(g); g.connect(audioCtx.destination);
-    o.frequency.value=750; // Clear high-frequency tone
+    o.frequency.value=750;
     o.type='triangle';
-    g.gain.setValueAtTime(0.7, audioCtx.currentTime); // Very loud gain/volume
-    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.4);
-    o.start(); o.stop(audioCtx.currentTime+0.4);
+    g.gain.setValueAtTime(0.85, audioCtx.currentTime); // Maximum loudness
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.45);
+    o.start(); o.stop(audioCtx.currentTime+0.45);
   }catch(e){}
 }
 
@@ -352,27 +354,47 @@ async function detectLoop(){
   if(found.length > 0){
     rememberedObj = found[0].class; rememberedTime = now;
     const box = found[0].bbox;
-    const areaPercent = (box[2]*box[3]) / (video.videoWidth*video.videoHeight) * 100;
-    if(areaPercent > 25){ speakMsg = getMsg('stopClose'); level = 3; currentCategory = "stopClose"; }
-    else if(areaPercent > 10){ speakMsg = getMsg('midClose'); level = 2; currentCategory = "midClose"; }
+    const currentArea = (box[2]*box[3]) / (video.videoWidth*video.videoHeight) * 100;
+
+    // Stable distance calculation with smooth threshold buffer to eliminate jitter/flapping while stationary
+    if(stableBoxSize === 0) {
+      stableBoxSize = currentArea;
+    } else {
+      // Smooth out minor AI model bounding box fluctuations when phone is kept still
+      stableBoxSize = (stableBoxSize * 0.7) + (currentArea * 0.3);
+    }
+
+    if(stableBoxSize > 25){ speakMsg = getMsg('stopClose'); level = 3; currentCategory = "stopClose"; }
+    else if(stableBoxSize > 10){ speakMsg = getMsg('midClose'); level = 2; currentCategory = "midClose"; }
     else { speakMsg = getMsg('farClose'); level = 1; currentCategory = "farClose"; }
-  } else if(isWall){
-    speakMsg = getMsg('wallClose'); level = 3; currentCategory = "wallClose";
-  } else if(now - rememberedTime < 5000 && rememberedObj){
-    speakMsg = getMsg('rememberedClose'); level = 2; currentCategory = "midClose";
-  } else if(info.change > 15){
-    speakMsg = getMsg('suddenClose'); level = 2; currentCategory = "midClose";
   } else {
-    speakMsg = getMsg('clearPath'); level = 0; currentCategory = "clear";
+    stableBoxSize = 0;
+    if(isWall){
+      speakMsg = getMsg('wallClose'); level = 3; currentCategory = "wallClose";
+    } else if(now - rememberedTime < 5000 && rememberedObj){
+      speakMsg = getMsg('rememberedClose'); level = 2; currentCategory = "midClose";
+    } else if(info.change > 15){
+      speakMsg = getMsg('suddenClose'); level = 2; currentCategory = "midClose";
+    } else {
+      speakMsg = getMsg('clearPath'); level = 0; currentCategory = "clear";
+    }
   }
 
-  // Instant response on window/category change: zero unnecessary frame delay when scene changes
+  // Instant response on genuine environment change with a strict stability latch for static objects
   const isCategoryChanged = (currentCategory !== lastAnnouncedCategory);
+  
+  if (isCategoryChanged) {
+    consecutiveMatches = 1;
+    lastAnnouncedCategory = currentCategory;
+  } else {
+    consecutiveMatches++;
+  }
+
   const timeElapsed = now - lastSpeakTime;
 
-  // Speak instantly when status/category changes, or repeat safely after 5 seconds if unchanged
-  if(isCategoryChanged || (speakMsg === lastSpoken && timeElapsed > 5000)) {
-    lastAnnouncedCategory = currentCategory;
+  // For obstacles or clear path, require at least 3 consistent reads to lock in before speaking, 
+  // preventing sudden false jumps in distance tier while the phone is completely still.
+  if(consecutiveMatches >= 3 && (speakMsg !== lastSpoken || timeElapsed > 6000)) {
     lastSpoken = speakMsg; 
     lastSpeakTime = now;
     if(level > 0){ 
@@ -385,7 +407,7 @@ async function detectLoop(){
   }
 
   if(isLive) {
-    setTimeout(() => requestAnimationFrame(detectLoop), 800); // Faster loop check for instant window change response
+    setTimeout(() => requestAnimationFrame(detectLoop), 500); // Fast responsive loop
   }
 }
 
