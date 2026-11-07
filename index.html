@@ -162,17 +162,17 @@ let lastStairCheckTime = 0;
 const translations = {
   'ur-PK': {
     loading: 'سنسور آن ہو رہا ہے۔',
-    started: 'اسمارٹ کین آن ہو گیا ہے۔ تمام چھوٹے، بڑے ابجیکٹس اور راستے کی رکاوٹوں کی شناخت جاری ہے۔',
+    started: 'اسمارٹ کین آن ہو گیا ہے۔ تمام رکاوٹیں، دروازے، دیواریں اور ابجیکٹس پہچانے جا رہے ہیں۔',
     camError: 'کیمرہ کی اجازت دیں',
     netError: 'انٹرنیٹ آن کریں، ماڈل لوڈ نہیں ہوا۔',
     clear: 'رستہ صاف ہے، آگے بڑھیں۔',
-    stopClose: 'رک جائیں، سامنے رکاوٹ ہے۔',
-    stairsStart: 'سیڑھیاں شروع ہو چکی ہیں۔',
-    stairsEnd: 'سیڑھیاں ختم ہو گئی ہیں، اب یہاں رک جائیں۔',
+    stopClose: 'رک جائیں، سامنے رکاوٹ یا دیوار ہے۔',
+    stairsStart: 'سیڑھیاں آ گئی ہیں۔',
+    stairsEnd: 'سیڑھیاں ختم ہو گئی ہیں۔',
     stairUpMsg: 'اوپر کی طرف سیڑھی نمبر',
     stairDownMsg: 'نیچے کی طرف سیڑھی نمبر',
     objects: {
-      'person': 'آدمی یا انسان', 'bicycle': 'سائیکل', 'car': 'کار یا گاڑی', 'motorcycle': 'موٹر سائیکل',
+      'person': 'اننسان یا شخص', 'bicycle': 'سائیکل', 'car': 'کار یا گاڑی', 'motorcycle': 'موٹر سائیکل',
       'airplane': 'ہوائی جہاز', 'bus': 'بس', 'train': 'ٹرین', 'truck': 'ٹرک', 'boat': 'کشتی',
       'traffic light': 'ٹریفک سگنل', 'fire hydrant': 'فائر ہائیڈرنٹ', 'stop sign': 'اسٹاپ سائن',
       'parking meter': 'پارکنگ میٹر', 'bench': 'بینچ', 'bird': 'پرندہ', 'cat': 'بلی',
@@ -186,24 +186,24 @@ const translations = {
       'knife': 'چھری', 'spoon': 'چمچ', 'bowl': 'پیالہ', 'banana': 'کیلا', 'apple': 'سیب',
       'sandwich': 'سینڈوچ', 'orange': 'ترنج یا کینو', 'broccoli': 'بروکولی', 'carrot': 'گاجر',
       'hot dog': 'ہاٹ ڈاگ', 'pizza': 'پیزا', 'donut': 'ڈونٹ', 'cake': 'کیک', 'chair': 'کرسی',
-      'couch': 'صوفہ', 'potted plant': 'گملہ', 'bed': 'بیڈ', 'dining table': 'کھانے کی میز',
+      'couch': 'صوفہ', 'potted plant': 'گملہ', 'bed': 'بیڈ یا بستر', 'dining table': 'ڈائننگ ٹیبل یا میز',
       'toilet': 'ٹوائلٹ', 'tv': 'ٹی وی', 'laptop': 'لیپ ٹاپ', 'mouse': 'ماؤس', 'remote': 'رِموٹ',
       'keyboard': 'کی بورڈ', 'cell phone': 'موبائل فون', 'microwave': 'مائیکرو ویو', 'oven': 'اوون',
       'toaster': 'ٹوسٹر', 'sink': 'سنک', 'refrigerator': 'فریج', 'book': 'کتاب',
       'clock': 'گھڑی', 'vase': 'پھولدان', 'scissors': 'قچی', 'teddy bear': 'ٹیڈی ریچھ',
       'hair drier': 'ہیئر ڈرائر', 'toothbrush': 'ٹوتھ برش',
-      'wall': 'دیوار', 'door': 'دروازہ', 'shoe': 'جوتا یا سلیپر', 'pothole': 'کھڈا یا گڑھا', 'pillar': 'پلر یا ستون', 'tree': 'درخت', 'stone': 'پتھر'
+      'wall': 'دیوار', 'door': 'دروازہ', 'shoe': 'جوتے یا سلیپر', 'pothole': 'کھڈا یا گڑھا', 'pillar': 'پلر یا ستون', 'tree': 'درخت', 'stone': 'پتھر', 'road': 'سڑک', 'water': 'پانی یا نالی'
     }
   },
   'en-US': {
     loading: 'Sensor is turning on.',
-    started: 'Smart Cane is on. All small/large objects, walls, doors, and path obstacles will now be recognized.',
+    started: 'Smart Cane is on. All obstacles, doors, walls and objects are being recognized.',
     camError: 'Please allow camera permissions',
     netError: 'Turn on internet, model failed to load.',
     clear: 'Path is clear, move ahead.',
-    stopClose: 'Stop, obstacle ahead.',
-    stairsStart: 'Stairs have started.',
-    stairsEnd: 'Stairs have ended, stop here.',
+    stopClose: 'Stop, obstacle or wall ahead.',
+    stairsStart: 'Stairs detected.',
+    stairsEnd: 'Stairs have ended.',
     stairUpMsg: 'Going up, step number',
     stairDownMsg: 'Going down, step number',
     objects: {
@@ -227,18 +227,18 @@ const translations = {
       'toaster': 'toaster', 'sink': 'sink', 'refrigerator': 'refrigerator', 'book': 'book',
       'clock': 'clock', 'vase': 'vase', 'scissors': 'scissors', 'teddy bear': 'teddy bear',
       'hair drier': 'hair drier', 'toothbrush': 'toothbrush',
-      'wall': 'wall', 'door': 'door', 'shoe': 'shoe or slipper', 'pothole': 'pothole or pit', 'pillar': 'pillar', 'tree': 'tree', 'stone': 'stone'
+      'wall': 'wall', 'door': 'door', 'shoe': 'shoe or slipper', 'pothole': 'pothole or pit', 'pillar': 'pillar', 'tree': 'tree', 'stone': 'stone', 'road': 'road', 'water': 'water or drain'
     }
   },
   'hi-IN': {
     loading: 'सेंसर चालू हो रहा है।',
-    started: 'स्मार्ट केन चालू हो गया है। सभी छोटे-बड़े ऑब्जेक्ट्स, दीवारें, दरवाज़े और बाधाओं को पहचाना जाएगा।',
+    started: 'स्मार्ट केन चालू है। सभी बाधाओं, दरवाजों और वस्तुओं को पहचाना जा रहा है।',
     camError: 'कृपया कैमरे की अनुमति दें',
     netError: 'इंटरनेट चालू करें, मॉडल लोड नहीं हुआ।',
     clear: 'रास्ता साफ़ है, आगे बढ़ें।',
-    stopClose: 'रुक जाइए, सामने बाधा है।',
-    stairsStart: 'सीढ़ियाँ शुरू हो चुकी हैं।',
-    stairsEnd: 'सीढ़ियाँ समाप्त हो गई हैं, यहाँ रुक जाइए।',
+    stopClose: 'रुकिए, सामने दीवार या बाधा है।',
+    stairsStart: 'सीढ़ियाँ आ गई हैं।',
+    stairsEnd: 'सीढ़ियाँ समाप्त हो गई हैं।',
     stairUpMsg: 'ऊपर जाते हुए, सीढ़ी संख्या',
     stairDownMsg: 'नीचे आते हुए, सीढ़ी संख्या',
     objects: {
@@ -262,18 +262,18 @@ const translations = {
       'toaster': 'टोस्टर', 'sink': 'सिंक', 'refrigerator': 'फ्रिज', 'book': 'किताब',
       'clock': 'घड़ी', 'vase': 'फूलदान', 'scissors': 'कैंची', 'teddy bear': 'टेडी बियर',
       'hair drier': 'हेयर ड्रायर', 'toothbrush': 'टूथब्रश',
-      'wall': 'दीवार', 'door': 'दरवाजा', 'shoe': 'जूता', 'pothole': 'गड्डा', 'pillar': 'पिलर', 'tree': 'पेड़', 'stone': 'पत्थर'
+      'wall': 'दीवार', 'door': 'दरवाजा', 'shoe': 'जूता', 'pothole': 'गड्डा', 'pillar': 'पिलर', 'tree': 'पेड़', 'stone': 'पत्थर', 'road': 'सड़क', 'water': 'पानी'
     }
   },
   'ar-SA': {
     loading: 'جاري تشغيل المستشعر.',
-    started: 'تم تشغيل العصا الذكية. سيتم التعرف على جميع الكائنات، الجدران، الأبواب والعوائق.',
+    started: 'العصا الذكية تعمل. يتم التعرف على جميع العوائق والأبواب والجدران.',
     camError: 'يرجى السماح بإذن الكاميرا',
     netError: 'قم بتشغيل الإنترنت، لم يتم تحميل النموذج.',
     clear: 'الطريق نظيف، تقدم للأمام.',
-    stopClose: 'توقف، توجد عقبة.',
-    stairsStart: 'بدأت السلالم.',
-    stairsEnd: 'انتهت السلالم، توقف هنا.',
+    stopClose: 'توقف، توجد عقبة أو جدار في الأمام.',
+    stairsStart: 'تم اكتشاف سلالم.',
+    stairsEnd: 'انتهت السلالم.',
     stairUpMsg: 'صعود، رقم الدرجة',
     stairDownMsg: 'نزول، رقم الدرجة',
     objects: {
@@ -297,7 +297,7 @@ const translations = {
       'toaster': 'محمصة خبز', 'sink': 'حوض غسيل', 'refrigerator': 'ثلاجة', 'book': 'كتاب',
       'clock': 'ساعة', 'vase': 'مزهرية', 'scissors': 'مقص', 'teddy bear': 'دب محشو',
       'hair drier': 'مجفف شعر', 'toothbrush': 'فرشاة أسنان',
-      'wall': 'جدار', 'door': 'باب', 'shoe': 'حذاء', 'pothole': 'حفرة', 'pillar': 'عمود', 'tree': 'شجرة', 'stone': 'حجر'
+      'wall': 'جدار', 'door': 'باب', 'shoe': 'حذاء', 'pothole': 'حفرة', 'pillar': 'عمود', 'tree': 'شجرة', 'stone': 'حجر', 'road': 'طريق', 'water': 'ماء'
     }
   }
 };
@@ -410,6 +410,16 @@ function getScreenInfo(){
   return {variance, change, verticalTilt};
 }
 
+// کسٹم ہیورسٹکس کے ذریعے دروازے، دیوار اور بڑی رکاوٹوں کی شناخت
+function detectCustomObstacles() {
+  const info = getScreenInfo();
+  // اگر فریم میں بہت زیادہ تبدیلی نہ ہو اور لائٹ ایک جیسی (تاریک یا یکساں قریب ترین سرفیس) ہو تو دیوار یا بند دروازہ سمجھا جائے گا
+  if (info.variance < 18) {
+    return 'wall';
+  }
+  return null;
+}
+
 async function detectLoop(){
   if(!isLive) return;
 
@@ -421,13 +431,20 @@ async function detectLoop(){
   let found = [];
   try{
     const preds = await model.detect(video);
-    found = preds.filter(p => p.score > 0.25);
+    found = preds.filter(p => p.score > 0.3); // تھرشولڈ بہتر کیا تاکہ غلط ابجیکٹس نہ آئیں
   }catch(e){}
+
+  // کسٹم رکاوٹ چیک کریں (مثلاً سامنے دیوار یا قریب بند دروازہ)
+  const customObstacle = detectCustomObstacles();
+  if (customObstacle && found.length === 0) {
+    found.push({ class: 'wall', score: 0.9 });
+  }
 
   const info = getScreenInfo();
   let now = Date.now();
 
-  let potentialStairCondition = (info.change > 4 && info.change < 18 && Math.abs(info.verticalTilt) > 8);
+  // سٹیئرز کا لاجک اب زیادہ سخت کر دیا گیا ہے تاکہ بغیر سیڑھی کے یہ آواز نہ نکالے
+  let potentialStairCondition = (info.change > 8 && info.change < 22 && Math.abs(info.verticalTilt) > 12);
 
   if (potentialStairCondition) {
     if (!stairMode) {
@@ -438,7 +455,7 @@ async function detectLoop(){
       speakText(startText);
       statusEl.innerText = "STAIRS STARTED (" + stairDirection.toUpperCase() + ")";
     } else {
-      if (now - lastStairCheckTime > 2000) {
+      if (now - lastStairCheckTime > 3000) {
         stairStepCount++;
         lastStairCheckTime = now;
         let stepText = (stairDirection === 'up' ? getMsg('stairUpMsg') : getMsg('stairDownMsg')) + " " + stairStepCount;
@@ -447,16 +464,16 @@ async function detectLoop(){
       }
     }
   } else {
-    if (stairMode) {
+    if (stairMode && (Math.abs(info.verticalTilt) < 5 || info.change < 3)) {
       stairMode = false;
       let endText = getMsg('stairsEnd');
       speakText(endText);
-      statusEl.innerText = "STAIRS ENDED - STOP";
+      statusEl.innerText = "STAIRS ENDED";
       stairStepCount = 0;
     }
   }
 
-  if (!stairMode && now - lastSpokenTime > 3000) {
+  if (!stairMode && now - lastSpokenTime > 3500) {
     if (found.length > 0) {
       let names = found.map(p => getObjName(p.class));
       let uniqueNames = [...new Set(names)].join(', ');
@@ -464,13 +481,13 @@ async function detectLoop(){
       let alertText = "";
       const lang = langSel.value;
       if (lang.startsWith('ur')) {
-        alertText = `محتاط رہیں، سامنے رکاوٹ ہے: ${uniqueNames}۔`;
+        alertText = `محتاط رہیں، سامنے ہے: ${uniqueNames}۔`;
       } else if (lang.startsWith('hi')) {
-        alertText = `सावधान, सामने बाधा है: ${uniqueNames}।`;
+        alertText = `सावधान, सामने है: ${uniqueNames}।`;
       } else if (lang.startsWith('ar')) {
-        alertText = `تنبيه، عقبة في الأمام: ${uniqueNames}.`;
+        alertText = `تنبيه، في الأمام: ${uniqueNames}.`;
       } else {
-        alertText = `Warning, obstacle ahead: ${uniqueNames}.`;
+        alertText = `Warning, ahead: ${uniqueNames}.`;
       }
 
       lastSpokenTime = now;
@@ -478,13 +495,6 @@ async function detectLoop(){
       vibrateHurdle();
       speakText(alertText);
       statusEl.innerText = "OBSTACLE: " + uniqueNames.toUpperCase();
-    } else if (info.variance < 20 || info.change > 15) {
-      let wallText = getMsg('stopClose');
-      lastSpokenTime = now;
-      playHurdleTone();
-      vibrateHurdle();
-      speakText(wallText);
-      statusEl.innerText = "OBSTACLE DETECTED";
     } else {
       let clearText = getMsg('clear');
       lastSpokenTime = now;
@@ -495,7 +505,7 @@ async function detectLoop(){
   }
 
   if(isLive) {
-    setTimeout(() => requestAnimationFrame(detectLoop), 250);
+    setTimeout(() => requestAnimationFrame(detectLoop), 300);
   }
 }
 
