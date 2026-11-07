@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Cane - Created By Humaira Sardar</title>
+<title>Smart Cane & GPS Navigation - Created By Humaira Sardar</title>
 <script type="module">
 import { ObjectDetector, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
 window.ObjectDetector = ObjectDetector;
@@ -24,11 +24,12 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 .btn-stop{background:#ef4444;color:#fff}
 .btn-narrate{background:#7c3aed;color:#fff}
 #status{text-align:center;margin:10px 0;font-weight:700}
+#gpsStatus{text-align:center;font-size:13px;color:#38bdf8;margin:8px 0;font-weight:bold;}
 </style>
 </head>
 <body>
 <div class="top">
-<h2 id="uiTitle">SMART CANE</h2>
+<h2 id="uiTitle">SMART CANE & GPS</h2>
 <div class="sub" id="uiSub">Your Eyes Smart Cane Created By Humaira Sardar</div>
 
 <label id="lblLang">SELECT LANGUAGE - HAR LANGUAGE</label>
@@ -122,12 +123,14 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 <option value="zu-ZA">IsiZulu - Zulu</option>
 </select>
 
-<label id="lblDest">DESTINATION</label>
+<label id="lblDest">DESTINATION / MANZIL</label>
 <input type="text" id="destinationInput" placeholder="e.g. Okara Bazar">
-<button id="openMapsBtn" class="btn-map">OPEN MAPS</button>
+<button id="openMapsBtn" class="btn-map">OPEN MAPS / NAVIGATE</button>
 
 <div id="status">STATUS: OFF</div>
-<button id="startBtn" class="btn-main">START - SENSOR ON</button>
+<div id="gpsStatus">GPS: WAITING FOR LOCATION...</div>
+
+<button id="startBtn" class="btn-main">START - SENSOR & GPS ON</button>
 <button id="narrateBtn" class="btn-narrate">BATAYEN - AAS PAAS KYA HAI?</button>
 <button id="stopBtn" class="btn-stop" style="display:none;">STOP</button>
 <video id="webcam" autoplay playsinline muted></video>
@@ -141,15 +144,18 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 <script>
 const video=document.getElementById('webcam');
 const statusEl=document.getElementById('status');
+const gpsStatusEl=document.getElementById('gpsStatus');
 const langSel=document.getElementById('voiceLanguage');
-let stream=null, isLive=false, detector=null, audioCtx=null, lastSpoken="", lastSpeakTime=0;
 
-// Multilingual UI Labels Mapping
+let stream=null, isLive=false, detector=null, audioCtx=null, lastSpoken="", lastSpeakTime=0;
+let watchId=null, lastLat=null, lastLon=null, targetCoords=null;
+
+// UI Labels Translation Map
 const UI_TEXT = {
-  "ur-PK": { title: "سمارٹ کین", sub: "آپ کی آنکھیں - تخلیق کردہ: حمیرا سردار", lblLang: "زبان منتخب کریں", lblDest: "منزل (مقام)", btnMap: "گوگل میپس کھولیں", btnStart: "اسٹارٹ - سینسر آن", btnNarrate: "بتائیں - آس پاس کیا ہے؟", btnStop: "بند کریں", revTitle: "واٹس ایپ پر اپنے تاثرات شیئر کریں", revBtn: "واٹس ایپ پر رابطہ کریں" },
-  "en-US": { title: "SMART CANE", sub: "Your Eyes Smart Cane Created By Humaira Sardar", lblLang: "SELECT LANGUAGE", lblDest: "DESTINATION", btnMap: "OPEN MAPS", btnStart: "START - SENSOR ON", btnNarrate: "TELL ME - WHAT'S AROUND?", btnStop: "STOP", revTitle: "Share Your Reviews On WhatsApp", revBtn: "Contact On WhatsApp" },
-  "hi-IN": { title: "स्मार्ट केन", sub: "आपकी आंखें स्मार्ट केन - हुमैरा सरदार द्वारा निर्मित", lblLang: "भाषा चुनें", lblDest: "गंतव्य", btnMap: "मैप्स खोलें", btnStart: "शुरू करें - सेंसर ऑन", btnNarrate: "बताएं - आसपास क्या है?", btnStop: "बंद करें", revTitle: "व्हाट्सएप पर अपनी समीक्षा साझा करें", revBtn: "व्हाट्सएप पर संपर्क करें" },
-  "ar-SA": { title: "العصا الذكية", sub: "عصا الذكية الخاصة بك - إعداد حميرة سردار", lblLang: "اختر اللغة", lblDest: "وجهة السفر", btnMap: "فتح الخرائط", btnStart: "ابدأ - المستشعر يعمل", btnNarrate: "أخبرني - ما حولك؟", btnStop: "إيقاف", revTitle: "شاركة تقييمك على واتساب", revBtn: "تواصل عبر واتساب" }
+  "ur-PK": { title: "سمارٹ کین اور جی پی ایس", sub: "آپ کی آنکھیں - تخلیق کردہ: حمیرا سردار", lblLang: "زبان منتخب کریں", lblDest: "منزل کا نام (Destination)", btnMap: "گوگل میپس لائیو نیویگیشن", btnStart: "اسٹارٹ - سینسر اور جی پی ایس آن", btnNarrate: "بتائیں - آس پاس کیا ہے؟", btnStop: "بند کریں" },
+  "en-US": { title: "SMART CANE & GPS", sub: "Your Eyes Smart Cane Created By Humaira Sardar", lblLang: "SELECT LANGUAGE", lblDest: "DESTINATION", btnMap: "OPEN MAPS NAVIGATION", btnStart: "START - SENSOR & GPS ON", btnNarrate: "TELL ME - WHAT'S AROUND?", btnStop: "STOP" },
+  "hi-IN": { title: "स्मार्ट केन और जीपीएस", sub: "आपकी आंखें स्मार्ट केन - हुमैरा सरदार द्वारा निर्मित", lblLang: "भाषा चुनें", lblDest: "गंतव्य", btnMap: "मैप्स नेविगेशन खोलें", btnStart: "शुरू करें - सेंसर और जीपीएस ऑन", btnNarrate: "बताएं - आसपास क्या है?", btnStop: "बंद करें" },
+  "ar-SA": { title: "العصا الذكية ونظام تحديد المواقع", sub: "عصا الذكية الخاصة بك - إعداد حميرة سردار", lblLang: "اختر اللغة", lblDest: "وجهة السفر", btnMap: "فتح التنقل الخرائط", btnStart: "ابدأ - المستشعر وGPS يعملان", btnNarrate: "أخبرني - ما حولك؟", btnStop: "إيقاف" }
 };
 
 function updateUI() {
@@ -178,10 +184,10 @@ const ALL_WORDS = {
 };
 
 const TRANSLATE = {
-  "ur-PK": {left:"بائیں طرف", center:"درمیان میں", right:"دائیں طرف", front:"سامنے", clear:"راستہ صاف ہے", stop:"رک جائیں", close:"بہت قریب ہے", far:"دور ہے"},
-  "hi-IN": {left:"बाईं ओर", center:"बीच में", right:"दाईं ओर", front:"सामने", clear:"रास्ता साफ है", stop:"रुके", close:"बहुत पास है", far:"दूर है"},
-  "en-US": {left:"on the left side", center:"in the center", right:"on the right side", front:"in front", clear:"path is clear", stop:"stop", close:"very close", far:"far"},
-  "ar-SA": {left:"على اليسار", center:"في المنتصف", right:"على اليمين", front:"أمامك", clear:"الطريق صافٍ", stop:"قِف", close:"قريب جداً", far:"بعيد"}
+  "ur-PK": {left:"بائیں طرف", center:"درمیان میں", right:"دائیں طرف", front:"سامنے", clear:"راستہ صاف ہے", stop:"رک جائیں", close:"بہت قریب ہے", far:"دور است", gpsActive:"جی پی ایس لوکیشن ایکٹیو ہے"},
+  "hi-IN": {left:"बाईं ओर", center:"बीच में", right:"दाईं ओर", front:"सामने", clear:"रास्ता साफ है", stop:"रुके", close:"बहुत पास है", far:"दूर है", gpsActive:"जीपीएस सक्रिय है"},
+  "en-US": {left:"on the left side", center:"in the center", right:"on the right side", front:"in front", clear:"path is clear", stop:"stop", close:"very close", far:"far", gpsActive:"GPS is active"},
+  "ar-SA": {left:"على اليسار", center:"في المنتصف", right:"على اليمين", front:"أمامك", clear:"الطريق صافٍ", stop:"قِف", close:"قريب جداً", far:"بعيد", gpsActive:"GPS نشط"}
 };
 
 function T(key){
@@ -244,6 +250,35 @@ async function loadStrongModel(){
     baseOptions:{ modelAssetPath:"https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite2/float32/1/efficientdet_lite2.tflite", delegate:"GPU" },
     scoreThreshold:0.25, runningMode:"VIDEO", maxResults:15
   });
+}
+
+// GPS Tracking & Voice Guidance
+function startGPS() {
+  if (!navigator.geolocation) {
+    gpsStatusEl.innerText = "GPS: Not supported by browser";
+    return;
+  }
+  watchId = navigator.geolocation.watchPosition(
+    (position) => {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+      lastLat = lat;
+      lastLon = lon;
+      gpsStatusEl.innerText = `GPS Active: Lat ${lat.toFixed(4)}, Lon ${lon.toFixed(4)}`;
+    },
+    (error) => {
+      gpsStatusEl.innerText = "GPS Error: " + error.message;
+    },
+    { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
+  );
+}
+
+function stopGPS() {
+  if (watchId !== null) {
+    navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+  }
+  gpsStatusEl.innerText = "GPS: OFF";
 }
 
 async function detectNow(isNarrate=false){
@@ -317,16 +352,18 @@ async function detectNow(isNarrate=false){
 
 document.getElementById('startBtn').addEventListener('click', async ()=>{
   statusEl.innerText="STATUS: LOADING...";
-  speakText('Strong model load ho raha hai.');
+  speakText('Sensor aur GPS on ho rahe hain.');
   if(!await ensureCamera()) return;
   try{ await loadStrongModel(); } catch(e){ speakText('Internet on karein.'); statusEl.innerText="STATUS: ERROR"; return; }
+  
   isLive=true;
-  statusEl.innerText="STATUS: LIVE - ALL SENSORS ON";
+  statusEl.innerText="STATUS: LIVE - SENSOR & GPS ON";
   document.getElementById('startBtn').style.display="none";
   document.getElementById('stopBtn').style.display="block";
-  speakText('Smart Cane on ho gaya hai, ab main har cheez detect kar rahi hoon.');
   
-  // Continuous detection loop using requestAnimationFrame / intervals
+  startGPS();
+  speakText('Smart Cane aur GPS navigation shuru ho gaya hai. Aap chal sakte hain.');
+  
   setInterval(()=>{
     if(isLive) detectNow(false);
   }, 2500);
@@ -340,6 +377,7 @@ document.getElementById('narrateBtn').addEventListener('click', ()=>{
 
 document.getElementById('stopBtn').addEventListener('click', ()=>{
   isLive=false; 
+  stopGPS();
   if(stream) stream.getTracks().forEach(t=>t.stop()); 
   stream=null; 
   video.srcObject=null; 
@@ -351,8 +389,14 @@ document.getElementById('stopBtn').addEventListener('click', ()=>{
 
 document.getElementById('openMapsBtn').addEventListener('click', ()=>{
   const q=document.getElementById('destinationInput').value.trim();
-  if(!q){ speakText('Pehle upar likhen kahan jana hai.'); return; }
-  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`,'_blank');
+  if(!q){ speakText('Pehle destination likhen.'); return; }
+  speakText('Google Maps navigation khul raha hai.');
+  // Agar GPS location maujood hai toh current location se directions kholen
+  if(lastLat && lastLon){
+    window.open(`https://www.google.com/maps/dir/?api=1&origin=${lastLat},${lastLon}&destination=${encodeURIComponent(q)}&travelmode=walking`,'_blank');
+  } else {
+    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`,'_blank');
+  }
 });
 </script>
 </body>
