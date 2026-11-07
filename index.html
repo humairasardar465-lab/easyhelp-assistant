@@ -187,7 +187,7 @@ const dict = {
       'hot dog': 'ہاٹ ڈاگ', 'pizza': 'پیزا', 'donut': 'ڈونٹ', 'cake': 'کیک', 'chair': 'کرسی',
       'couch': 'صوفہ', 'potted plant': 'گملہ', 'bed': 'بیڈ', 'dining table': 'کھانے کی میز',
       'toilet': 'ٹوائلٹ', 'tv': 'ٹی وی', 'laptop': 'لیپ ٹاپ', 'mouse': 'ماؤس', 'remote': 'رِموٹ',
-      'keyboard': 'کی بورڈ', 'cell phone': 'موبائل فون', 'microwave': 'مائیکرو ویو', 'oven': 'اوون',
+      'keyboard': 'کی بورڈ', 'cell phone': 'موبایل فون', 'microwave': 'مائیکرو ویو', 'oven': 'اوون',
       'toaster': 'ٹوسٹر', 'sink': 'سنک', 'refrigerator': 'فریج', 'book': 'کتاب',
       'clock': 'گھڑی', 'vase': 'پھولدان', 'scissors': 'قچی', 'teddy bear': 'ٹیڈی ریچھ',
       'hair drier': 'ہیئر ڈرائر', 'toothbrush': 'ٹوتھ برش',
@@ -467,11 +467,11 @@ async function detectLoop(){
         alertText = `Warning, obstacle ahead: ${uniqueNames}.`;
       }
 
-      lastSpokenTime = now;
-      playHurdleTone();
-      vibrateHurdle();
-      speakText(alertText);
-      statusEl.innerText = "OBSTACLE: " + uniqueNames.toUpperCase();
+    lastSpokenTime = now;
+    playHurdleTone();
+    vibrateHurdle();
+    speakText(alertText);
+    statusEl.innerText = "OBSTACLE: " + uniqueNames.toUpperCase();
     } else if (info.variance < 20 || info.change > 15) {
       let wallText = getMsg('stopClose') || 'رک جائیں، سامنے رکاوٹ ہے۔';
       lastSpokenTime = now;
