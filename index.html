@@ -12,14 +12,15 @@ h2{text-align:center;color:#00ffcc;margin:0;font-size:24px}
 .creator{text-align:center;font-size:12px;color:#94a3b8;margin:6px 0 16px}
 label{display:block;color:#00ffcc;font-size:13px;font-weight:700;margin:14px 0 6px;text-transform:uppercase}
 select,input{width:100%;padding:12px;border-radius:10px;border:1px solid #374151;background:#1f2937;color:#fff;font-size:15px}
-video{width:100%;height:280px;border-radius:12px;background:#000;object-fit:cover;margin-top:12px}
+video{width:100%;height:300px;border-radius:12px;background:#000;object-fit:cover;margin-top:12px;border:2px solid #00ffcc}
 button{border:none;padding:13px;font-size:15px;border-radius:10px;cursor:pointer;margin-top:10px;font-weight:700;width:100%}
 .btn-main{background:#00ffcc;color:#000}
 .btn-map{background:#0284c7;color:#fff}
 .btn-voice{background:#d97706;color:#fff}
 .btn-stop{background:#ef4444;color:#fff}
-#output{margin-top:14px;padding:12px;background:#1f2937;border-radius:10px;min-height:60px;font-size:15px;text-align:right}
+#output{margin-top:14px;padding:12px;background:#1f2937;border-radius:10px;min-height:60px;font-size:15px;text-align:right;white-space:pre-wrap}
 .status{text-align:center;margin:10px 0;font-size:13px;font-weight:700}
+#debug{font-size:11px;color:#fbbf24;text-align:center;margin-top:8px}
 </style>
 </head>
 <body>
@@ -38,87 +39,15 @@ button{border:none;padding:13px;font-size:15px;border-radius:10px;cursor:pointer
 <option value="sd-PK">Sindhi - سنڌي</option>
 <option value="ps-PK">Pashto - پښتو</option>
 <option value="bal-PK">Balochi - بلوچی</option>
-<option value="bn-BD">Bengali - বাংলা</option>
-<option value="ta-IN">Tamil - தமிழ்</option>
-<option value="te-IN">Telugu - తెలుగు</option>
-<option value="mr-IN">Marathi - मराठी</option>
-<option value="gu-IN">Gujarati - ગુજરાતી</option>
-<option value="kn-IN">Kannada - ಕನ್ನಡ</option>
-<option value="ml-IN">Malayalam - മലയാളം</option>
-<option value="or-IN">Odia - ଓଡ଼ିଆ</option>
-<option value="ne-NP">Nepali - नेपाली</option>
-<option value="si-LK">Sinhala - සිංහල</option>
 <option value="fa-IR">Persian - فارسی</option>
+<option value="bn-BD">Bengali - বাংলা</option>
 <option value="tr-TR">Turkish - Türkçe</option>
 <option value="fr-FR">French - Français</option>
 <option value="de-DE">German - Deutsch</option>
 <option value="es-ES">Spanish - Español</option>
-<option value="it-IT">Italian - Italiano</option>
-<option value="pt-PT">Portuguese - Português</option>
-<option value="ru-RU">Russian - Русский</option>
-<option value="uk-UA">Ukrainian - Українська</option>
 <option value="zh-CN">Chinese - 中文</option>
 <option value="ja-JP">Japanese - 日本語</option>
 <option value="ko-KR">Korean - 한국어</option>
-<option value="id-ID">Indonesian - Bahasa Indonesia</option>
-<option value="ms-MY">Malay - Bahasa Melayu</option>
-<option value="th-TH">Thai - ไทย</option>
-<option value="vi-VN">Vietnamese - Tiếng Việt</option>
-<option value="nl-NL">Dutch - Nederlands</option>
-<option value="sv-SE">Swedish - Svenska</option>
-<option value="da-DK">Danish - Dansk</option>
-<option value="fi-FI">Finnish - Suomi</option>
-<option value="no-NO">Norwegian - Norsk</option>
-<option value="pl-PL">Polish - Polski</option>
-<option value="cs-CZ">Czech - Čeština</option>
-<option value="hu-HU">Hungarian - Magyar</option>
-<option value="ro-RO">Romanian - Română</option>
-<option value="el-GR">Greek - Ελληνικά</option>
-<option value="he-IL">Hebrew - עברית</option>
-<option value="am-ET">Amharic - አማርኛ</option>
-<option value="sw-KE">Swahili - Kiswahili</option>
-<option value="so-SO">Somali - Soomaali</option>
-<option value="ha-NG">Hausa - Hausa</option>
-<option value="yo-NG">Yoruba - Yorùbá</option>
-<option value="ig-NG">Igbo - Igbo</option>
-<option value="zu-ZA">Zulu - isiZulu</option>
-<option value="xh-ZA">Xhosa - isiXhosa</option>
-<option value="af-ZA">Afrikaans</option>
-<option value="sq-AL">Albanian - Shqip</option>
-<option value="hy-AM">Armenian - Հայերեն</option>
-<option value="az-AZ">Azerbaijani - Azərbaycan</option>
-<option value="be-BY">Belarusian - Беларуская</option>
-<option value="bg-BG">Bulgarian - Български</option>
-<option value="my-MM">Burmese - မြန်မာ</option>
-<option value="km-KH">Khmer - ខ្មែរ</option>
-<option value="lo-LA">Lao - ລາວ</option>
-<option value="ka-GE">Georgian - ქართული</option>
-<option value="kk-KZ">Kazakh - Қазақша</option>
-<option value="ky-KG">Kyrgyz - Кыргызча</option>
-<option value="uz-UZ">Uzbek - O'zbek</option>
-<option value="tg-TJ">Tajik - Тоҷикӣ</option>
-<option value="mn-MN">Mongolian - Монгол</option>
-<option value="ti-ET">Tigrinya - ትግርኛ</option>
-<option value="jv-ID">Javanese - Basa Jawa</option>
-<option value="su-ID">Sundanese - Basa Sunda</option>
-<option value="fil-PH">Filipino - Filipino</option>
-<option value="haw-US">Hawaiian - ʻŌlelo Hawaiʻi</option>
-<option value="is-IS">Icelandic - Íslenska</option>
-<option value="ga-IE">Irish - Gaeilge</option>
-<option value="cy-GB">Welsh - Cymraeg</option>
-<option value="eu-ES">Basque - Euskara</option>
-<option value="ca-ES">Catalan - Català</option>
-<option value="gl-ES">Galician - Galego</option>
-<option value="hr-HR">Croatian - Hrvatski</option>
-<option value="sr-RS">Serbian - Српски</option>
-<option value="bs-BA">Bosnian - Bosanski</option>
-<option value="mk-MK">Macedonian - Македонски</option>
-<option value="sl-SI">Slovenian - Slovenščina</option>
-<option value="et-EE">Estonian - Eesti</option>
-<option value="lv-LV">Latvian - Latviešu</option>
-<option value="lt-LT">Lithuanian - Lietuvių</option>
-<option value="mt-MT">Maltese - Malti</option>
-<option value="lb-LU">Luxembourgish - Lëtzebuergesch</option>
 </select>
 
 <label>Destination Search</label>
@@ -133,6 +62,7 @@ button{border:none;padding:13px;font-size:15px;border-radius:10px;cursor:pointer
 <button id="stopBtn" class="btn-stop" style="display:none;">Stop Live</button>
 
 <video id="webcam" autoplay playsinline muted></video>
+<div id="debug">Camera yahan nazar aayega</div>
 <canvas id="canvas" style="display:none;"></canvas>
 <div id="output"></div>
 </div>
@@ -141,6 +71,7 @@ button{border:none;padding:13px;font-size:15px;border-radius:10px;cursor:pointer
 const video=document.getElementById('webcam');
 const canvas=document.getElementById('canvas');
 const output=document.getElementById('output');
+const debug=document.getElementById('debug');
 const voiceLanguageSelect=document.getElementById('voiceLanguage');
 const startBtn=document.getElementById('startBtn');
 const stopBtn=document.getElementById('stopBtn');
@@ -149,86 +80,109 @@ let autoTimer=null, stream=null, isLive=false, isPaused=false, isThinking=false;
 
 const API_KEY = "AIzaSyDI5btsG8Wu77sAj8gI9Ug8E_9Lr_FvN5A";
 
-// زبان کا نام - اب AI کو یہی بھیجا جائے گا تاکہ وہ اسی زبان میں بولے
 function getLangName(){
   const sel=voiceLanguageSelect;
-  const txt=sel.options[sel.selectedIndex].text.split(' - ')[0];
-  return txt;
+  return sel.options[sel.selectedIndex].text.split(' - ')[0];
 }
+function getLangCode(){ return voiceLanguageSelect.value; }
 
 function speakText(text){
   window.speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(text);
-  u.lang=voiceLanguageSelect.value;
+  u.lang=getLangCode();
   u.rate=0.95;
-  // اس زبان کی آواز ڈھونڈو، ورنہ Default
+  // Is zuban ki awaz dhoondo
   const voices=window.speechSynthesis.getVoices();
-  const v=voices.find(v=>v.lang===voiceLanguageSelect.value) || voices.find(v=>v.lang.startsWith(voiceLanguageSelect.value.split('-')[0]));
+  let v=voices.find(v=>v.lang===getLangCode());
+  if(!v) v=voices.find(v=>v.lang && v.lang.startsWith(getLangCode().split('-')[0]));
   if(v) u.voice=v;
   window.speechSynthesis.speak(u);
   output.innerText=text;
 }
-
-// یہی اصل کام ہے - جیسے آپ مجھ سے بات کرتی ہیں، ویسے ہی یہ ہر سوال کا جواب دے گا
-async function askGemini(question, withImage=null){
-  const langName=getLangName();
-  const langCode=voiceLanguageSelect.value;
-  let parts=[{text:`You are Smart King Assistant, created by Humaira Sardar / Smart King. You are helping a blind person. User asked in ${langName}: "${question}". You MUST reply ONLY in ${langName} language. Do NOT use English if language is ${langName}. Do NOT use any other language. Keep answer short, 1-2 lines, clear, spoken style. If user asks what can you do, list your abilities: camera guide, voice guide, maps, directions, reading surroundings. Never mention Google or Gemini.`}];
-  if(withImage){
-    parts.push({inline_data:{mime_type:"image/jpeg",data:withImage}});
-    parts[0].text=`You are Smart King Assistant. Reply ONLY in ${langName}. No English if language is ${langName}. Look at this LIVE camera image for a blind person. Tell in 1 short line what is in front RIGHT NOW. Describe ANY object - person, bike, car, wall, stairs, dog, hole, table, tree, shop, road. If obstacle close say STOP. If clear say CLEAR.`;
-  }
-  try{
-    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({contents:[{parts}]})
-    });
-    const data=await res.json();
-    if(data.candidates && data.candidates[0].content){
-      return data.candidates[0].content.parts[0].text;
-    }
-    return null;
-  }catch(e){ return null; }
-}
+window.speechSynthesis.onvoiceschanged=()=>{};
 
 async function ensureCameraOn(){
   if(stream && video.srcObject) return true;
   try{
+    debug.innerText="Camera on kar rahi hoon... Allow dabayein";
     try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false}); }
     catch(e){ stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }
-    video.srcObject=stream; return true;
-  }catch(e){ return false; }
+    video.srcObject=stream;
+    await video.play();
+    debug.innerText="Camera ON hai - ab aapko video me sab nazar aayega";
+    return true;
+  }catch(e){
+    debug.innerText="Camera BLOCK hai! Chrome ke upar Lock par click kar ke Camera Allow karein";
+    speakText('Camera block hai, please Chrome me Lock par click kar ke Camera Allow karein');
+    return false;
+  }
 }
 
-// Live Mode - کیمرے کی تصویر لے کر اس کا جواب بولے گا، چپ نہیں رہے گا
+async function askGemini(question, withImage=null){
+  const langName=getLangName();
+  let prompt="";
+  if(withImage){
+    // BEST PROMPT - Isi wajah se ab wohi zuban bolega
+    prompt=`You are Smart King Assistant. CRITICAL RULE: You MUST answer ONLY in ${langName} language. You are FORBIDDEN to use English. If user selected ${langName}, your entire answer must be in ${langName}, 100%. No English word at all. Now look at this LIVE camera image for a blind person. Tell in 1 short line in ${langName} what is in front. Describe ANY object - person, bike, car, wall, stairs, dog, hole, table, tree, shop, road. If obstacle close, say STOP in ${langName}. If clear, say CLEAR in ${langName}.`;
+  } else {
+    prompt=`You are Smart King Assistant, created by Humaira Sardar. CRITICAL RULE: You MUST answer ONLY in ${langName}. FORBIDDEN to use English if language is ${langName}. Your entire answer must be in ${langName}. User asked: "${question}". Answer in ${langName} in 1-2 short lines, spoken style. If user asks what can you do, say in ${langName}: I can guide you with camera, tell what is in front, give directions, open maps, and talk with you. Never mention Google or Gemini.`;
+  }
+  let parts=[{text:prompt}];
+  if(withImage) parts.push({inline_data:{mime_type:"image/jpeg",data:withImage}});
+  try{
+    // Model badal diya - 1.5-flash har Key par chalta hai
+    const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts}]})
+    });
+    const data=await res.json();
+    if(data.error){
+      debug.innerText="API Error: "+data.error.message;
+      return null;
+    }
+    if(data.candidates && data.candidates[0].content){
+      return data.candidates[0].content.parts[0].text;
+    }
+    return null;
+  }catch(e){ debug.innerText="Internet Error: "+e.message; return null; }
+}
+
 async function analyzeCamera(){
   if(!isLive || isPaused || isThinking) return;
   const camOk=await ensureCameraOn();
-  if(!camOk){ speakText('Please allow camera'); return; }
+  if(!camOk) return;
   isThinking=true;
+  debug.innerText="Camera dekh rahi hoon...";
   canvas.width=video.videoWidth||640;
   canvas.height=video.videoHeight||480;
   const ctx=canvas.getContext('2d');
   ctx.drawImage(video,0,0,canvas.width,canvas.height);
-  const base64Image=canvas.toDataURL('image/jpeg',0.5).split(',')[1];
-  const ans=await askGemini("What is in front of me?", base64Image);
-  if(ans){ speakText(ans); }
-  else { speakText(getLangName()==='Urdu' ? 'مجھے صاف نظر نہیں آ رہا، کیمرہ تھوڑا آگے کریں۔' : 'I cannot see clearly, please move camera a little.'); }
+  const base64Image=canvas.toDataURL('image/jpeg',0.7).split(',')[1];
+  const ans=await askGemini("What is in front?", base64Image);
+  if(ans){
+    debug.innerText="Camera dekh liya - jawab aa gaya";
+    speakText(ans);
+  } else {
+    debug.innerText="Jawab nahi aaya - dobara koshish kar rahi hoon";
+    speakText(getLangName()==='Urdu' ? 'Thora ruk jayein, dobara dekh rahi hoon.' : 'Wait, checking again.');
+  }
   isThinking=false;
 }
 
 async function startAutoLive(){
   if(isLive) return;
   const camOk=await ensureCameraOn();
-  if(!camOk){ speakText('Please allow camera'); return; }
+  if(!camOk) return;
   isLive=true; isPaused=false;
-  liveStatus.innerText="LIVE";
+  liveStatus.innerText="LIVE - "+getLangName();
   startBtn.style.display="none"; stopBtn.style.display="block";
   const langName=getLangName();
-  // Live شروع ہوتے ہی پہلی بار کیمرہ دیکھ کر بتائے گا
-  speakText(langName==='Urdu' ? 'لائیو آن ہو گیا ہے، میں کیمرے سے دیکھ کر بتاتی ہوں سامنے کیا ہے۔' : 'Live is on, I will tell you what I see.');
+  if(langName==='Urdu') speakText('Live on ho gaya hai, ab main camera se dekh kar bataungi samne kya hai.');
+  else if(langName==='Arabic') speakText('تم تشغيل الوضع المباشر، سأخبرك بما أراه أمامك.');
+  else if(langName==='Hindi') speakText('Live on ho gaya hai, ab main camera se dekh kar bataungi.');
+  else speakText('Live is on in '+langName);
   setTimeout(analyzeCamera, 1000);
-  autoTimer=setInterval(analyzeCamera, 4000);
+  autoTimer=setInterval(analyzeCamera, 5000);
 }
 
 function stopLive(){
@@ -238,46 +192,41 @@ function stopLive(){
   window.speechSynthesis.cancel();
   liveStatus.innerText="OFF";
   startBtn.style.display="block"; stopBtn.style.display="none";
+  debug.innerText="Camera band hai";
 }
 startBtn.addEventListener('click', startAutoLive);
 stopBtn.addEventListener('click', stopLive);
 
-// Voice Command - اب یہ آپ کی پوری بات سن کر اسی کا جواب دے گا
 document.getElementById('voiceBtn').addEventListener('click', ()=>{
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   if(!SR){ speakText('Please use Chrome'); return; }
   const rec=new SR();
-  rec.lang=voiceLanguageSelect.value;
-  rec.continuous=false;
-  rec.interimResults=false;
+  // Aap Urdu bolengi to woh Urdu hi sunega, chahe upar Arabic laga ho
+  rec.lang='ur-PK';
   rec.onresult=async (e)=>{
     const q=e.results[0][0].transcript;
     const lower=q.toLowerCase();
-    output.innerText='آپ نے کہا: '+q;
-
-    // صرف رک جاؤ / چلو والے حکم یہیں سے مانے گا، باقی سب Gemini سے پوچھے گا
-    if(lower.includes('رک') || lower.includes('stop') || lower.includes('ruk') || lower.includes('रुक')){
-      isPaused=true; speakText(getLangName()==='Urdu' ? 'ٹھیک ہے، میں رک گئی ہوں۔' : 'Okay, I stopped.'); return;
+    output.innerText='Aap ne kaha: '+q;
+    if(lower.includes('رک') || lower.includes('stop') || lower.includes('ruk')){
+      isPaused=true; speakText(getLangName()==='Urdu' ? 'Theek hai, main ruk gayi hoon.' : 'Okay, I stopped.'); return;
     }
-    if(lower.includes('چلو') || lower.includes('start') || lower.includes('chalo') || lower.includes('चलो')){
-      isPaused=false; speakText(getLangName()==='Urdu' ? 'ٹھیک ہے، پھر چلتے ہیں۔' : 'Okay, lets go.'); return;
+    if(lower.includes('چلو') || lower.includes('start') || lower.includes('chalo')){
+      isPaused=false; speakText(getLangName()==='Urdu' ? 'Theek hai, phir chalte hain.' : 'Okay, lets go.'); return;
     }
-    // سامنے کیا ہے - کیمرے کی تصویر کے ساتھ پوچھے گا
-    if(lower.includes('سامنے') || lower.includes('what is in front') || lower.includes('samne') || lower.includes('सामने') || lower.includes('what') || lower.includes('کیا ہے')){
-      if(!isLive){ isLive=true; liveStatus.innerText="LIVE"; startBtn.style.display="none"; stopBtn.style.display="block"; }
+    if(lower.includes('سامنے') || lower.includes('samne') || lower.includes('what') || lower.includes('کیا ہے') || lower.includes('kya hai') || lower.includes('dekho') || lower.includes('batao')){
+      if(!isLive){ isLive=true; liveStatus.innerText="LIVE - "+getLangName(); startBtn.style.display="none"; stopBtn.style.display="block"; }
       isPaused=false;
-      speakText(getLangName()==='Urdu' ? 'رکیں، میں کیمرے سے دیکھ کر بتاتی ہوں۔' : 'Wait, I am checking camera.');
+      debug.innerText="Camera dekh rahi hoon...";
       setTimeout(analyzeCamera, 700);
       return;
     }
-    // باقی ہر سوال - جیسے "تم میرے لیے کیا کیا کر سکتی ہو" - یہ Gemini سے پوچھ کر اسی کا جواب دے گا
-    output.innerText='سن رہی ہوں... جواب لا رہی ہوں...';
+    output.innerText='Jawab la rahi hoon...';
     const ans=await askGemini(q);
     if(ans){ speakText(ans); }
-    else{ speakText('دوبارہ بولیں، میں نے سنا نہیں۔'); }
+    else{ speakText('Dobara bolein, internet slow hai.'); }
   };
   rec.start();
-  speakText(getLangName()==='Urdu' ? 'جی بولیں، میں سن رہی ہوں۔' : 'Yes, I am listening.');
+  speakText(getLangName()==='Urdu' ? 'Ji bolein, main sun rahi hoon.' : 'Yes, I am listening.');
 });
 
 document.getElementById('openMapsBtn').addEventListener('click', ()=>{
