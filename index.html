@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Cane - Mobile Is Your Eye - Amazon Collection</title>
+<title>Smart Cane - Mobile Is Your Eye - Humaira Sardar</title>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@latest"></script>
 <style>
@@ -17,7 +17,6 @@ select,input{width:100%;padding:12px;border-radius:10px;border:1px solid #374151
 video{width:100%;height:320px;border-radius:12px;background:#000;object-fit:cover;margin-top:12px;border:3px solid #00ffcc}
 button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer;margin-top:10px;font-weight:700;width:100%}
 .btn-main{background:#00ffcc;color:#000}
-.btn-voice{background:#d97706;color:#fff}
 .btn-map{background:#0284c7;color:#fff}
 .btn-stop{background:#ef4444;color:#fff}
 #status{text-align:center;margin:10px 0;font-weight:700;font-size:14px}
@@ -143,7 +142,6 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 <div id="status">STATUS: OFF</div>
 
 <button id="startBtn" class="btn-main">START - SENSOR ON</button>
-<button id="voiceBtn" class="btn-voice">VOICE COMMAND</button>
 <button id="stopBtn" class="btn-stop" style="display:none;">STOP</button>
 
 <video id="webcam" autoplay playsinline muted></video>
@@ -153,13 +151,13 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 const video=document.getElementById('webcam');
 const statusEl=document.getElementById('status');
 const langSel=document.getElementById('voiceLanguage');
-let stream=null, isLive=false, model=null, lastSpoken="", lastSpeakTime=0, audioCtx=null, lastAvg=0, rememberedObj=null, rememberedTime=0, detectionActive=false;
+let stream=null, isLive=false, model=null, lastSpoken="", lastSpeakTime=0, audioCtx=null, lastAvg=0, rememberedObj=null, rememberedTime=0;
+let lastAnnouncedCategory = null; // Track stability of announcement to avoid repetitive flapping
 
-// Native dictionary for multilingual real-time announcements without relying on roman transcription
 const translations = {
   'ur-PK': {
     loading: 'سنسور آن ہو رہا ہے۔',
-    started: 'اسمارٹ کین آن ہو گیا ہے۔ اب میں بتاتی رہوں گی رکاوট کتنی دور ہے.',
+    started: 'اسمارٹ کین آن ہو گیا ہے۔ اب میں بتاتی رہوں گی رکاوٹ کتنی دور ہے۔',
     stopClose: 'رک جائیں، رکاوٹ بہت قریب ہے، آدھا میٹر پر ہے۔',
     midClose: 'سامنے رکاوٹ ہے، 1 میٹر دور ہے، آہستہ بائیں ہو جائیں۔',
     farClose: 'سامنے رکاوٹ ہے، 2 میٹر دور ہے، آہستہ چلیں۔',
@@ -168,8 +166,7 @@ const translations = {
     suddenClose: 'رک جائیں، سامنے اچانک کوئی رکاوٹ آئی ہے، 1 میٹر پر ہے۔',
     clearPath: 'رستہ صاف ہے، آہستہ سیدھے چلتے جائیں۔',
     camError: 'کیمرہ کی اجازت دیں',
-    netError: 'انٹرنیٹ آن کریں، ماڈل لوڈ نہیں ہوا۔',
-    listen: 'جی بولیں'
+    netError: 'انٹرنیٹ آن کریں، ماڈل لوڈ نہیں ہوا۔'
   },
   'en-US': {
     loading: 'Sensor is turning on.',
@@ -182,8 +179,7 @@ const translations = {
     suddenClose: 'Stop, sudden obstacle appeared ahead, 1 meter away.',
     clearPath: 'Path is clear, keep walking straight slowly.',
     camError: 'Please allow camera permissions',
-    netError: 'Turn on internet, model failed to load.',
-    listen: 'Yes, please speak.'
+    netError: 'Turn on internet, model failed to load.'
   },
   'hi-IN': {
     loading: 'सेंसर चालू हो रहा है।',
@@ -196,8 +192,7 @@ const translations = {
     suddenClose: 'रुक जाइए, सामने अचानक कोई रुकावट आ गई है, 1 मीटर पर है।',
     clearPath: 'रास्ता साफ़ है, धीरे-धीरे सीधे चलते जाइए।',
     camError: 'कृपया कैमरे की अनुमति दें',
-    netError: 'इंटरनेट चालू करें, मॉडल लोड नहीं हुआ।',
-    listen: 'जी बोलिए।'
+    netError: 'इंटरनेट चालू करें, मॉडल लोड नहीं हुआ।'
   },
   'ar-SA': {
     loading: 'جاري تشغيل المستشعر.',
@@ -210,22 +205,20 @@ const translations = {
     suddenClose: 'توقف، ظهرت عقبة مفاجئة أمامك، على بعد متر واحد.',
     clearPath: 'الطريق نظيف، استمر في المشي بشكل مستقيم وببطء.',
     camError: 'يرجى السماح بإذن الكاميرا',
-    netError: 'قم بتشغيل الإنترنت، لم يتم تحميل النموذج.',
-    listen: 'نعم، تفضل بالحديث.'
+    netError: 'قم بتشغيل الإنترنت، لم يتم تحميل النموذج.'
   },
   'pa-IN': {
     loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ਹੈ।',
     started: 'ਸਮਾਰਟ ਕੈਨ ਚਾਲੂ ਹੋ ਗਿਆ ਹੈ। ਮੈਂ ਰੁਕਾਵਟਾਂ ਬਾਰੇ ਦੱਸਦੀ ਰਹਾਂਗੀ।',
-    stopClose: 'ਰੁਕ ਜਾਓ, ਰੁਕਾਵਟ ਬਹੁਤ ਨੇੜੇ ਹੈ, ਅੱਧਾ ਮੀਟਰ ਦੂर ਹੈ।',
+    stopClose: 'ਰੁਕ ਜਾਓ, ਰੁਕਾਵਟ ਬਹੁਤ ਨੇੜੇ ਹੈ, ਅੱਧਾ ਮੀਟਰ ਦੂਰ ਹੈ।',
     midClose: 'ਸਾਹਮਣੇ ਰੁਕਾਵਟ ਹੈ, 1 ਮੀਟਰ ਦੂਰ ਹੈ, ਹੌਲੀ ਖੱਬੇ ਹੋ ਜਾਓ।',
     farClose: 'ਸਾਹਮਣੇ ਰੁਕਾਵਟ ਹੈ, 2 ਮੀਟਰ ਦੂਰ ਹੈ, ਹੌਲੀ ਚੱلو।',
     wallClose: 'ਰੁਕ ਜਾਓ, ਸਾਹਮਣੇ ਵੱਡੀ ਰੁਕਾਵਟ ਬਹੁਤ ਨੇੜੇ ਹੈ, ਅੱਧਾ ਮੀਟਰ ਦੂਰ।',
     rememberedClose: 'ਉਹ ਰੁਕਾਵਟ ਹੁਣ ਨੇੜੇ ਆ ਗਈ ਹੈ, 1 ਮੀਟਰ ਤੇ ਹੈ, ਰੁਕ ਜਾਓ।',
-    suddenClose: 'ਰੁਕ ਜਾਓ, ਸਾਹਮਣੇ अचानक ਰੁਕਾਵਟ ਆਈ ਹੈ, 1 ਮੀਟਰ ਤੇ ਹੈ।',
+    suddenClose: 'ਰੁਕ ਜਾਓ, ਸਾਹਮਣੇ اچانک ਰੁਕਾਵਟ ਆਈ ਹੈ, 1 ਮੀਟਰ ਤੇ ਹੈ।',
     clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਹੌਲੀ-ਹੌਲੀ ਸਿੱਧੇ ਚਲਦੇ ਜਾਓ।',
     camError: 'ਕਿਰਪਾ ਕਰਕੇ ਕੈਮਰੇ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ',
-    netError: 'ਇੰਟਰਨੈਟ ਚਾਲੂ ਕਰੋ, ਮਾਡਲ ਲੋਡ ਨਹੀਂ ਹੋਇਆ।',
-    listen: 'ਜੀ ਬੋلو।'
+    netError: 'ਇੰਟਰਨੈਟ ਚਾਲੂ ਕਰੋ, ਮਾਡਲ ਲੋਡ ਨਹੀਂ ਹੋਇਆ।'
   },
   'ps-PK': {
     loading: 'سنډر چالان کیږي.',
@@ -238,8 +231,7 @@ const translations = {
     suddenClose: 'وګرځئ، مخکې ناڅاپه خنډ راغلی، ۱ متر.',
     clearPath: 'لاره پاکه ده، په کراره سیده روان شئ.',
     camError: 'مهرباني وکړئ د کامرې اجازه ورکړئ',
-    netError: 'انټرنیټ چالان کړئ، ماډل بار نشو.',
-    listen: 'هو، خبرې وکړئ.'
+    netError: 'انټرنیټ چالان کړئ، ماډل بار نشو.'
   },
   'sd-PK': {
     loading: 'سينسر چالو ٿي رهيو آهي.',
@@ -252,8 +244,7 @@ const translations = {
     suddenClose: 'بيهي وڃو، سامهون اڻڄاتل رڪاوٽ آئي آهي، 1 ميٽر تي.',
     clearPath: 'رستو صاف آهي، آهستي سڌو هلبو وڃو.',
     camError: 'مهرباني ڪري ڪمري جي اجازت ڏيو',
-    netError: 'انٽرنيٽ چالو ڪريو، ماڊل لوڊ نه ٿيو.',
-    listen: 'ها، ڳالهايو.'
+    netError: 'انٽرنيٽ چالو ڪريو، ماڊل لوڊ نه ٿيو.'
   }
 };
 
@@ -262,7 +253,6 @@ function getMsg(key) {
   if(translations[lang] && translations[lang][key]) {
     return translations[lang][key];
   }
-  // Fallback to English if translation missing for any of the 100+ languages
   return translations['en-US'][key] || key;
 }
 
@@ -296,7 +286,6 @@ function vibrateLevel(level){
 async function ensureCamera(){
   if(stream && video.srcObject) return true;
   try{
-    // Fixed rear camera facing preference with fallback
     stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: { exact: "environment" }, width: { ideal: 640 }, height: { ideal: 480 } },
       audio: false
@@ -344,28 +333,35 @@ async function detectLoop(){
 
   const info = getScreenInfo();
   const isWall = info.variance < 20;
-  let speakMsg = "", level = 0;
+  let speakMsg = "", level = 0, currentCategory = "clear";
 
   if(found.length > 0){
     rememberedObj = found[0].class; rememberedTime = now;
     const box = found[0].bbox;
     const areaPercent = (box[2]*box[3]) / (video.videoWidth*video.videoHeight) * 100;
-    if(areaPercent > 25){ speakMsg = getMsg('stopClose'); level = 3; }
-    else if(areaPercent > 10){ speakMsg = getMsg('midClose'); level = 2; }
-    else { speakMsg = getMsg('farClose'); level = 1; }
+    if(areaPercent > 25){ speakMsg = getMsg('stopClose'); level = 3; currentCategory = "stopClose"; }
+    else if(areaPercent > 10){ speakMsg = getMsg('midClose'); level = 2; currentCategory = "midClose"; }
+    else { speakMsg = getMsg('farClose'); level = 1; currentCategory = "farClose"; }
   } else if(isWall){
-    speakMsg = getMsg('wallClose'); level = 3;
+    speakMsg = getMsg('wallClose'); level = 3; currentCategory = "wallClose";
   } else if(now - rememberedTime < 5000 && rememberedObj){
-    speakMsg = getMsg('rememberedClose'); level = 2;
+    speakMsg = getMsg('rememberedClose'); level = 2; currentCategory = "midClose";
   } else if(info.change > 15){
-    speakMsg = getMsg('suddenClose'); level = 2;
+    speakMsg = getMsg('suddenClose'); level = 2; currentCategory = "midClose";
   } else {
-    speakMsg = getMsg('clearPath'); level = 0;
+    speakMsg = getMsg('clearPath'); level = 0; currentCategory = "clear";
   }
 
-  // Optimized speech pacing interval (speaking without cutting off aggressively)
-  if((speakMsg !== lastSpoken && level > 0) || (now - lastSpeakTime > 3500)){
-    lastSpoken = speakMsg; lastSpeakTime = now;
+  // Stability control: Do not spam/flap announcements if the scene hasn't substantially changed or distance category remains stable
+  const isCategoryChanged = (currentCategory !== lastAnnouncedCategory);
+  const timeElapsed = now - lastSpeakTime;
+
+  // Speak immediately if category changed (e.g. state went from steady to close, or clear to obstacle), 
+  // OR repeat the same status only if stable and at least 5 seconds have passed without flapping.
+  if(isCategoryChanged || (speakMsg === lastSpoken && timeElapsed > 5000)) {
+    lastAnnouncedCategory = currentCategory;
+    lastSpoken = speakMsg; 
+    lastSpeakTime = now;
     if(level > 0){ playTone(); vibrateLevel(level); }
     speakText(speakMsg);
   }
@@ -397,18 +393,6 @@ document.getElementById('stopBtn').addEventListener('click', ()=>{
   statusEl.innerText="STATUS: OFF";
   document.getElementById('startBtn').style.display="block";
   document.getElementById('stopBtn').style.display="none";
-});
-
-document.getElementById('voiceBtn').addEventListener('click', ()=>{
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if(!SR) return;
-  const rec = new SR(); 
-  rec.lang = langSel.value;
-  rec.onresult = (e)=>{
-    setTimeout(() => { detectLoop(); }, 400);
-  };
-  rec.start(); 
-  speakText(getMsg('listen'));
 });
 
 // Map functionality remains untouched as requested
