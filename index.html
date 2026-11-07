@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart King - Fixed</title>
+<title>Smart King - Distance Sensor</title>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@latest"></script>
 <style>
@@ -13,23 +13,22 @@ body{font-family:Arial;background:#0a0f1e;color:#fff;margin:0;padding:16px}
 h2{text-align:center;color:#00ffcc;margin:0}
 .sub{text-align:center;font-size:12px;color:#94a3b8;margin:6px 0 14px}
 label{display:block;color:#00ffcc;font-size:13px;font-weight:700;margin:14px 0 6px}
-select,input{width:100%;padding:12px;border-radius:10px;border:1px solid #374151;background:#1f2937;color:#fff;font-size:15px}
+select{width:100%;padding:12px;border-radius:10px;border:1px solid #374151;background:#1f2937;color:#fff;font-size:15px}
 video{width:100%;height:320px;border-radius:12px;background:#000;object-fit:cover;margin-top:12px;border:3px solid #00ffcc}
 button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer;margin-top:10px;font-weight:700;width:100%}
 .btn-main{background:#00ffcc;color:#000}
 .btn-test{background:#7c3aed;color:#fff}
-.btn-voice{background:#d97706;color:#fff}
-.btn-map{background:#0284c7;color:#fff}
 .btn-stop{background:#ef4444;color:#fff}
 #status{text-align:center;margin:10px 0;font-weight:700}
-#sensorBox{text-align:center;padding:12px;background:#064e3b;border-radius:10px;margin-top:10px;font-size:14px}
-#debug{margin-top:10px;padding:10px;background:#000;border-radius:10px;font-size:12px;color:#a7f3d0;min-height:60px;text-align:left;white-space:pre-wrap}
+#sensorBox{text-align:center;padding:14px;background:#064e3b;border-radius:10px;margin-top:10px;font-size:16px;font-weight:700}
+#distanceBox{text-align:center;padding:14px;background:#111827;border:2px solid #00ffcc;border-radius:10px;margin-top:10px;font-size:22px;font-weight:900}
+#debug{margin-top:10px;padding:10px;background:#000;border-radius:10px;font-size:12px;color:#a7f3d0;min-height:50px;text-align:left;white-space:pre-wrap}
 </style>
 </head>
 <body>
 <div class="top">
 <h2>SMART KING</h2>
-<div class="sub">MOBILE IS YOUR EYE - FIXED VERSION</div>
+<div class="sub">DISTANCE SENSOR - RUKAWAT KITNI DOOR HAI?</div>
 
 <label>SELECT LANGUAGE</label>
 <select id="voiceLanguage">
@@ -38,19 +37,15 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 <option value="hi-IN">Hindi</option>
 </select>
 
-<label>DESTINATION</label>
-<input type="text" id="destinationInput" placeholder="e.g. Okara Bazar">
-<button id="openMapsBtn" class="btn-map">OPEN MAPS</button>
-
 <div id="status">STATUS: OFF</div>
 
-<button id="startBtn" class="btn-main">START - CAMERA + SENSOR ON</button>
-<button id="testBtn" class="btn-test">TEST NOW - Abhi Samne Kya Hai? Batao</button>
-<button id="voiceBtn" class="btn-voice">VOICE COMMAND</button>
+<button id="startBtn" class="btn-main">START - SENSOR ON</button>
+<button id="testBtn" class="btn-test">TEST NOW - 3 SECOND MEIN BATAO</button>
 <button id="stopBtn" class="btn-stop" style="display:none;">STOP</button>
 
 <video id="webcam" autoplay playsinline muted></video>
 
+<div id="distanceBox">DOORI: ---</div>
 <div id="sensorBox">SENSOR: OFF</div>
 <div id="debug">Debug yahan aayega...</div>
 </div>
@@ -58,15 +53,16 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 <script>
 const video=document.getElementById('webcam');
 const sensorBox=document.getElementById('sensorBox');
+const distanceBox=document.getElementById('distanceBox');
 const statusEl=document.getElementById('status');
 const debugEl=document.getElementById('debug');
 const langSel=document.getElementById('voiceLanguage');
-let stream=null, isLive=false, model=null, timer=null, lastSpoken="", lastSpeakTime=0, audioCtx=null, lastBrightness=0;
+let stream=null, isLive=false, model=null, timer=null, lastSpeakTime=0, lastSpoken="", audioCtx=null, lastFrameData=null;
 
 function speakText(t){
   window.speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(t);
-  u.lang=langSel.value; u.rate=0.95;
+  u.lang=langSel.value; u.rate=1.0;
   window.speechSynthesis.speak(u);
   debugEl.innerText="BOLA: "+t;
 }
@@ -77,16 +73,16 @@ function playTone(){
     o.connect(g); g.connect(audioCtx.destination);
     o.frequency.value=880; o.type='sine';
     g.gain.setValueAtTime(0.2, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.4);
-    o.start(); o.stop(audioCtx.currentTime+0.4);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.3);
+    o.start(); o.stop(audioCtx.currentTime+0.3);
   }catch(e){}
 }
-function vibrateStrong(){ if(navigator.vibrate) navigator.vibrate([300,100,300,100,300]); }
-function vibrateLight(){ if(navigator.vibrate) navigator.vibrate([120]); }
-
-function getUrduName(en){
-  const m={'person':'samne ek insan hai','chair':'samne kursi hai','couch':'samne sofa hai','bed':'samne bed hai','dining table':'samne table hai','car':'samne gari hai','motorcycle':'samne bike hai','bicycle':'samne cycle hai','dog':'samne kutta hai','cat':'samne billi hai','tv':'samne TV hai','laptop':'samne laptop hai','book':'samne kitab hai','bottle':'samne bottle hai','cell phone':'samne mobile hai','oven':'samne chulha hai','sink':'samne sink hai','refrigerator':'samne fridge hai','toilet':'samne toilet hai'};
-  return m[en] || ('samne '+en+' hai');
+// Vibration - 3 level
+function vibrateLevel(level){
+  if(!navigator.vibrate) return;
+  if(level===3) navigator.vibrate([400,100,400,100,400]); // Bahut qareeb - tez
+  else if(level===2) navigator.vibrate([200,100,200]); // Darmiyani
+  else if(level===1) navigator.vibrate([100]); // Door - halki
 }
 
 async function ensureCamera(){
@@ -96,27 +92,22 @@ async function ensureCamera(){
     video.srcObject=stream; await video.play(); return true;
   }catch(e){
     try{ stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); video.srcObject=stream; await video.play(); return true; }
-    catch(e2){ speakText('Camera ki ijazat dein, upar Lock par click kar ke Camera Allow karein'); return false; }
+    catch(e2){ speakText('Camera ki ijazat dein'); return false; }
   }
 }
 
-// DEEWAR DETECTION - Naya system
-function checkWall(){
-  if(!video.videoWidth) return null;
-  const c=document.createElement('canvas');
-  c.width=60; c.height=45;
-  const ctx=c.getContext('2d');
-  ctx.drawImage(video,0,0,60,45);
+// PURANA WALA SENSOR - Frame me achanak tabdeeli = Rukawat aayi
+function oldSensorCheck(){
+  if(!video.videoWidth) return 0;
+  const c=document.createElement('canvas'); c.width=60; c.height=45;
+  const ctx=c.getContext('2d'); ctx.drawImage(video,0,0,60,45);
   const d=ctx.getImageData(0,0,60,45).data;
-  let r=0,g=0,b=0, total=60*45;
-  let variance=0;
-  for(let i=0;i<d.length;i+=4){ r+=d[i]; g+=d[i+1]; b+=d[i+2]; }
-  let avgR=r/total, avgG=g/total, avgB=b/total;
-  for(let i=0;i<d.length;i+=4){ variance += Math.abs(d[i]-avgR) + Math.abs(d[i+1]-avgG) + Math.abs(d[i+2]-avgB); }
-  variance = variance / total;
-  // Agar variance boht kam hai matlab poori screen ek hi rang ki hai = Deewar / Darwaza bilkul qareeb hai
-  // Aur brightness bhi check karo
-  return {variance: variance, avg: (avgR+avgG+avgB)/3};
+  let avg=0; for(let i=0;i<d.length;i+=4){ avg+=(d[i]+d[i+1]+d[i+2])/3; } avg=avg/(60*45);
+  let variance=0; for(let i=0;i<d.length;i+=4){ variance+=Math.abs((d[i]+d[i+1]+d[i+2])/3 - avg); } variance=variance/(60*45);
+  let change=0;
+  if(lastFrameData) change=Math.abs(avg - lastFrameData);
+  lastFrameData=avg;
+  return {variance, change, avg};
 }
 
 async function detectNow(isTest=false){
@@ -124,74 +115,92 @@ async function detectNow(isTest=false){
   if(!video.videoWidth) return;
   const now=Date.now();
 
-  // 1. Pehle COCO se cheez dekho
+  // 1. Object Detection - Kitna bara hai? Bara = Qareeb, Chota = Door
   let found=[];
-  try{ const preds=await model.detect(video); found=preds.filter(p=>p.score>0.40); found.sort((a,b)=>(b.bbox[2]*b.bbox[3])-(a.bbox[2]*a.bbox[3])); }catch(e){}
+  try{
+    const preds=await model.detect(video);
+    found=preds.filter(p=>p.score>0.35); // 0.35 kar diya taake aadhi cheez bhi pakri jaye
+    found.sort((a,b)=>(b.bbox[2]*b.bbox[3])-(a.bbox[2]*a.bbox[3]));
+  }catch(e){}
 
-  // 2. Deewar check karo
-  const wallInfo=checkWall();
-  const isWall = wallInfo && wallInfo.variance < 18;
+  // 2. Purana Sensor
+  const sensor = oldSensorCheck();
+  const isWall = sensor.variance < 20; // Poori screen ek rang = Deewar bilkul qareeb
 
-  debugEl.innerText="Dekha: "+(found.length? found.map(f=>f.class+" "+Math.round(f.score*100)+"%").join(", ") : "koi object nahi")+"\nDeewar Check: variance="+Math.round(wallInfo.variance)+" (18 se kam = Deewar)";
+  debugEl.innerText="Object: "+(found.length? found[0].class+" "+Math.round(found[0].score*100)+"%" : "koi object nahi")+"\nWall Variance: "+Math.round(sensor.variance)+" | Change: "+Math.round(sensor.change);
+
+  // --- DOORI KA ANDAZA ---
+  let distanceText="", speakMsg="", level=0, boxColor="#064e3b";
 
   if(found.length>0){
-    const obj=found[0].class;
-    const txt=getUrduName(obj);
-    if(isTest || txt!==lastSpoken || now-lastSpeakTime>5000){
-      lastSpoken=txt; lastSpeakTime=now;
-      playTone(); vibrateLight();
-      sensorBox.style.background="#7f1d1d";
-      sensorBox.innerText="SENSOR: OBJECT FOUND - "+obj.toUpperCase();
-      speakText('Ruk jayen, '+txt+', aahista baien ho jayen.');
-    }
-    return;
-  }
+    // Box kitna bara hai - is se doori ka andaza
+    const box = found[0].bbox;
+    const areaPercent = (box[2]*box[3]) / (video.videoWidth * video.videoHeight) * 100;
+    const objName = found[0].class;
 
-  if(isWall){
-    if(isTest || lastSpoken!=="deewar" || now-lastSpeakTime>4000){
-      lastSpoken="deewar"; lastSpeakTime=now;
-      playTone(); vibrateStrong();
-      sensorBox.style.background="#7f1d1d";
-      sensorBox.innerText="SENSOR: WALL / BARI RUKAWAT - QAREEB HAI";
-      speakText('Ruk jayen, samne deewar ya bari rukawat hai, peeche haten ya baien ho jayen.');
+    if(areaPercent > 25){
+      // Bahut bara = Bahut qareeb
+      distanceText="DOORI: BAHUT QAREEB - 0.5 METER";
+      speakMsg="Ruk jayen, rukawat bahut qareeb hai, aadha meter par hai, "+objName+" hai, peeche haten.";
+      level=3; boxColor="#7f1d1d";
+    } else if(areaPercent > 10){
+      distanceText="DOORI: QAREEB - 1 METER";
+      speakMsg="Rukawat qareeb hai, 1 meter door hai, aahista baien ho jayen.";
+      level=2; boxColor="#92400e";
+    } else {
+      distanceText="DOORI: DOOR - 2 METER SE ZYADA";
+      speakMsg="Samne door rukawat hai, 2 meter door hai, aahista chalen.";
+      level=1; boxColor="#365314";
     }
-    return;
-  }
-
-  // 3. Agar kuch bhi nahi mila to ab "Rasta Saaf" har dafa mat bolo, sirf test me bolo
-  if(isTest){
-    speakText('Samne koi bari cheez nazar nahi aa rahi, aahista aage barhen.');
-    sensorBox.style.background="#064e3b";
-    sensorBox.innerText="SENSOR: KOI OBJECT NAHI MILA - TEST";
+  } else if(isWall){
+    // Deewar bilkul qareeb hai
+    distanceText="DOORI: BAHUT QAREEB - DEEWAR";
+    speakMsg="Ruk jayen, samne deewar ya bari rukawat bilkul qareeb hai, aadha meter par hai.";
+    level=3; boxColor="#7f1d1d";
+  } else if(sensor.change > 15){
+    // Achanak kuch aaya hai - Purane sensor ne pakra
+    distanceText="DOORI: QAREEB - KOI CHEEZ AAYI HAI";
+    speakMsg="Ruk jayen, samne achanak koi rukawat aayi hai, 1 meter par hai.";
+    level=2; boxColor="#92400e";
   } else {
-    sensorBox.style.background="#064e3b";
-    sensorBox.innerText="SENSOR: SCANNING...";
-    // Auto me har 8 sec me ek dafa hi bolo, bar bar nahi
-    if(now-lastSpeakTime>8000){
-      lastSpoken="clear"; lastSpeakTime=now;
-      speakText('Rasta saaf lag raha hai, aahista chalte jayen.');
-    }
+    // Kuch nahi hai
+    distanceText="DOORI: RASTA SAAF";
+    speakMsg="Rasta saaf hai, aahista seedhe chalte jayen.";
+    level=0; boxColor="#064e3b";
+  }
+
+  distanceBox.innerText=distanceText;
+  distanceBox.style.background=boxColor;
+  sensorBox.innerText="SENSOR: "+distanceText;
+  sensorBox.style.background=boxColor;
+
+  // 3 SECOND RULE - Har 3 sec me ek dafa bolo, ya TEST me foran bolo
+  if(isTest || speakMsg!==lastSpoken || now-lastSpeakTime>3000){
+    lastSpoken=speakMsg; lastSpeakTime=now;
+    if(level>0){ playTone(); vibrateLevel(level); }
+    speakText(speakMsg);
   }
 }
 
 document.getElementById('startBtn').addEventListener('click', async ()=>{
-  statusEl.innerText="STATUS: LOADING MODEL...";
-  speakText('Model load ho raha hai, thora intezar karein, internet on rakhen.');
+  statusEl.innerText="STATUS: LOADING...";
+  speakText('Sensor on ho raha hai, 3 second me jawab milega.');
   if(!await ensureCamera()) return;
   try{ if(!model) model=await cocoSsd.load(); }
-  catch(e){ speakText('Internet on karein, model load nahi hua.'); statusEl.innerText="STATUS: MODEL FAIL - Internet Check Karen"; return; }
+  catch(e){ speakText('Internet on karein, model load nahi hua.'); return; }
   isLive=true;
-  statusEl.innerText="STATUS: LIVE - OBJECT + WALL DETECTION ON";
+  statusEl.innerText="STATUS: LIVE - 3 SECOND SENSOR ON";
   document.getElementById('startBtn').style.display="none";
   document.getElementById('stopBtn').style.display="block";
-  speakText('Camera aur Sensor on ho gaya hai. Ab main deewar ko bhi bataungi, table bed ko bhi bataungi.');
-  timer=setInterval(()=>detectNow(false), 2000);
+  speakText('Sensor on ho gaya hai. Ab main har 3 second me bataungi rukawat kitni door hai.');
+  // HAR 3 SECOND MEIN CHECK - 40 second nahi
+  timer=setInterval(()=>detectNow(false), 3000);
 });
 
-document.getElementById('testBtn').addEventListener('click', async ()=>{
+document.getElementById('testBtn').addEventListener('click', ()=>{
   if(!isLive){ speakText('Pehle START dabayen.'); return; }
-  speakText('Rukiye, main abhi dekh kar batati hoon.');
-  setTimeout(()=>detectNow(true), 600);
+  speakText('Rukiye, 3 second me batati hoon.');
+  setTimeout(()=>detectNow(true), 500);
 });
 
 document.getElementById('stopBtn').addEventListener('click', ()=>{
@@ -202,24 +211,6 @@ document.getElementById('stopBtn').addEventListener('click', ()=>{
   statusEl.innerText="STATUS: OFF";
   document.getElementById('startBtn').style.display="block";
   document.getElementById('stopBtn').style.display="none";
-});
-
-document.getElementById('voiceBtn').addEventListener('click', ()=>{
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR) return;
-  const rec=new SR(); rec.lang='ur-PK';
-  rec.onresult=(e)=>{
-    const q=e.results[0][0].transcript;
-    if(q.includes('samne')||q.includes('kya hai')){ speakText('Rukiye, dekh kar batati hoon.'); setTimeout(()=>detectNow(true),600); }
-    else speakText('Main sun rahi hoon.');
-  };
-  rec.start(); speakText('Ji bolein.');
-});
-
-document.getElementById('openMapsBtn').addEventListener('click', ()=>{
-  const q=document.getElementById('destinationInput').value.trim();
-  if(!q){ speakText('Pehle upar likhen kahan jana hai.'); return; }
-  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`,'_blank');
 });
 </script>
 </body>
