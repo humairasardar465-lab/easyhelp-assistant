@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart King - Mobile Hi Aankh Hai</title>
+<title>Smart King - Mobile Is Your Eye</title>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@latest"></script>
 <style>
 *{box-sizing:border-box}
 body{font-family:Arial;background:#0a0f1e;color:#fff;margin:0;padding:16px}
@@ -18,70 +20,95 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 .btn-voice{background:#d97706;color:#fff}
 .btn-map{background:#0284c7;color:#fff}
 .btn-stop{background:#ef4444;color:#fff}
-#output{margin-top:14px;padding:14px;background:#1f2937;border-radius:10px;min-height:60px;font-size:17px;text-align:right}
 #status{text-align:center;margin:10px 0;font-weight:700}
 #sensorBox{text-align:center;padding:12px;background:#064e3b;border-radius:10px;margin-top:10px;font-size:14px}
+#output{margin-top:14px;padding:12px;background:#1f2937;border-radius:10px;min-height:40px;font-size:14px;text-align:center;color:#94a3b8}
 </style>
 </head>
 <body>
 <div class="top">
-<h2>👑 SMART KING</h2>
-<div class="sub">Mobile Hi Aankh Hai - Bina Kisi Key Ke</div>
+<h2>SMART KING</h2>
+<div class="sub">MOBILE IS YOUR EYE - REAL TIME OBJECT DETECTION</div>
 
-<label>Select Language - زبان بدلیں</label>
+<label>SELECT LANGUAGE</label>
 <select id="voiceLanguage">
-<option value="ur-PK" selected>Urdu - اردو</option>
+<option value="ur-PK" selected>Urdu</option>
 <option value="en-US">English</option>
-<option value="hi-IN">Hindi - हिंदी</option>
-<option value="ar-SA">Arabic - العربية</option>
-<option value="pa-IN">Punjabi - ਪੰਜਾਬੀ</option>
-<option value="ps-PK">Pashto - پښتو</option>
-<option value="sd-PK">Sindhi - سنڌي</option>
+<option value="hi-IN">Hindi</option>
+<option value="ar-SA">Arabic</option>
+<option value="pa-IN">Punjabi</option>
 </select>
 
-<label>Kahan Jana Hai?</label>
-<input type="text" id="destinationInput" placeholder="Jese: Okara Bazar">
-<button id="openMapsBtn" class="btn-map">🗺 Maps Kholo - Rasta Batayega</button>
+<label>DESTINATION</label>
+<input type="text" id="destinationInput" placeholder="e.g. Okara Bazar">
+<button id="openMapsBtn" class="btn-map">OPEN MAPS</button>
 
-<div id="status">OFF</div>
+<div id="status">STATUS: OFF</div>
 
-<button id="startBtn" class="btn-main">▶ START - Camera + Sensor ON</button>
-<button id="voiceBtn" class="btn-voice">🎤 Bolo</button>
-<button id="stopBtn" class="btn-stop" style="display:none;">⏹ STOP</button>
+<button id="startBtn" class="btn-main">START - CAMERA + SENSOR ON</button>
+<button id="voiceBtn" class="btn-voice">VOICE COMMAND</button>
+<button id="stopBtn" class="btn-stop" style="display:none;">STOP</button>
 
 <video id="webcam" autoplay playsinline muted></video>
-<canvas id="canvas" style="display:none;"></canvas>
 
-<div id="sensorBox">📡 Sensor: OFF<br>Mobile samne rakhen, hilne par vibrate karega</div>
-<div id="output">Yahan jawab aayega...</div>
+<div id="sensorBox">SENSOR: OFF</div>
+<div id="output">System will SPEAK, not only write.</div>
 </div>
 
 <script>
 const video=document.getElementById('webcam');
-const canvas=document.getElementById('canvas');
 const output=document.getElementById('output');
 const sensorBox=document.getElementById('sensorBox');
 const statusEl=document.getElementById('status');
 const langSel=document.getElementById('voiceLanguage');
-let stream=null, isLive=false, timer=null, lastFrame=null, lastVibrate=0;
+let stream=null, isLive=false, model=null, timer=null, lastSpoken="", lastSpeakTime=0, audioCtx=null;
 
-function getLangName(){ return langSel.options[langSel.selectedIndex].text.split(' - ')[0]; }
+function getLang(){ return langSel.value; }
 
 function speakText(t){
   window.speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(t);
-  u.lang=langSel.value; u.rate=0.95;
+  u.lang=getLang(); u.rate=0.95;
   window.speechSynthesis.speak(u);
-  output.innerText=t;
+  output.innerText="Speaking: "+t;
 }
 
-function doVibrate(level){
-  const now=Date.now();
-  if(now - lastVibrate < 1200) return;
-  lastVibrate=now;
-  if(!navigator.vibrate) return;
-  if(level===2){ navigator.vibrate([400,100,400,100,400]); }
-  else if(level===1){ navigator.vibrate([150]); }
+function playTone(){
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    const o=audioCtx.createOscillator(); const g=audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.frequency.value=880; o.type='sine';
+    g.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.4);
+    o.start(); o.stop(audioCtx.currentTime+0.4);
+  }catch(e){}
+}
+
+function vibrateLight(){
+  if(navigator.vibrate) navigator.vibrate([120]);
+}
+
+function getUrduName(en){
+  const map={
+    'person':'samne ek insan hai',
+    'chair':'samne kursi hai',
+    'couch':'samne sofa hai',
+    'bed':'samne bed hai',
+    'dining table':'samne table hai',
+    'car':'samne gari hai',
+    'motorcycle':'samne bike hai',
+    'bicycle':'samne cycle hai',
+    'bus':'samne bus hai',
+    'truck':'samne truck hai',
+    'dog':'samne kutta hai',
+    'cat':'samne billi hai',
+    'cow':'samne gaaye hai',
+    'bottle':'samne bottle hai',
+    'cell phone':'samne mobile hai'
+  };
+  if(map[en]) return map[en];
+  return 'samne '+en+' hai';
 }
 
 async function ensureCamera(){
@@ -91,52 +118,53 @@ async function ensureCamera(){
     catch(e){ stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }
     video.srcObject=stream; await video.play();
     return true;
-  }catch(e){
-    speakText('Camera ki ijazat dein, Chrome me upar Lock par click kar ke Camera Allow karein');
-    return false;
-  }
+  }catch(e){ speakText('Camera ki ijazat dein'); return false; }
 }
 
-function checkSensorRealTime(){
-  if(!isLive) return;
+async function detectReal(){
+  if(!isLive || !model) return;
   if(!video.videoWidth) return;
-  canvas.width=120; canvas.height=90;
-  const ctx=canvas.getContext('2d');
-  ctx.drawImage(video,0,0,120,90);
-  const data=ctx.getImageData(0,0,120,90).data;
-  let brightness=0;
-  for(let i=0;i<data.length;i+=4){ brightness += (data[i]+data[i+1]+data[i+2])/3; }
-  brightness = brightness / (120*90);
-  let change=0;
-  if(lastFrame){ change=Math.abs(brightness - lastFrame); }
-  lastFrame=brightness;
-  if(change > 18){
-    doVibrate(2);
-    sensorBox.style.background="#7f1d1d";
-    sensorBox.innerText="📡 Sensor: SAMNE KOI CHEEZ AAYI HAI 🔴\nMobile tez vibrate ho raha hai - Ruk jayen";
-    const lang=getLangName();
-    if(lang==='Urdu') speakText('Ruk jayen, samne koi cheez aayi hai, aahista baien ho jayen.');
-    else if(lang==='Hindi') speakText('Ruk jayen, samne koi cheez aayi hai.');
-    else if(lang==='Arabic') speakText('توقف، هناك شيء أمامك.');
-    else speakText('Stop, something came in front.');
-  } else if(change > 8){
-    doVibrate(1);
-    sensorBox.style.background="#92400e";
-    sensorBox.innerText="📡 Sensor: Samne halki harkat hai 🟡\nHalki vibration - Aahista chalen";
-  } else {
-    sensorBox.style.background="#064e3b";
-    sensorBox.innerText="📡 Sensor: Rasta Saaf Lag Raha Hai 🟢\nKoi tez harkat nahi - Seedha chalen";
-  }
+  try{
+    const predictions = await model.detect(video);
+    let found = predictions.filter(p=>p.score>0.55);
+    found.sort((a,b)=> (b.bbox[2]*b.bbox[3]) - (a.bbox[2]*a.bbox[3]));
+    const now=Date.now();
+    if(found.length>0){
+      const obj = found[0].class;
+      const urduText = getUrduName(obj);
+      if(urduText !== lastSpoken || now - lastSpeakTime > 6000){
+        lastSpoken=urduText; lastSpeakTime=now;
+        playTone();
+        vibrateLight();
+        sensorBox.style.background="#7f1d1d";
+        sensorBox.innerText="SENSOR: OBJECT FOUND - "+obj.toUpperCase();
+        if(getLang()==='ur-PK') speakText('Ruk jayen, '+urduText+', aahista baien ho jayen.');
+        else speakText('Stop, '+obj+' in front.');
+      }
+    } else {
+      sensorBox.style.background="#064e3b";
+      sensorBox.innerText="SENSOR: PATH CLEAR";
+      if(now - lastSpeakTime > 8000){
+        lastSpoken="clear"; lastSpeakTime=now;
+        if(getLang()==='ur-PK') speakText('Rasta saaf hai, seedhe chalte jayen.');
+        else speakText('Path is clear, keep walking straight.');
+      }
+    }
+  }catch(e){ console.log(e); }
 }
 
 document.getElementById('startBtn').addEventListener('click', async ()=>{
+  statusEl.innerText="STATUS: LOADING AI MODEL...";
+  speakText('Model load ho raha hai, thora intezar karein.');
   if(!await ensureCamera()) return;
+  try{ if(!model) model = await cocoSsd.load(); }
+  catch(e){ speakText('Internet on karein, model load karne ke liye internet chahiye.'); return; }
   isLive=true;
-  statusEl.innerText="🟢 LIVE - Bina Key Ke - "+getLangName();
+  statusEl.innerText="STATUS: LIVE - OBJECT DETECTION ON";
   document.getElementById('startBtn').style.display="none";
   document.getElementById('stopBtn').style.display="block";
-  speakText(getLangName()==='Urdu' ? 'Camera aur Sensor on ho gaya hai, bina kisi Key ke. Mobile samne rakhen, samne cheez aayegi to mobile vibrate karega aur main bataungi.' : 'Camera and Sensor is ON without any key.');
-  timer=setInterval(checkSensorRealTime, 1000);
+  speakText('Camera aur Sensor on ho gaya hai. Ab main samne wali asli cheez ka naam bol kar bataungi.');
+  timer=setInterval(detectReal, 1500);
 });
 
 document.getElementById('stopBtn').addEventListener('click', ()=>{
@@ -144,31 +172,23 @@ document.getElementById('stopBtn').addEventListener('click', ()=>{
   if(stream) stream.getTracks().forEach(t=>t.stop());
   stream=null; video.srcObject=null;
   window.speechSynthesis.cancel();
-  statusEl.innerText="OFF";
+  statusEl.innerText="STATUS: OFF";
   document.getElementById('startBtn').style.display="block";
   document.getElementById('stopBtn').style.display="none";
-  sensorBox.innerText="📡 Sensor: OFF";
 });
 
 document.getElementById('voiceBtn').addEventListener('click', ()=>{
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){ speakText('Chrome use karein'); return; }
+  if(!SR) return;
   const rec=new SR(); rec.lang='ur-PK';
   rec.onresult=(e)=>{
     const q=e.results[0][0].transcript;
-    const lower=q.toLowerCase();
-    output.innerText='Aap ne kaha: '+q;
-    const lang=getLangName();
-    if(lower.includes('samne') || lower.includes('kya hai') || lower.includes('dekho')){
-      speakText(lang==='Urdu' ? 'Mobile samne rakhen, agar samne cheez hogi to mobile vibrate karega aur main bata dungi.' : 'Keep mobile in front, if something comes, mobile will vibrate.');
-      checkSensorRealTime();
-      return;
+    if(q.includes('samne')||q.includes('kya hai')){
+      speakText('Main abhi camera se dekh kar batati hoon samne kya hai.');
+      setTimeout(detectReal, 800);
+    } else {
+      speakText('Main sun rahi hoon, mobile samne rakhen.');
     }
-    if(lower.includes('kahan') || lower.includes('bazar') || lower.includes('jana')){
-      speakText(lang==='Urdu' ? 'Upar destination likh kar Maps wala button dabayen, Maps aap ko rasta batayega.' : 'Write destination above and press Maps button.');
-      return;
-    }
-    speakText(lang==='Urdu' ? 'Main sun rahi hoon, mobile samne rakhen, main aap ke sath hoon.' : 'I am listening, keep mobile in front.');
   };
   rec.start();
   speakText('Ji bolein, main sun rahi hoon.');
