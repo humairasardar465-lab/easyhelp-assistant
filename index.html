@@ -6,23 +6,22 @@
 <title>Smart King Assistant</title>
 <style>
 *{box-sizing:border-box}
-body{font-family:'Segoe UI',Arial,sans-serif;background:#0a0f1e;color:#fff;text-align:center;margin:0;padding:16px}
-.top{max-width:620px;margin:auto;background:#111827;padding:22px;border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,.5);text-align:left}
-h2{text-align:center;color:#00ffcc;margin:0;font-size:24px;letter-spacing:.5px}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#0a0f1e;color:#fff;margin:0;padding:16px}
+.top{max-width:620px;margin:auto;background:#111827;padding:22px;border-radius:16px;text-align:left}
+h2{text-align:center;color:#00ffcc;margin:0;font-size:24px}
 .creator{text-align:center;font-size:12px;color:#94a3b8;margin:6px 0 16px}
-label{display:block;color:#00ffcc;font-size:13px;font-weight:700;margin:14px 0 6px;letter-spacing:.3px;text-transform:uppercase}
-select,input{width:100%;padding:12px;border-radius:10px;border:1px solid #374151;background:#1f2937;color:#fff;font-size:15px;outline:none}
-video{width:100%;height:280px;border-radius:12px;background:#000;object-fit:cover;margin-top:12px}
+label{display:block;color:#00ffcc;font-size:13px;font-weight:700;margin:14px 0 6px;text-transform:uppercase}
+select,input{width:100%;padding:12px;border-radius:10px;border:1px solid #374151;background:#1f2937;color:#fff;font-size:15px}
+video{width:100%;height:280px;border-radius:12px;background:#000;object-fit:cover;margin-top:12px;display:none}
 button{border:none;padding:13px;font-size:15px;border-radius:10px;cursor:pointer;margin-top:10px;font-weight:700;width:100%}
 .btn-main{background:#00ffcc;color:#000}
 .btn-map{background:#0284c7;color:#fff}
 .btn-voice{background:#d97706;color:#fff}
+.btn-cam{background:#7c3aed;color:#fff}
 .btn-stop{background:#ef4444;color:#fff}
-#output{margin-top:14px;padding:12px;background:#1f2937;border-radius:10px;min-height:48px;font-size:14px;text-align:right}
+#output{margin-top:14px;padding:12px;background:#1f2937;border-radius:10px;min-height:48px;font-size:15px;text-align:right}
 .status{text-align:center;margin:10px 0;font-size:13px;font-weight:700}
-.dot{display:inline-block;width:10px;height:10px;background:#ef4444;border-radius:50%;animation:blink 1s infinite}
-@keyframes blink{50%{opacity:0}}
-hr{border:0;border-top:1px solid #374151;margin:18px 0}
+.dot{display:inline-block;width:10px;height:10px;background:#ef4444;border-radius:50%}
 </style>
 </head>
 <body>
@@ -44,9 +43,10 @@ hr{border:0;border-top:1px solid #374151;margin:18px 0}
 <input type="text" id="destinationInput" placeholder="Enter destination...">
 <button id="openMapsBtn" class="btn-map">Open Maps</button>
 
-<hr>
+<hr style="border:0;border-top:1px solid #374151;margin:18px 0">
 
 <label>Live Camera</label>
+<button id="camBtn" class="btn-cam">Camera On</button>
 <button id="startBtn" class="btn-main">Start Live Mode</button>
 <button id="voiceBtn" class="btn-voice">Voice Command</button>
 <button id="stopBtn" class="btn-stop" style="display:none;">Stop Live</button>
@@ -63,42 +63,83 @@ const output=document.getElementById('output');
 const voiceLanguageSelect=document.getElementById('voiceLanguage');
 const startBtn=document.getElementById('startBtn');
 const stopBtn=document.getElementById('stopBtn');
+const camBtn=document.getElementById('camBtn');
 const liveStatus=document.getElementById('liveStatus');
-let autoTimer=null, stream=null, isLive=false, isPaused=false, isThinking=false;
+let autoTimer=null, stream=null, isLive=false, isPaused=false, isThinking=false, camOn=false;
 
-// Key Attached
 const API_KEY = "AIzaSyDI5btsG8Wu77sAj8gI9Ug8E_9Lr_FvN5A";
 
-const systemIdentity = "You are Smart King Assistant, created by Smart King. Never mention Google, Gemini. Reply concisely in the requested language.";
+// زبان کا پورا نام - اب AI کو صحیح زبان بتائی جائے گی
+function getLangName(code){
+  if(code==='ur-PK') return 'Urdu';
+  if(code==='en-US') return 'English';
+  if(code==='ar-SA') return 'Arabic';
+  if(code==='hi-IN') return 'Hindi';
+  if(code==='pa-IN') return 'Punjabi';
+  return 'Urdu';
+}
 
 function speakText(text){
   window.speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(text);
-  u.lang=voiceLanguageSelect.value; u.rate=1.0;
+  // Hindi اور Arabic کے لیے صحیح آواز
+  u.lang=voiceLanguageSelect.value;
+  u.rate=0.95;
+  // اگر آواز نہ ملے تو دوبارہ کوشش
+  const voices=window.speechSynthesis.getVoices();
+  const v=voices.find(v=>v.lang===voiceLanguageSelect.value) || voices.find(v=>v.lang.startsWith(voiceLanguageSelect.value.split('-')[0]));
+  if(v) u.voice=v;
   window.speechSynthesis.speak(u);
   output.innerText=text;
 }
+window.speechSynthesis.onvoiceschanged=()=>{};
+
+// Camera On / Off - الگ بٹن
+async function toggleCamera(){
+  if(camOn){
+    if(stream) stream.getTracks().forEach(t=>t.stop());
+    video.srcObject=null; video.style.display='none'; camOn=false;
+    camBtn.innerText='Camera On';
+    speakText(getLangName(voiceLanguageSelect.value)==='Urdu' ? 'کیمرہ بند ہو گیا ہے' : 'Camera is off');
+    return;
+  }
+  try{
+    try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false}); }
+    catch(e){ stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }
+    video.srcObject=stream; video.style.display='block'; camOn=true;
+    camBtn.innerText='Camera Off';
+  }catch(e){ speakText('Please allow camera permission'); }
+}
+camBtn.addEventListener('click', toggleCamera);
 
 async function analyzeCamera(){
-  if(!isLive || isPaused || isThinking || !video.srcObject) return;
+  if(!isLive || isPaused || isThinking) return;
+  if(!camOn){
+    speakText('پہلے کیمرہ آن کریں، پھر میں دیکھ کر بتاؤں گی۔');
+    return;
+  }
   isThinking=true;
   canvas.width=video.videoWidth||640;
   canvas.height=video.videoHeight||480;
   const ctx=canvas.getContext('2d');
   ctx.drawImage(video,0,0,canvas.width,canvas.height);
   const base64Image=canvas.toDataURL('image/jpeg',0.5).split(',')[1];
-  const lang=voiceLanguageSelect.value;
+  const langCode=voiceLanguageSelect.value;
+  const langName=getLangName(langCode);
+
   try{
     const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`,{
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({contents:[{parts:[
-        {text:`${systemIdentity} This is a LIVE camera frame for a blind person. Tell in ONLY 1 short line what is in front RIGHT NOW. Describe ANY object - person, bike, car, wall, stairs, dog, hole, table, tree, shop, road, anything you see. If obstacle is close say STOP. If path is clear say CLEAR. Reply STRICTLY in language code ${lang}. Very short.`},
+        {text:`You are Smart King Assistant. You must reply ONLY in ${langName} language. No English if language is ${langName}. This is LIVE camera for blind person. Tell in 1 short line what is in front. Describe ANY object - person, bike, car, wall, stairs, dog, hole, table, tree, shop, road. If obstacle close say STOP. If clear say CLEAR.`},
         {inline_data:{mime_type:"image/jpeg",data:base64Image}}
       ]}]})
     });
     const data=await res.json();
     if(data.candidates && data.candidates[0].content){
       speakText(data.candidates[0].content.parts[0].text);
+    } else {
+      speakText(langName==='Urdu' ? 'مجھے نظر نہیں آ رہا، تھوڑا آگے کریں۔' : 'I cannot see clearly.');
     }
   }catch(e){ console.log(e); }
   isThinking=false;
@@ -106,47 +147,89 @@ async function analyzeCamera(){
 
 async function startAutoLive(){
   if(isLive) return;
-  try{
-    try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false}); }
-    catch(e){ stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); }
-    video.srcObject=stream;
-    isLive=true; isPaused=false;
-    liveStatus.innerText="LIVE - 1 SEC MODE";
-    startBtn.style.display="none"; stopBtn.style.display="block";
-    speakText("میں سمارٹ کنگ اسسٹنٹ ہوں، لائیو آن ہو گیا ہے، اب میں ہر سیکنڈ کیمرے سے دیکھ کر بتاؤں گی کہ سامنے کیا ہے۔");
-    autoTimer=setInterval(analyzeCamera, 1000);
-    setTimeout(analyzeCamera, 500);
-  }catch(err){ speakText("براہ کرم کیمرہ کی اجازت دیں۔"); }
+  if(!camOn) await toggleCamera();
+  isLive=true; isPaused=false;
+  liveStatus.innerText="LIVE - 1 SEC MODE";
+  startBtn.style.display="none"; stopBtn.style.display="block";
+  const langName=getLangName(voiceLanguageSelect.value);
+  if(langName==='Urdu') speakText('میں سمارٹ کنگ اسسٹنٹ ہوں، لائیو آن ہو گیا ہے، اب میں ہر سیکنڈ کیمرے سے دیکھ کر بتاؤں گی۔');
+  else if(langName==='Hindi') speakText('Main Smart King Assistant hoon, live on ho gaya hai, ab main camera se dekh kar bataungi.');
+  else if(langName==='Arabic') speakText('أنا مساعد سمارٹ کنگ، تم تشغيل الوضع المباشر، سأخبرك بما أراه.');
+  else if(langName==='English') speakText('I am Smart King Assistant, live is on, I will tell you what I see from camera.');
+  else speakText('Main Smart King Assistant haan, live on ho gaya hai.');
+  autoTimer=setInterval(analyzeCamera, 1000);
+  setTimeout(analyzeCamera, 500);
 }
 
 function stopLive(){
   isLive=false; if(autoTimer) clearInterval(autoTimer);
-  if(stream) stream.getTracks().forEach(t=>t.stop());
   window.speechSynthesis.cancel();
   liveStatus.innerText="OFF";
   startBtn.style.display="block"; stopBtn.style.display="none";
-  output.innerText="";
 }
 startBtn.addEventListener('click', startAutoLive);
 stopBtn.addEventListener('click', stopLive);
 
+// Voice Command - اب نام پوچھنے پر کیمرہ نہیں دیکھے گا
 document.getElementById('voiceBtn').addEventListener('click', ()=>{
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(!SR){ speakText("Chrome استعمال کریں۔"); return; }
+  if(!SR){ speakText('Chrome use karein'); return; }
   const rec=new SR(); rec.lang=voiceLanguageSelect.value;
   rec.onresult=(e)=>{
-    const q=e.results[0][0].transcript.toLowerCase();
-    if(q.includes("رک")||q.includes("stop")){ isPaused=true; speakText("ٹھیک ہے، میں رک گئی ہوں۔"); }
-    else if(q.includes("چلو")||q.includes("start")){ isPaused=false; speakText("ٹھیک ہے، پھر چلتے ہیں۔"); analyzeCamera(); }
-    else{ speakText("رکیں، میں کیمرے سے دیکھ کر بتاتی ہوں۔"); analyzeCamera(); }
+    const q=e.results[0][0].transcript;
+    const lower=q.toLowerCase();
+    output.innerText='آپ نے کہا: '+q;
+    const langName=getLangName(voiceLanguageSelect.value);
+
+    // 1. نام پوچھا تو سیدھا نام بتائے گا، کیمرہ نہیں دیکھے گا
+    if(lower.includes('نام') || lower.includes('name') || lower.includes('naam') || lower.includes('اسم') || lower.includes('नाम')){
+      if(langName==='Urdu') speakText('میرا نام سمارٹ کنگ اسسٹنٹ ہے، مجھے سمارٹ کنگ نے بنایا ہے۔');
+      else if(langName==='Hindi') speakText('Mera naam Smart King Assistant hai.');
+      else if(langName==='Arabic') speakText('اسمي مساعد سمارٹ کنگ.');
+      else if(langName==='English') speakText('My name is Smart King Assistant.');
+      else speakText('Mera naam Smart King Assistant hai.');
+      return;
+    }
+    // 2. رک جاؤ
+    if(lower.includes('رک') || lower.includes('stop') || lower.includes('ruk') || lower.includes('قف')){
+      isPaused=true;
+      if(langName==='Urdu') speakText('ٹھیک ہے، میں رک گئی ہوں۔');
+      else if(langName==='Hindi') speakText('Theek hai, main ruk gayi hoon.');
+      else if(langName==='Arabic') speakText('حسنا، توقفت.');
+      else speakText('Okay, I stopped.');
+      return;
+    }
+    // 3. چلو
+    if(lower.includes('چلو') || lower.includes('start') || lower.includes('chalo')){
+      isPaused=false;
+      if(langName==='Urdu') speakText('ٹھیک ہے، پھر چلتے ہیں۔');
+      else speakText('Okay, lets go.');
+      analyzeCamera();
+      return;
+    }
+    // 4. سامنے کیا ہے - تب ہی کیمرہ دیکھے گا
+    if(lower.includes('سامنے') || lower.includes('کیا ہے') || lower.includes('kya') || lower.includes('what') || lower.includes('سامنے')){
+      if(!camOn){
+        speakText(langName==='Urdu' ? 'پہلے کیمرہ آن کریں، کیمرہ بند ہے۔' : 'Please turn on camera first.');
+        return;
+      }
+      speakText(langName==='Urdu' ? 'رکیں، میں کیمرے سے دیکھ کر بتاتی ہوں۔' : 'Wait, I am checking camera.');
+      analyzeCamera();
+      return;
+    }
+    // 5. باقی کوئی بھی بات - سیدھا جواب دے گا، wait پر نہیں اٹکے گا
+    if(langName==='Urdu') speakText('میں نے سن لیا، آپ چلتی رہیں، میں آپ کے ساتھ ہوں۔');
+    else if(langName==='Hindi') speakText('Maine sun liya, aap chalte rahen, main aapke saath hoon.');
+    else if(langName==='Arabic') speakText('سمعتك، واصل المشي، أنا معك.');
+    else speakText('I heard you, keep walking, I am with you.');
   };
   rec.start();
-  speakText("جی بولیں، میں سن رہی ہوں۔");
+  speakText(getLangName(voiceLanguageSelect.value)==='Urdu' ? 'جی بولیں، میں سن رہی ہوں۔' : 'Yes, I am listening.');
 });
 
 document.getElementById('openMapsBtn').addEventListener('click', ()=>{
   const q=document.getElementById('destinationInput').value.trim();
-  if(!q){ speakText("براہ کرم پہلے منزل کا نام لکھیں۔"); return; }
+  if(!q){ speakText('Please enter destination first.'); return; }
   window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`,'_blank');
 });
 </script>
