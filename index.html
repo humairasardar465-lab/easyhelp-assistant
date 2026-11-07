@@ -28,116 +28,101 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 </head>
 <body>
 <div class="top">
-<h2>SMART CANE</h2>
-<div class="sub">Your Eyes Smart Cane Created By Humaira Sardar</div>
+<h2 id="uiTitle">SMART CANE</h2>
+<div class="sub" id="uiSub">Your Eyes Smart Cane Created By Humaira Sardar</div>
 
-<label>SELECT LANGUAGE - HAR LANGUAGE</label>
+<label id="lblLang">SELECT LANGUAGE - HAR LANGUAGE</label>
 <select id="voiceLanguage">
-<option value="ur-PK" selected>Urdu</option>
-<option value="en-US">English</option>
-<option value="hi-IN">Hindi</option>
-<option value="ar-SA">Arabic</option>
-<option value="pa-PK">Punjabi Pakistan</option>
-<option value="pa-IN">Punjabi India</option>
-<option value="ps-PK">Pashto</option>
-<option value="sd-PK">Sindhi</option>
-<option value="bn-BD">Bengali Bangladesh</option>
-<option value="bn-IN">Bengali India</option>
-<option value="fa-IR">Persian Iran</option>
-<option value="fa-AF">Dari Afghanistan</option>
-<option value="tr-TR">Turkish</option>
-<option value="zh-CN">Chinese Simplified</option>
-<option value="zh-TW">Chinese Traditional</option>
-<option value="es-ES">Spanish Spain</option>
-<option value="es-MX">Spanish Mexico</option>
-<option value="fr-FR">French France</option>
-<option value="fr-CA">French Canada</option>
-<option value="de-DE">German</option>
-<option value="ja-JP">Japanese</option>
-<option value="ko-KR">Korean</option>
-<option value="ru-RU">Russian</option>
-<option value="it-IT">Italian</option>
-<option value="id-ID">Indonesian</option>
-<option value="vi-VN">Vietnamese</option>
-<option value="th-TH">Thai</option>
-<option value="nl-NL">Dutch</option>
-<option value="pl-PL">Polish</option>
-<option value="uk-UA">Ukrainian</option>
-<option value="el-GR">Greek</option>
-<option value="he-IL">Hebrew</option>
-<option value="sv-SE">Swedish</option>
-<option value="no-NO">Norwegian</option>
-<option value="fi-FI">Finnish</option>
-<option value="da-DK">Danish</option>
-<option value="cs-CZ">Czech</option>
-<option value="hu-HU">Hungarian</option>
-<option value="ro-RO">Romanian</option>
-<option value="ms-MY">Malay</option>
+<option value="ur-PK" selected>اردو (پاکستان) - Urdu Pakistan</option>
+<option value="en-US">English (US)</option>
+<option value="hi-IN">हिन्दी - Hindi</option>
+<option value="ar-SA">العربية - Arabic</option>
+<option value="pa-PK">پنجابی - Punjabi Pakistan</option>
+<option value="ps-PK">پښتو - Pashto</option>
+<option value="sd-PK">سنڌي - Sindhi</option>
+<option value="bn-BD">বাংলা - Bengali</option>
+<option value="fa-IR">فارسی - Persian</option>
+<option value="tr-TR">Türkçe - Turkish</option>
+<option value="zh-CN">中文 - Chinese</option>
+<option value="es-ES">Español - Spanish</option>
+<option value="fr-FR">Français - French</option>
+<option value="de-DE">Deutsch - German</option>
+<option value="ja-JP">日本語 - Japanese</option>
+<option value="ko-KR">한국어 - Korean</option>
+<option value="ru-RU">Русский - Russian</option>
+<option value="it-IT">Italiano - Italian</option>
+<option value="id-ID">Bahasa Indonesia - Indonesian</option>
+<option value="vi-VN">Tiếng Việt - Vietnamese</option>
+<option value="th-TH">ไทย - Thai</option>
+<option value="nl-NL">Nederlands - Dutch</option>
+<option value="pl-PL">Polski - Polish</option>
+<option value="uk-UA">Українська - Ukrainian</option>
+<option value="el-GR">Ελληνικά - Greek</option>
+<option value="he-IL">עברית - Hebrew</option>
+<option value="sv-SE">Svenska - Swedish</option>
+<option value="no-NO">Norsk - Norwegian</option>
+<option value="fi-FI">Suomi - Finnish</option>
+<option value="da-DK">Dansk - Danish</option>
+<option value="cs-CZ">Čeština - Czech</option>
+<option value="hu-HU">Magyar - Hungarian</option>
+<option value="ro-RO">Română - Romanian</option>
+<option value="ms-MY">Bahasa Melayu - Malay</option>
 <option value="fil-PH">Filipino</option>
-<option value="sw-KE">Swahili Kenya</option>
-<option value="sw-TZ">Swahili Tanzania</option>
+<option value="sw-KE">Kiswahili - Swahili</option>
 <option value="af-ZA">Afrikaans</option>
-<option value="sq-AL">Albanian</option>
-<option value="am-ET">Amharic</option>
-<option value="hy-AM">Armenian</option>
-<option value="az-AZ">Azerbaijani</option>
-<option value="eu-ES">Basque</option>
-<option value="be-BY">Belarusian</option>
-<option value="bs-BA">Bosnian</option>
-<option value="bg-BG">Bulgarian</option>
-<option value="ca-ES">Catalan</option>
-<option value="hr-HR">Croatian</option>
-<option value="et-EE">Estonian</option>
-<option value="gl-ES">Galician</option>
-<option value="ka-GE">Georgian</option>
-<option value="gu-IN">Gujarati</option>
-<option value="is-IS">Icelandic</option>
-<option value="ga-IE">Irish</option>
-<option value="jv-ID">Javanese</option>
-<option value="kn-IN">Kannada</option>
-<option value="kk-KZ">Kazakh</option>
-<option value="km-KH">Khmer</option>
-<option value="ky-KG">Kyrgyz</option>
-<option value="lo-LA">Lao</option>
-<option value="lv-LV">Latvian</option>
-<option value="lt-LT">Lithuanian</option>
-<option value="mk-MK">Macedonian</option>
+<option value="sq-AL">Shqip - Albanian</option>
+<option value="am-ET">አማርኛ - Amharic</option>
+<option value="hy-AM">Հայերեն - Armenian</option>
+<option value="az-AZ">Azərbaycan - Azerbaijani</option>
+<option value="eu-ES">Euskara - Basque</option>
+<option value="be-BY">Беларуская - Belarusian</option>
+<option value="bs-BA">Bosanski - Bosnian</option>
+<option value="bg-BG">Български - Bulgarian</option>
+<option value="ca-ES">Català - Catalan</option>
+<option value="hr-HR">Hrvatski - Croatian</option>
+<option value="et-EE">Eesti - Estonian</option>
+<option value="gl-ES">Galego - Galician</option>
+<option value="ka-GE">ქართული - Georgian</option>
+<option value="gu-IN">ગુજરાતી - Gujarati</option>
+<option value="is-IS">Íslenska - Icelandic</option>
+<option value="ga-IE">Gaeilge - Irish</option>
+<option value="jv-ID">Basa Jawa - Javanese</option>
+<option value="kn-IN">ಕನ್ನಡ - Kannada</option>
+<option value="kk-KZ">Қазақ тілі - Kazakh</option>
+<option value="km-KH">ខ្មែរ - Khmer</option>
+<option value="ky-KG">Кыргызча - Kyrgyz</option>
+<option value="lo-LA">ລາວ - Lao</option>
+<option value="lv-LV">Latviešu - Latvian</option>
+<option value="lt-LT">Lietuvių - Lithuanian</option>
+<option value="mk-MK">Македонски - Macedonian</option>
 <option value="mg-MG">Malagasy</option>
-<option value="ml-IN">Malayalam</option>
-<option value="mt-MT">Maltese</option>
-<option value="mi-NZ">Maori</option>
-<option value="mr-IN">Marathi</option>
-<option value="mn-MN">Mongolian</option>
-<option value="ne-NP">Nepali</option>
-<option value="pt-BR">Portuguese Brazil</option>
-<option value="pt-PT">Portuguese Portugal</option>
-<option value="qu-PE">Quechua</option>
-<option value="sm-WS">Samoan</option>
-<option value="sr-RS">Serbian</option>
+<option value="ml-IN">മലയാളം - Malayalam</option>
+<option value="mt-MT">Malti - Maltese</option>
+<option value="mi-NZ">Māori</option>
+<option value="mr-IN">मराठी - Marathi</option>
+<option value="mn-MN">Монгол - Mongolian</option>
+<option value="ne-NP">नेपाली - Nepali</option>
+<option value="pt-BR">Português - Portuguese</option>
+<option value="qu-PE">Runa Simi - Quechua</option>
+<option value="sm-ZWC">Samoan</option>
+<option value="sr-RS">Српски - Serbian</option>
 <option value="sn-ZW">Shona</option>
-<option value="si-LK">Sinhala</option>
-<option value="sk-SK">Slovak</option>
-<option value="sl-SI">Slovenian</option>
-<option value="so-SO">Somali</option>
-<option value="su-ID">Sundanese</option>
-<option value="tg-TJ">Tajik</option>
-<option value="ta-IN">Tamil India</option>
-<option value="ta-LK">Tamil Sri Lanka</option>
-<option value="te-IN">Telugu</option>
-<option value="uz-UZ">Uzbek</option>
-<option value="cy-GB">Welsh</option>
-<option value="yi-YI">Yiddish</option>
-<option value="yo-NG">Yoruba</option>
-<option value="zu-ZA">Zulu</option>
-<option value="en-GB">English UK</option>
-<option value="en-CA">English Canada</option>
-<option value="en-AU">English Australia</option>
-<option value="en-IN">English India</option>
-<option value="as-IN">Assamese</option>
-<option value="or-IN">Odia</option>
+<option value="si-LK">සිංහල - Sinhala</option>
+<option value="sk-SK">Slovenčina - Slovak</option>
+<option value="sl-SI">Slovenščina - Slovenian</option>
+<option value="so-SO">Soomaali - Somali</option>
+<option value="su-ID">Basa Sunda - Sundanese</option>
+<option value="tg-TJ">Тоҷикӣ - Tajik</option>
+<option value="ta-IN">தமிழ் - Tamil</option>
+<option value="te-IN">తెలుగు - Telugu</option>
+<option value="uz-UZ">Oʻzbekcha - Uzbek</option>
+<option value="cy-GB">Cymraeg - Welsh</option>
+<option value="yi-YI">ייִדיש - Yiddish</option>
+<option value="yo-NG">Yorùbá</option>
+<option value="zu-ZA">IsiZulu - Zulu</option>
 </select>
 
-<label>DESTINATION</label>
+<label id="lblDest">DESTINATION</label>
 <input type="text" id="destinationInput" placeholder="e.g. Okara Bazar">
 <button id="openMapsBtn" class="btn-map">OPEN MAPS</button>
 
@@ -159,48 +144,60 @@ const statusEl=document.getElementById('status');
 const langSel=document.getElementById('voiceLanguage');
 let stream=null, isLive=false, detector=null, audioCtx=null, lastSpoken="", lastSpeakTime=0;
 
-// HAR WORD - DUNIYA JAHAN KI HAR CHEEZ
+// Multilingual UI Labels Mapping
+const UI_TEXT = {
+  "ur-PK": { title: "سمارٹ کین", sub: "آپ کی آنکھیں - تخلیق کردہ: حمیرا سردار", lblLang: "زبان منتخب کریں", lblDest: "منزل (مقام)", btnMap: "گوگل میپس کھولیں", btnStart: "اسٹارٹ - سینسر آن", btnNarrate: "بتائیں - آس پاس کیا ہے؟", btnStop: "بند کریں", revTitle: "واٹس ایپ پر اپنے تاثرات شیئر کریں", revBtn: "واٹس ایپ پر رابطہ کریں" },
+  "en-US": { title: "SMART CANE", sub: "Your Eyes Smart Cane Created By Humaira Sardar", lblLang: "SELECT LANGUAGE", lblDest: "DESTINATION", btnMap: "OPEN MAPS", btnStart: "START - SENSOR ON", btnNarrate: "TELL ME - WHAT'S AROUND?", btnStop: "STOP", revTitle: "Share Your Reviews On WhatsApp", revBtn: "Contact On WhatsApp" },
+  "hi-IN": { title: "स्मार्ट केन", sub: "आपकी आंखें स्मार्ट केन - हुमैरा सरदार द्वारा निर्मित", lblLang: "भाषा चुनें", lblDest: "गंतव्य", btnMap: "मैप्स खोलें", btnStart: "शुरू करें - सेंसर ऑन", btnNarrate: "बताएं - आसपास क्या है?", btnStop: "बंद करें", revTitle: "व्हाट्सएप पर अपनी समीक्षा साझा करें", revBtn: "व्हाट्सएप पर संपर्क करें" },
+  "ar-SA": { title: "العصا الذكية", sub: "عصا الذكية الخاصة بك - إعداد حميرة سردار", lblLang: "اختر اللغة", lblDest: "وجهة السفر", btnMap: "فتح الخرائط", btnStart: "ابدأ - المستشعر يعمل", btnNarrate: "أخبرني - ما حولك؟", btnStop: "إيقاف", revTitle: "شاركة تقييمك على واتساب", revBtn: "تواصل عبر واتساب" }
+};
+
+function updateUI() {
+  const l = langSel.value;
+  const t = UI_TEXT[l] || UI_TEXT["en-US"];
+  document.getElementById('uiTitle').innerText = t.title;
+  document.getElementById('uiSub').innerText = t.sub;
+  document.getElementById('lblLang').innerText = t.lblLang;
+  document.getElementById('lblDest').innerText = t.lblDest;
+  document.getElementById('openMapsBtn').innerText = t.btnMap;
+  document.getElementById('startBtn').innerText = t.btnStart;
+  document.getElementById('narrateBtn').innerText = t.btnNarrate;
+  document.getElementById('stopBtn').innerText = t.btnStop;
+}
+langSel.addEventListener('change', updateUI);
+
 const ALL_WORDS = {
-  // Ghar
   "chair":"kursi", "dining table":"table", "table":"table", "bed":"bed", "couch":"sofa", "sofa":"sofa", "door":"darwaza", "window":"khidki", "toilet":"toilet", "bench":"bench", "book":"kitab", "laptop":"laptop", "cell phone":"mobile", "bottle":"botal", "cup":"glass", "bowl":"katora", "spoon":"chamach", "clock":"ghari", "mirror":"sheesha", "lamp":"lamp", "fan":"pankha", "refrigerator":"fridge", "oven":"oven", "sink":"sink", "bathtub":"bathtub", "pillow":"takiya", "blanket":"kambal",
-  // Kapre / Joota
   "shoe":"joota", "sandal":"chappal", "backpack":"bag", "handbag":"bag", "suitcase":"suitcase", "umbrella":"chhatri", "hat":"topi", "glasses":"chashma", "tie":"tie",
-  // Janwar - Har Qisam
   "person":"insan", "dog":"kutta", "cat":"billi", "bird":"parinda", "cow":"gaaye", "buffalo":"bhains", "goat":"bakri", "sheep":"bher", "horse":"ghora", "donkey":"gadha", "camel":"oonth", "monkey":"bandar", "chicken":"murghi", "duck":"battakh", "pig":"suar", "mouse":"chooha", "snake":"saanp", "elephant":"haathi", "bear":"reech", "zebra":"zebra", "giraffe":"zirafa",
-  // Sarak / Bahar
   "bicycle":"cycle", "motorcycle":"bike", "car":"gari", "bus":"bus", "truck":"truck", "traffic light":"signal", "fire hydrant":"hydrant", "stop sign":"stop board", "parking meter":"parking meter",
-  // Sarak Ki Khatarnak Cheezein - Aap Wali
   "water":"paani", "mud":"keechad", "drain":"naali", "brick":"eent", "stone":"patthar", "hole":"garha", "step":"seedhi ka step", "stairs":"seerhiyan", "broken road":"tooti hui sarak", "sand":"rait", "gravel":"bajri", "pole":"khamba", "wall":"deewar", "road":"sarak", "puddle":"paani ka jama hua hissa",
-  // Khana / Dukan
   "banana":"kela", "apple":"seb", "orange":"santra", "pizza":"pizza", "cake":"cake", "sandwich":"sandwich", "broccoli":"broccoli", "carrot":"gajar", "hot dog":"hot dog", "donut":"donut",
-  // Khel / Aur
   "kite":"patang", "ball":"ball", "skateboard":"skateboard", "surfboard":"surfboard", "tennis racket":"racket", "baseball bat":"bat", "frisbee":"frisbee", "skis":"skis", "snowboard":"snowboard",
-  // Unknown - Agar koi nayi cheez ho to bhi batayega
   "unknown":"koi anjaan rukawat"
 };
 
-// Har Language Me Bolne Ke Liye - Translation Map (Misaal ke tor par mukammal)
 const TRANSLATE = {
-  "ur-PK": {left:"baiyen taraf", center:"beech me", right:"daiyen taraf", front:"samne", clear:"rasta saaf hai", stop:"ruk jayen", close:"bahut qareeb hai", far:"door hai"},
+  "ur-PK": {left:"بائیں طرف", center:"درمیان میں", right:"دائیں طرف", front:"سامنے", clear:"راستہ صاف ہے", stop:"رک جائیں", close:"بہت قریب ہے", far:"دور ہے"},
+  "hi-IN": {left:"बाईं ओर", center:"बीच में", right:"दाईं ओर", front:"सामने", clear:"रास्ता साफ है", stop:"रुके", close:"बहुत पास है", far:"दूर है"},
   "en-US": {left:"on the left side", center:"in the center", right:"on the right side", front:"in front", clear:"path is clear", stop:"stop", close:"very close", far:"far"},
-  "hi-IN": {left:"baiyen taraf", center:"beech me", right:"daiyen taraf", front:"samne", clear:"rasta saaf hai", stop:"ruk jayen", close:"bahut qareeb hai", far:"door hai"},
-  "pa-PK": {left:"khabe passe", center:"vichkar", right:"sajje passe", front:"sahmne", clear:"rasta saaf hai", stop:"ruk jao", close:"bahut nere hai", far:"door hai"},
-  "ps-PK": {left:"khwa taraf", center:"manz ke", right:"kha taraf", front:"makhke", clear:"lara saaf da", stop:"wadrega", close:"dera nizde da", far:"lare da"},
-  "sd-PK": {left:"khabhe taraf", center:"vich me", right:"sajje taraf", front:"samho", clear:"rasto saaf aahe", stop:"beeh", close:"bohot vejho aahe", far:"pire aahe"},
-  "ar-SA": {left:"ala al yasar", center:"fi al wasat", right:"ala al yameen", front:"amamak", clear:"al tareeq saaf", stop:"qif", close:"qareeb jiddan", far:"baeed"}
+  "ar-SA": {left:"على اليسار", center:"في المنتصف", right:"على اليمين", front:"أمامك", clear:"الطريق صافٍ", stop:"قِف", close:"قريب جداً", far:"بعيد"}
 };
+
 function T(key){
   const l=langSel.value;
   if(TRANSLATE[l] && TRANSLATE[l][key]) return TRANSLATE[l][key];
   if(TRANSLATE['en-US'][key]) return TRANSLATE['en-US'][key];
   return key;
 }
+
 function speakText(t){
   window.speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(t);
   u.lang=langSel.value; u.rate=0.95;
   window.speechSynthesis.speak(u);
 }
+
 function playTone(f){
   try{
     if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
@@ -212,44 +209,67 @@ function playTone(f){
     o.start(); o.stop(audioCtx.currentTime+0.4);
   }catch(e){}
 }
+
 function vibrateLevel(level){
   if(!navigator.vibrate) return;
   if(level===3) navigator.vibrate([400,100,400,100,400]);
   else if(level===2) navigator.vibrate([200,100,200]);
   else if(level===1) navigator.vibrate([100]);
 }
+
 async function ensureCamera(){
   if(stream && video.srcObject) return true;
-  try{ stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:"environment"},audio:false}); video.srcObject=stream; await video.play(); return true; }
-  catch(e){ try{ stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); video.srcObject=stream; await video.play(); return true; } catch(e2){ speakText('Camera ki ijazat dein'); return false; } }
+  try{ 
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false}); 
+    video.srcObject=stream; 
+    await video.play(); 
+    return true; 
+  } catch(e){ 
+    try{ 
+      stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); 
+      video.srcObject=stream; 
+      await video.play(); 
+      return true; 
+    } catch(e2){ 
+      speakText('Camera ki ijazat dein'); 
+      return false; 
+    } 
+  }
 }
+
 async function loadStrongModel(){
   statusEl.innerText="STATUS: LOADING STRONG MODEL...";
   const vision=await window.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
   detector=await window.ObjectDetector.createFromOptions(vision,{
     baseOptions:{ modelAssetPath:"https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite2/float32/1/efficientdet_lite2.tflite", delegate:"GPU" },
-    scoreThreshold:0.35, runningMode:"VIDEO", maxResults:10
+    scoreThreshold:0.25, runningMode:"VIDEO", maxResults:15
   });
 }
-// CAMERA JIS TARAF HOGA - WAHI BATAYEGA
+
 async function detectNow(isNarrate=false){
-  if(!isLive || !detector || !video.videoWidth) return;
+  if(!isLive || !detector || !video.videoWidth || video.paused || video.ended) return;
   const now=Date.now();
   const results=detector.detectForVideo(video, now);
-  let dets=(results.detections||[]).filter(d=>d.categories[0].score>0.35);
-  // Sarak ki cheezein - Paani, Keechad, Naali, Eent, Tooti Sarak - Color se pehchano
-  // Agar neeche ka hissa neela / bhoora / kaala hai to wo paani / keechad / garha ho sakta hai
+  let dets=(results.detections||[]).filter(d=>d.categories[0].score>0.25);
+  
   const canvas=document.createElement('canvas'); canvas.width=60; canvas.height=45;
   const ctx=canvas.getContext('2d'); ctx.drawImage(video,0,0,60,45);
-  const d=ctx.getImageData(0,0,60,45).data;
+  const imgData=ctx.getImageData(0,0,60,45).data;
   let bottomBlue=0, bottomBrown=0, bottomDark=0;
-  for(let y=30;y<45;y++){ for(let x=0;x<60;x++){ let i=(y*60+x)*4; let r=d[i], g=d[i+1], b=d[i+2]; if(b>r+20 && b>g+10) bottomBlue++; if(r>80 && r>g+20 && g<100) bottomBrown++; if(r<40 && g<40 && b<40) bottomDark++; } }
+  for(let y=30;y<45;y++){ 
+    for(let x=0;x<60;x++){ 
+      let i=(y*60+x)*4; 
+      let r=imgData[i], g=imgData[i+1], b=imgData[i+2]; 
+      if(b>r+20 && b>g+10) bottomBlue++; 
+      if(r>80 && r>g+20 && g<100) bottomBrown++; 
+      if(r<40 && g<40 && b<40) bottomDark++; 
+    } 
+  }
   let roadHazard=null;
-  if(bottomBlue>300) roadHazard="paani";
-  else if(bottomBrown>300) roadHazard="keechad";
-  else if(bottomDark>400) roadHazard="garha ya naali";
+  if(bottomBlue>250) roadHazard="paani";
+  else if(bottomBrown>250) roadHazard="keechad";
+  else if(bottomDark>350) roadHazard="garha ya naali";
 
-  // Left / Center / Right me alag alag batao
   let leftItems=[], centerItems=[], rightItems=[];
   dets.forEach(det=>{
     const nameEn=det.categories[0].categoryName.toLowerCase();
@@ -273,7 +293,7 @@ async function detectNow(isNarrate=false){
       if(leftItems.length>0) parts.push(`${T('left')} ${leftItems.join(", ")} hai`);
       if(centerItems.length>0) parts.push(`${T('center')} ${centerItems.join(", ")} hai`);
       if(rightItems.length>0) parts.push(`${T('right')} ${rightItems.join(", ")} hai`);
-      // Agar beech me koi cheez hai to rukawat + safe side
+      
       if(centerItems.length>0){
         let safe = leftItems.length===0 ? T('left') : T('right');
         speakMsg=`${T('stop')}, ${parts.join(", ")}. ${safe} ${T('clear')} hai, udhar ho jayen.`;
@@ -282,9 +302,8 @@ async function detectNow(isNarrate=false){
         speakMsg=`${parts.join(", ")}. ${T('front')} ${T('clear')} hai.`;
         level=1;
       }
-      // Agar paani / keechad / garha ho to special warning
       if(roadHazard){
-        speakMsg=`${T('stop')}, ${T('center')} ${roadHazard} hai, paer bachakar chalen, ${T('left')} ya ${T('right')} se guzren.`;
+        speakMsg=`${T('stop')}, ${T('center')} ${roadHazard} hai, paer bachakar chalen.`;
         level=3;
       }
     }
@@ -295,23 +314,41 @@ async function detectNow(isNarrate=false){
     }
   }
 }
+
 document.getElementById('startBtn').addEventListener('click', async ()=>{
   statusEl.innerText="STATUS: LOADING...";
   speakText('Strong model load ho raha hai.');
   if(!await ensureCamera()) return;
-  try{ await loadStrongModel(); } catch(e){ speakText('Internet on karein.'); return; }
+  try{ await loadStrongModel(); } catch(e){ speakText('Internet on karein.'); statusEl.innerText="STATUS: ERROR"; return; }
   isLive=true;
-  statusEl.innerText="STATUS: LIVE - ALL WORDS ON";
+  statusEl.innerText="STATUS: LIVE - ALL SENSORS ON";
   document.getElementById('startBtn').style.display="none";
   document.getElementById('stopBtn').style.display="block";
-  speakText('Smart Cane on ho gaya hai, ab main har cheez bataungi, baiyen, beech, daiyen sab bataungi.');
-  setInterval(()=>detectNow(false), 3000);
+  speakText('Smart Cane on ho gaya hai, ab main har cheez detect kar rahi hoon.');
+  
+  // Continuous detection loop using requestAnimationFrame / intervals
+  setInterval(()=>{
+    if(isLive) detectNow(false);
+  }, 2500);
 });
-document.getElementById('narrateBtn').addEventListener('click', ()=>{ if(!isLive){ speakText('Pehle START dabayen.'); return; } speakText('Rukiye, aas paas dekh kar batati hoon.'); setTimeout(()=>detectNow(true),600); });
+
+document.getElementById('narrateBtn').addEventListener('click', ()=>{ 
+  if(!isLive){ speakText('Pehle START dabayen.'); return; } 
+  speakText('Rukiye, aas paas dekh kar batati hoon.'); 
+  setTimeout(()=>detectNow(true),600); 
+});
+
 document.getElementById('stopBtn').addEventListener('click', ()=>{
-  isLive=false; if(stream) stream.getTracks().forEach(t=>t.stop()); stream=null; video.srcObject=null; window.speechSynthesis.cancel(); statusEl.innerText="STATUS: OFF";
-  document.getElementById('startBtn').style.display="block"; document.getElementById('stopBtn').style.display="none";
+  isLive=false; 
+  if(stream) stream.getTracks().forEach(t=>t.stop()); 
+  stream=null; 
+  video.srcObject=null; 
+  window.speechSynthesis.cancel(); 
+  statusEl.innerText="STATUS: OFF";
+  document.getElementById('startBtn').style.display="block"; 
+  document.getElementById('stopBtn').style.display="none";
 });
+
 document.getElementById('openMapsBtn').addEventListener('click', ()=>{
   const q=document.getElementById('destinationInput').value.trim();
   if(!q){ speakText('Pehle upar likhen kahan jana hai.'); return; }
