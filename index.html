@@ -3,9 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Cane Application</title>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@latest"></script>
+<title>Your eyes smart cane created by Humaira Sardar</title>
 <style>
 *{box-sizing:border-box}
 body{font-family:Arial,sans-serif;background:#0a0f1e;color:#fff;margin:0;padding:16px}
@@ -26,7 +24,7 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 <body>
 <div class="top">
 <h2>SMART CANE</h2>
-<div class="sub">Advanced AI Navigation Assistant</div>
+<div class="sub">Your eyes smart cane created by Humaira Sardar</div>
 
 <label>SELECT LANGUAGE</label>
 <select id="voiceLanguage">
@@ -161,133 +159,32 @@ const statusEl = document.getElementById('status');
 const langSel = document.getElementById('voiceLanguage');
 const micBtn = document.getElementById('micBtn');
 
-let stream = null, isLive = false, model = null, audioCtx = null, lastAvg = 0;
+let stream = null, isLive = false, audioCtx = null;
 let lastSpokenTime = 0;
 let waitingForUserReady = false;
-let currentSafeDirection = "straight";
-
-let stairMode = false;
-let stairStepCount = 0;
-let stairDirection = 'up';
-let lastStairCheckTime = 0;
-
-let currentHeading = "شمال (North)";
-
-if (window.DeviceOrientationEvent) {
-  window.addEventListener('deviceorientation', (event) => {
-    let alpha = event.alpha;
-    if (alpha !== null) {
-      const lang = langSel.value;
-      if (alpha >= 315 || alpha < 45) {
-        currentHeading = lang.startsWith('ur') ? "شمال" : (lang.startsWith('ar') ? "الشمال" : "North");
-      } else if (alpha >= 45 && alpha < 135) {
-        currentHeading = lang.startsWith('ur') ? "مشرق" : (lang.startsWith('ar') ? "الشرق" : "East");
-      } else if (alpha >= 135 && alpha < 225) {
-        currentHeading = lang.startsWith('ur') ? "جنوب" : (lang.startsWith('ar') ? "الجنوب" : "South");
-      } else if (alpha >= 225 && alpha < 315) {
-        currentHeading = lang.startsWith('ur') ? "مغرب" : (lang.startsWith('ar') ? "الغرب" : "West");
-      }
-    }
-  }, true);
-}
 
 const translations = {
   'ur-PK': {
     loading: 'سنسور آن ہو رہا ہے۔',
-    started: 'اسمارٹ کین آن ہو گیا ہے۔ تمام رکاوٹیں پہچانی جا رہی ہیں۔',
+    started: 'اسمارٹ کین آن ہو گیا ہے۔ رکاوٹیں تلاش کی جا رہی ہیں۔',
     camError: 'کیمرہ کی اجازت دیں',
-    netError: 'انٹرنیٹ آن کریں، ماڈل لوڈ نہیں ہوا۔',
-    clear: 'رستہ صاف ہے، آگے بڑھیں۔ سمت ہے:',
-    readyPrompt: 'کیا آپ چلنے کے لیے تیار ہیں؟ مائیک کا بٹن دبائیں اور کہیں کہ میں ریڈی ہوں۔',
+    clear: 'رستہ بالکل صاف ہے، آگے بڑھیں۔',
+    readyPrompt: 'کیا آپ چلنے کے لیے تیار ہیں؟ مائیک کا بٹن دبائیں اور بولیں۔',
     safeLeft: 'بائیں طرف راستہ صاف ہے، بائیں طرف موڑ لیں۔',
     safeRight: 'دائیں طرف راستہ صاف ہے، دائیں طرف موڑ لیں۔',
-    safeStraight: 'آگے رستہ بالکل صاف ہے، آگے بڑھیں۔',
-    stairsUpStart: 'اوپر کی طرف اصل سیڑھیاں شروع ہو چکی ہیں۔',
-    stairsDownStart: 'نیچے کی طرف اصل سیڑھیاں شروع ہو چکی ہیں۔',
-    stairsEnd: 'سیڑھیاں ختم ہو گئی ہیں۔',
-    stairUpMsg: 'اوپر کی طرف سیڑھی نمبر',
-    stairDownMsg: 'نیچے کی طرف سیڑھی نمبر',
-    objects: {
-      'person': 'انسان', 'bicycle': 'سائیکل', 'car': 'کار', 'motorcycle': 'موٹر سائیکل',
-      'bus': 'بس', 'train': 'ٹرین', 'truck': 'ٹرک', 'boat': 'کشتی',
-      'traffic light': 'ٹریفک سگنل', 'stop sign': 'اسٹاپ سائن', 'bench': 'بینچ',
-      'bird': 'پرندہ', 'cat': 'بلی', 'dog': 'کتا', 'horse': 'گھوڑا', 'cow': 'गाय',
-      'backpack': 'بیک بیگ', 'umbrella': 'چھتری', 'handbag': 'هینڈ بیگ', 'suitcase': 'سوئٹ کیس',
-      'bottle': 'بوتل', 'cup': 'کپ', 'fork': 'کانٹا', 'knife': 'چھری', 'spoon': 'چمچ',
-      'chair': 'کرسی', 'couch': 'صوفہ', 'potted plant': 'گملہ', 'bed': 'بیڈ',
-      'dining table': 'ڈائننگ ٹیبل', 'toilet': 'ٹوائلٹ', 'tv': 'ٹی وی', 'laptop': 'لیپ ٹاپ',
-      'cell phone': 'موبایل فون', 'microwave': 'مائیکرو ویو', 'oven': 'اوون', 'refrigerator': 'فریج',
-      'book': 'کتاب', 'clock': 'گھڑی', 'wall': 'دیوار', 'door': 'دروازہ',
-      'shoe': 'جوتا', 'pothole': 'گڑھا', 'pillar': 'پلر', 'tree': 'درخت', 'stone': 'پتھر'
-    }
+    safeStraight: 'آگے رستہ صاف ہے، آگے بڑھیں۔',
+    obstacleAlert: 'تنبيه! سامنے رکاوٹ یا قریبی دیوار موجود ہے، رک جائیں۔'
   },
   'en-US': {
     loading: 'Sensor is turning on.',
-    started: 'Smart Cane is on. Recognizing obstacles.',
+    started: 'Smart Cane is on. Scanning obstacles.',
     camError: 'Please allow camera permissions',
-    netError: 'Turn on internet, model failed to load.',
-    clear: 'Path is clear, move ahead. Heading is:',
-    readyPrompt: 'Are you ready to walk? Press the mic button and say I am ready.',
+    clear: 'Path is clear, move ahead.',
+    readyPrompt: 'Are you ready to walk? Press mic button and speak.',
     safeLeft: 'Left side is clear, turn left.',
     safeRight: 'Right side is clear, turn right.',
     safeStraight: 'Path ahead is clear, move straight.',
-    stairsUpStart: 'Going up stairs started.',
-    stairsDownStart: 'Going down stairs started.',
-    stairsEnd: 'Stairs have ended.',
-    stairUpMsg: 'Going up, step number',
-    stairDownMsg: 'Going down, step number',
-    objects: {
-      'person': 'person', 'bicycle': 'bicycle', 'car': 'car', 'motorcycle': 'motorcycle',
-      'bus': 'bus', 'train': 'train', 'truck': 'truck', 'boat': 'boat',
-      'traffic light': 'traffic light', 'stop sign': 'stop sign', 'bench': 'bench',
-      'bird': 'bird', 'cat': 'cat', 'dog': 'dog', 'horse': 'horse', 'cow': 'cow',
-      'backpack': 'backpack', 'umbrella': 'umbrella', 'handbag': 'handbag', 'suitcase': 'suitcase',
-      'bottle': 'bottle', 'cup': 'cup', 'fork': 'fork', 'knife': 'knife', 'spoon': 'spoon',
-      'chair': 'chair', 'couch': 'couch', 'potted plant': 'potted plant', 'bed': 'bed',
-      'dining table': 'dining table', 'toilet': 'toilet', 'tv': 'tv', 'laptop': 'laptop',
-      'cell phone': 'cell phone', 'microwave': 'microwave', 'oven': 'oven', 'refrigerator': 'refrigerator',
-      'book': 'book', 'clock': 'clock', 'wall': 'wall', 'door': 'door',
-      'shoe': 'shoe', 'pothole': 'pothole', 'pillar': 'pillar', 'tree': 'tree', 'stone': 'stone'
-    }
-  },
-  'hi-IN': {
-    loading: 'सेंसर चालू हो रहा है।',
-    started: 'स्मार्ट केन चालू है।',
-    camError: 'कृपया कैमरे की अनुमति दें',
-    netError: 'इंटरनेट चालू करें, मॉडल लोड नहीं हुआ।',
-    clear: 'रास्ता साफ़ है, आगे बढ़ें। दिशा है:',
-    readyPrompt: 'क्या आप चलने के लिए तैयार हैं? माइक बटन दबाएं और कहें मैं तैयार हूँ।',
-    safeLeft: 'बाईं ओर रास्ता साफ़ है, बाएं मुड़ें।',
-    safeRight: 'दाईं ओर रास्ता साफ़ है, दाएं मुड़ें।',
-    safeStraight: 'आगे रास्ता साफ़ है, आगे बढ़ें।',
-    stairsUpStart: 'ऊपर जाने वाली सीढ़ियाँ शुरू।',
-    stairsDownStart: 'नीचे आने वाली सीढ़ियाँ शुरू।',
-    stairsEnd: 'सीढ़ियाँ समाप्त।',
-    stairUpMsg: 'ऊपर जाते हुए, सीढ़ी संख्या',
-    stairDownMsg: 'नीचे आते हुए, सीढ़ी संख्या',
-    objects: {
-      'person': 'व्यक्ति', 'bicycle': 'साइकिल', 'car': 'कार', 'chair': 'कुर्सी',
-      'door': 'दरवाजा', 'wall': 'दीवार', 'bed': 'बिस्तर', 'dining table': 'डाइनिंग टेबल'
-    }
-  },
-  'ar-SA': {
-    loading: 'جاري تشغيل المستشعر.',
-    started: 'العصا الذكية تعمل.',
-    camError: 'يرجى السماح بإذن الكاميرا',
-    netError: 'قم بتشغيل الإنترنت، لم يتم تحميل النموذج.',
-    clear: 'الطريق نظيف، تقدم للأمام. الاتجاه:',
-    readyPrompt: 'هل أنت مستعد للمشي؟ اضغط على زر الميكروفون وقل أنا مستعد.',
-    safeLeft: 'الجانب الأيسر نظيف، انعطف يساراً.',
-    safeRight: 'الجانب الأيمن نظيف، انعطف يميناً.',
-    safeStraight: 'الطريق أمامك نظيف، تقدم.',
-    stairsUpStart: 'بدء صعود السلالم.',
-    stairsDownStart: 'بدء نزول السلالم.',
-    stairsEnd: 'انتهت السلالم.',
-    stairUpMsg: 'صعود، رقم الدرجة',
-    stairDownMsg: 'نزول، رقم الدرجة',
-    objects: {
-      'person': 'شخص', 'car': 'سيارة', 'chair': 'كرسي', 'door': 'باب', 'wall': 'جدار', 'bed': 'سرير'
-    }
+    obstacleAlert: 'Warning! Close obstacle or wall ahead, stop.'
   }
 };
 
@@ -297,17 +194,6 @@ function getMsg(key) {
     return translations[lang][key];
   }
   return translations['en-US'][key] || key;
-}
-
-function getObjName(objKey) {
-  const lang = langSel.value;
-  if(translations[lang] && translations[lang].objects && translations[lang].objects[objKey]) {
-    return translations[lang].objects[objKey];
-  }
-  if(translations['en-US'].objects[objKey]) {
-    return translations['en-US'].objects[objKey];
-  }
-  return objKey;
 }
 
 function speakText(t){
@@ -324,9 +210,9 @@ function playHurdleTone(){
     const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
     o.connect(g); g.connect(audioCtx.destination);
     o.frequency.value = 880; o.type = 'sine';
-    g.gain.setValueAtTime(0.2, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
-    o.start(); o.stop(audioCtx.currentTime + 0.3);
+    g.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+    o.start(); o.stop(audioCtx.currentTime + 0.4);
   }catch(e){}
 }
 
@@ -337,15 +223,15 @@ function playClearTone(){
     o.connect(g); g.connect(audioCtx.destination);
     o.frequency.value = 750;
     o.type = 'triangle';
-    g.gain.setValueAtTime(0.85, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
-    o.start(); o.stop(audioCtx.currentTime + 0.45);
+    g.gain.setValueAtTime(0.5, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+    o.start(); o.stop(audioCtx.currentTime + 0.3);
   }catch(e){}
 }
 
 function vibrateHurdle(){
   if(!navigator.vibrate) return;
-  navigator.vibrate([300, 100, 300]);
+  navigator.vibrate([400, 150, 400]);
 }
 
 async function ensureCamera(){
@@ -372,41 +258,28 @@ async function ensureCamera(){
 }
 
 function getScreenInfo(){
-  if(!video.videoWidth) return {variance: 100, change: 0, verticalTilt: 0, leftAvg: 100, rightAvg: 100};
+  if(!video.videoWidth) return {leftAvg: 100, rightAvg: 100, centerBrightness: 100};
   const c = document.createElement('canvas'); c.width = 60; c.height = 45;
   const ctx = c.getContext('2d'); ctx.drawImage(video, 0, 0, 60, 45);
   const d = ctx.getImageData(0, 0, 60, 45).data;
   
-  let leftSum = 0, rightSum = 0;
-  let topSum = 0, bottomSum = 0;
-  let totalSum = 0;
+  let leftSum = 0, rightSum = 0, centerSum = 0;
 
   for(let y = 0; y < 45; y++){
     for(let x = 0; x < 60; x++){
       let idx = (y * 60 + x) * 4;
       let brightness = (d[idx] + d[idx+1] + d[idx+2]) / 3;
-      totalSum += brightness;
-      if(x < 30) leftSum += brightness; else rightSum += brightness;
-      if(y < 22) topSum += brightness; else bottomSum += brightness;
+      if(x < 22) leftSum += brightness;
+      else if(x > 38) rightSum += brightness;
+      else centerSum += brightness;
     }
   }
 
-  let avg = totalSum / (60 * 45);
-  let leftAvg = leftSum / (30 * 45);
-  let rightAvg = rightSum / (30 * 45);
-
-  let variance = 0; 
-  for(let i = 0; i < d.length; i += 4){ 
-    variance += Math.abs(((d[i] + d[i+1] + d[i+2]) / 3) - avg); 
-  } 
-  variance = variance / (60 * 45);
-  
-  let change = Math.abs(avg - lastAvg); 
-  lastAvg = avg;
-
-  let verticalTilt = (topSum / (60 * 22)) - (bottomSum / (60 * 23));
-
-  return {variance, change, verticalTilt, leftAvg, rightAvg};
+  return {
+    leftAvg: leftSum / (22 * 45),
+    rightAvg: rightSum / (22 * 45),
+    centerBrightness: centerSum / (16 * 45)
+  };
 }
 
 function startVoiceRecognition() {
@@ -427,16 +300,13 @@ function startVoiceRecognition() {
     micBtn.style.display = "none";
     
     const info = getScreenInfo();
-    if (info.leftAvg > info.rightAvg + 10) {
-      currentSafeDirection = "left";
+    if (info.leftAvg > info.rightAvg + 12) {
       speakText(getMsg('safeLeft'));
       statusEl.innerText = "SAFE SIDE: LEFT";
-    } else if (info.rightAvg > info.leftAvg + 10) {
-      currentSafeDirection = "right";
+    } else if (info.rightAvg > info.leftAvg + 12) {
       speakText(getMsg('safeRight'));
       statusEl.innerText = "SAFE SIDE: RIGHT";
     } else {
-      currentSafeDirection = "straight";
       speakText(getMsg('safeStraight'));
       statusEl.innerText = "SAFE SIDE: STRAIGHT";
     }
@@ -457,7 +327,7 @@ micBtn.addEventListener('click', () => {
 async function detectLoop(){
   if(!isLive) return;
 
-  if(!model || !video.videoWidth) {
+  if(!video.videoWidth) {
     requestAnimationFrame(detectLoop);
     return;
   }
@@ -467,85 +337,36 @@ async function detectLoop(){
     return;
   }
 
-  let found = [];
-  try{
-    const preds = await model.detect(video);
-    // اب صرف پکی اور واضح چیزیں پکڑی جائیں گی (تھرشولڈ 0.5)
-    found = preds.filter(p => p.score > 0.5);
-  }catch(e){}
-
   const info = getScreenInfo();
   let now = Date.now();
 
-  // جعلی سٹیئرز کو مکمل ختم کرنے کے لیے کنڈیشن سخت کر دی گئی ہے (صرف تیز ٹلٹ پر چلے گا)
-  let potentialStairCondition = (info.change > 12 && info.change < 30 && Math.abs(info.verticalTilt) > 18);
+  // اگر کیمرے کے سامنے ہاتھ رکھا جائے، دروازہ یا دیوار بالکل قریب ہو (سینٹر ڈارک یا بلاک ہو جائے)
+  let isCloseObstacle = (info.centerBrightness < 35);
 
-  if (potentialStairCondition) {
-    if (!stairMode) {
-      stairMode = true;
-      stairStepCount = 1;
-      stairDirection = info.verticalTilt > 0 ? 'up' : 'down';
-      let startText = stairDirection === 'up' ? getMsg('stairsUpStart') : getMsg('stairsDownStart');
-      speakText(startText);
-      statusEl.innerText = "STAIRS (" + stairDirection.toUpperCase() + ")";
-    } else {
-      if (now - lastStairCheckTime > 3000) {
-        stairStepCount++;
-        lastStairCheckTime = now;
-        let stepText = (stairDirection === 'up' ? getMsg('stairUpMsg') : getMsg('stairDownMsg')) + " " + stairStepCount;
-        speakText(stepText);
-        statusEl.innerText = "STAIRS STEP " + stairStepCount;
-      }
-    }
-  } else {
-    if (stairMode && Math.abs(info.verticalTilt) < 3) {
-      stairMode = false;
-      speakText(getMsg('stairsEnd'));
-      statusEl.innerText = "STAIRS ENDED";
-      stairStepCount = 0;
-    }
-  }
+  if (isCloseObstacle && now - lastSpokenTime > 3500) {
+    let alertText = getMsg('obstacleAlert');
+    lastSpokenTime = now;
+    playHurdleTone();
+    vibrateHurdle();
+    speakText(alertText);
+    statusEl.innerText = "OBSTACLE DETECTED: STOP";
 
-  if (!stairMode && now - lastSpokenTime > 4500) {
-    if (found.length > 0) {
-      let matchedObj = found[0];
-      let objName = getObjName(matchedObj.class);
-      
-      let alertText = "";
-      const lang = langSel.value;
-      if (lang.startsWith('ur')) {
-        alertText = `رک جائیں! سامنے ${objName} ہے۔ چہرہ ${currentHeading} کی طرف ہے۔`;
-      } else if (lang.startsWith('hi')) {
-        alertText = `रुकिए! सामने ${objName} है। दिशा ${currentHeading} है।`;
-      } else if (lang.startsWith('ar')) {
-        alertText = `توقف! يوجد ${objName} في الأمام. الاتجاه نحو ${currentHeading}.`;
-      } else {
-        alertText = `Stop! ${objName} ahead. Facing ${currentHeading}.`;
-      }
+    waitingForUserReady = true;
+    micBtn.style.display = "block";
+    setTimeout(() => {
+      speakText(getMsg('readyPrompt'));
+    }, 2000);
 
-      lastSpokenTime = now;
-      playHurdleTone();
-      vibrateHurdle();
-      speakText(alertText);
-      statusEl.innerText = "OBSTACLE: " + objName.toUpperCase();
-
-      waitingForUserReady = true;
-      micBtn.style.display = "block";
-      setTimeout(() => {
-        speakText(getMsg('readyPrompt'));
-      }, 2500);
-
-    } else {
-      let clearText = getMsg('clear') + " " + currentHeading;
-      lastSpokenTime = now;
-      playClearTone();
-      speakText(clearText);
-      statusEl.innerText = "STATUS: GO AHEAD - CLEAR (" + currentHeading + ")";
-    }
+  } else if (!isCloseObstacle && now - lastSpokenTime > 4000) {
+    let clearText = getMsg('clear');
+    lastSpokenTime = now;
+    playClearTone();
+    speakText(clearText);
+    statusEl.innerText = "STATUS: GO AHEAD - CLEAR";
   }
 
   if(isLive) {
-    setTimeout(() => requestAnimationFrame(detectLoop), 300);
+    setTimeout(() => requestAnimationFrame(detectLoop), 250);
   }
 }
 
@@ -554,16 +375,6 @@ document.getElementById('startBtn').addEventListener('click', async () => {
   speakText(getMsg('loading'));
   
   if(!await ensureCamera()) {
-    statusEl.innerText = "STATUS: OFF";
-    return;
-  }
-
-  try {
-    if(!model) {
-      model = await cocoSsd.load();
-    }
-  } catch(e) {
-    speakText(getMsg('netError'));
     statusEl.innerText = "STATUS: OFF";
     return;
   }
@@ -584,8 +395,6 @@ document.getElementById('stopBtn').addEventListener('click', () => {
   stream = null; 
   video.srcObject = null;
   window.speechSynthesis.cancel();
-  stairMode = false;
-  stairStepCount = 0;
   waitingForUserReady = false;
   micBtn.style.display = "none";
   statusEl.innerText = "STATUS: OFF";
