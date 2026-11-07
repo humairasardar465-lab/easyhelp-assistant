@@ -17,7 +17,6 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 .btn-main{background:#00ffcc;color:#000}
 .btn-map{background:#0284c7;color:#fff}
 .btn-stop{background:#ef4444;color:#fff}
-.btn-mic{background:#10b981;color:#fff}
 #status{text-align:center;margin:10px 0;font-weight:700;font-size:14px}
 </style>
 </head>
@@ -142,7 +141,6 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 
 <button id="startBtn" class="btn-main">START - SENSOR ON</button>
 <button id="stopBtn" class="btn-stop" style="display:none;">STOP</button>
-<button id="micBtn" class="btn-mic" style="display:none;">🎤 SPEAK (I AM READY)</button>
 
 <video id="webcam" autoplay playsinline muted></video>
 </div>
@@ -157,34 +155,28 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 const video = document.getElementById('webcam');
 const statusEl = document.getElementById('status');
 const langSel = document.getElementById('voiceLanguage');
-const micBtn = document.getElementById('micBtn');
 
 let stream = null, isLive = false, audioCtx = null;
 let lastSpokenTime = 0;
-let waitingForUserReady = false;
 
 const translations = {
   'ur-PK': {
     loading: 'سنسور آن ہو رہا ہے۔',
-    started: 'اسمارٹ کین آن ہو گیا ہے۔ راستے کی ہر رکاوٹ کا جائزہ جاری ہے۔',
+    started: 'اسمارٹ کین آن ہو گیا ہے۔ راستے کی نگرانی شروع ہے۔',
     camError: 'کیمرہ کی اجازت دیں',
     clear: 'رستہ بالکل صاف ہے، آگے بڑھیں۔',
-    readyPrompt: 'کیا آپ چلنے کے لیے تیار ہیں؟ مائیک کا بٹن دبائیں اور بولیں۔',
-    safeLeft: 'بائیں طرف راستہ صاف ہے، بائیں طرف موڑ لیں۔',
-    safeRight: 'دائیں طرف راستہ صاف ہے، دائیں طرف موڑ لیں۔',
-    safeStraight: 'آگے رستہ صاف ہے، آگے بڑھیں۔',
-    obstacleAlert: 'تنبيه! سامنے رکاوٹ یا دیوار موجود ہے، فوراً رک جائیں۔'
+    obstacleStop: 'رک جائیں! سامنے رکاوٹ یا دیوار ہے۔',
+    safeLeft: 'بائیں طرف رستہ صاف ہے، بائیں ہو جائیں۔',
+    safeRight: 'دائیں طرف رستہ صاف ہے، دائیں ہو جائیں۔'
   },
   'en-US': {
     loading: 'Sensor is turning on.',
-    started: 'Smart Cane is on. Scanning path obstacles.',
+    started: 'Smart Cane is on. Scanning path.',
     camError: 'Please allow camera permissions',
     clear: 'Path is clear, move ahead.',
-    readyPrompt: 'Are you ready to walk? Press mic button and speak.',
+    obstacleStop: 'Stop! Obstacle or wall ahead.',
     safeLeft: 'Left side is clear, turn left.',
-    safeRight: 'Right side is clear, turn right.',
-    safeStraight: 'Path ahead is clear, move straight.',
-    obstacleAlert: 'Warning! Close obstacle or wall ahead, stop immediately.'
+    safeRight: 'Right side is clear, turn right.'
   }
 };
 
@@ -257,7 +249,6 @@ async function ensureCamera(){
   }
 }
 
-// کیمرے کے فریم کا تفصیلی تجزیہ (بائیں، دائیں اور درمیان کی رکاوٹیں جاننے کے لیے)
 function getScreenInfo(){
   if(!video.videoWidth) return {leftAvg: 100, rightAvg: 100, centerBrightness: 100};
   const c = document.createElement('canvas'); c.width = 60; c.height = 45;
@@ -283,50 +274,6 @@ function getScreenInfo(){
   };
 }
 
-// مائیک کے ذریعے صارف کا جواب سننا اور گائیڈ کرنا
-function startVoiceRecognition() {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    speakText("Speech recognition not supported.");
-    return;
-  }
-  const recognition = new SpeechRecognition();
-  recognition.lang = langSel.value;
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-
-  recognition.onresult = (event) => {
-    const speechResult = event.results[0][0].transcript.toLowerCase();
-    statusEl.innerText = "HEARD: " + speechResult;
-    waitingForUserReady = false;
-    micBtn.style.display = "none";
-    
-    const info = getScreenInfo();
-    // موازنہ کریں کہ کس طرف زیادہ روشنی یا کھلا رستہ ہے
-    if (info.leftAvg > info.rightAvg + 10) {
-      speakText(getMsg('safeLeft'));
-      statusEl.innerText = "SAFE SIDE: LEFT";
-    } else if (info.rightAvg > info.leftAvg + 10) {
-      speakText(getMsg('safeRight'));
-      statusEl.innerText = "SAFE SIDE: RIGHT";
-    } else {
-      speakText(getMsg('safeStraight'));
-      statusEl.innerText = "SAFE SIDE: STRAIGHT";
-    }
-  };
-
-  recognition.onerror = () => {
-    waitingForUserReady = false;
-    micBtn.style.display = "none";
-  };
-
-  recognition.start();
-}
-
-micBtn.addEventListener('click', () => {
-  startVoiceRecognition();
-});
-
 async function detectLoop(){
   if(!isLive) return;
 
@@ -335,33 +282,34 @@ async function detectLoop(){
     return;
   }
 
-  if (waitingForUserReady) {
-    if(isLive) setTimeout(() => requestAnimationFrame(detectLoop), 500);
-    return;
-  }
-
   const info = getScreenInfo();
   let now = Date.now();
 
-  // اگر کیمرے کے سامنے ہاتھ رکھا جائے، دروازہ یا قریبی دیوار آئے (سینٹر کی روشنی کم ہو جائے)
-  let isCloseObstacle = (info.centerBrightness < 45);
+  // اگر درمیان میں کوئی رکاوٹ (ہاتھ، دیوار یا قریب چیز) آئے
+  let isCloseObstacle = (info.centerBrightness < 50);
 
   if (isCloseObstacle && now - lastSpokenTime > 3500) {
-    let alertText = getMsg('obstacleAlert');
     lastSpokenTime = now;
     playHurdleTone();
     vibrateHurdle();
+
+    let guidance = "";
+    if (info.leftAvg > info.rightAvg + 8) {
+      guidance = getMsg('safeLeft');
+    } else if (info.rightAvg > info.leftAvg + 8) {
+      guidance = getMsg('safeRight');
+    } else {
+      guidance = langSel.value.startsWith('ur') ? "دائیں یا بائیں ہو جائیں۔" : "Turn left or right.";
+    }
+
+    let alertText = getMsg('obstacleStop') + " " + guidance;
     speakText(alertText);
     statusEl.innerText = "OBSTACLE DETECTED: STOP";
 
-    waitingForUserReady = true;
-    micBtn.style.display = "block";
-    speakText(getMsg('readyPrompt'));
-
-  } else if (!isCloseObstacle && now - lastSpokenTime > 4500) {
-    let clearText = getMsg('clear');
+  } else if (!isCloseObstacle && now - lastSpokenTime > 4000) {
     lastSpokenTime = now;
     playClearTone();
+    let clearText = getMsg('clear');
     speakText(clearText);
     statusEl.innerText = "STATUS: GO AHEAD - CLEAR";
   }
@@ -396,8 +344,6 @@ document.getElementById('stopBtn').addEventListener('click', () => {
   stream = null; 
   video.srcObject = null;
   window.speechSynthesis.cancel();
-  waitingForUserReady = false;
-  micBtn.style.display = "none";
   statusEl.innerText = "STATUS: OFF";
   document.getElementById('startBtn').style.display = "block";
   document.getElementById('stopBtn').style.display = "none";
