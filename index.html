@@ -151,100 +151,63 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 const video=document.getElementById('webcam');
 const statusEl=document.getElementById('status');
 const langSel=document.getElementById('voiceLanguage');
-let stream=null, isLive=false, model=null, lastSpoken="", lastSpeakTime=0, audioCtx=null, lastAvg=0, rememberedObj=null, rememberedTime=0;
+let stream=null, isLive=false, model=null, lastSpoken="", lastSpeakTime=0, audioCtx=null, lastAvg=0;
 let lastAnnouncedCategory = null; 
-let consecutiveMatches = 0; 
-let stableBoxSize = 0; // Locks distance tier so static objects don't jump between meter sizes when still
 
 const translations = {
   'ur-PK': {
     loading: 'سنسور آن ہو رہا ہے۔',
-    started: 'اسمارٹ کین آن ہو گیا ہے۔ اب میں بتاتی رہوں گی رکاوٹ کتنی دور ہے۔',
-    stopClose: 'رک جائیں، رکاوٹ بہت قریب ہے، آدھا میٹر پر ہے۔',
-    midClose: 'سامنے رکاوٹ ہے، 1 میٹر دور ہے، آہستہ بائیں ہو جائیں۔',
-    farClose: 'سامنے رکاوٹ ہے، 2 میٹر دور ہے، آہستہ چلیں۔',
-    wallClose: 'رک جائیں، سامنے بڑی رکاوٹ بالکل قریب ہے، آدھا میٹر پر ہے۔',
-    rememberedClose: 'وہی رکاوٹ اب قریب آ گئی ہے، 1 میٹر پر ہے، رک جائیں۔',
-    suddenClose: 'رک جائیں، سامنے اچانک کوئی رکاوٹ آئی ہے، 1 میٹر پر ہے۔',
-    clearPath: 'رستہ صاف ہے، آہستہ سیدھے چلتے جائیں۔',
+    started: 'اسمارٹ کین آن ہو گیا ہے۔ اب میں بتاتی رہوں گی راستہ کیسا ہے۔',
+    stopClose: 'رک جائیں، سامنے رکاوٹ موجود ہے۔',
+    clearPath: 'رستہ صاف ہے، آگے بڑھیں۔',
     camError: 'کیمرہ کی اجازت دیں',
     netError: 'انٹرنیٹ آن کریں، ماڈل لوڈ نہیں ہوا۔'
   },
   'en-US': {
     loading: 'Sensor is turning on.',
-    started: 'Smart Cane is on. I will keep informing you about obstacles.',
-    stopClose: 'Stop, obstacle is very close, half a meter away.',
-    midClose: 'Obstacle ahead, 1 meter away, slowly move left.',
-    farClose: 'Obstacle ahead, 2 meters away, walk slowly.',
-    wallClose: 'Stop, large obstacle very close ahead, half a meter away.',
-    rememberedClose: 'That obstacle has come closer now, 1 meter away, stop.',
-    suddenClose: 'Stop, sudden obstacle appeared ahead, 1 meter away.',
-    clearPath: 'Path is clear, keep walking straight slowly.',
+    started: 'Smart Cane is on. I will keep informing you about the path.',
+    stopClose: 'Stop, obstacle ahead.',
+    clearPath: 'Path is clear, move ahead.',
     camError: 'Please allow camera permissions',
     netError: 'Turn on internet, model failed to load.'
   },
   'hi-IN': {
     loading: 'सेंसर चालू हो रहा है।',
-    started: 'स्मार्ट केन चालू हो गया है। अब मैं रुकावटों के बारे में बताती रहूंगी।',
-    stopClose: 'रुक जाइए, रुकावट बहुत पास है, आधे मीटर की दूरी पर है।',
-    midClose: 'सामने रुकावट है, 1 मीटर दूर है, धीरे से बाएं हो जाइए।',
-    farClose: 'सामने रुकावट है, 2 मीटर दूर है, धीरे चलिए।',
-    wallClose: 'रुक जाइए, सामने बड़ी रुकावट बिल्कुल पास है, आधे मीटर पर है।',
-    rememberedClose: 'वही रुकावट अब पास आ गई है, 1 मीटर पर है, रुक जाइए।',
-    suddenClose: 'रुक जाइए, सामने अचानक कोई रुकावट आ गई है, 1 मीटर पर है।',
-    clearPath: 'रास्ता साफ़ है, धीरे-धीरे सीधे चलते जाइए।',
+    started: 'स्मार्ट केन चालू हो गया है। अब मैं रास्ते के बारे में बताती रहूंगी।',
+    stopClose: 'रुक जाइए, सामने रुकावट है।',
+    clearPath: 'रास्ता साफ़ है, आगे बढ़ें।',
     camError: 'कृपया कैमरे की अनुमति दें',
     netError: 'इंटरनेट चालू करें, मॉडल लोड नहीं हुआ।'
   },
   'ar-SA': {
     loading: 'جاري تشغيل المستشعر.',
-    started: 'تم تشغيل العصا الذكية. سأستمر في إعلامك بالعقبات.',
-    stopClose: 'توقف، العقبة قريبة جدا، على بعد نصف متر.',
-    midClose: 'عقبة أمامك، على بعد متر واحد، اتجه ببطء إلى اليسار.',
-    farClose: 'عقبة أمامك، على بعد مترين، امش ببطء.',
-    wallClose: 'توقف، عقبة كبيرة قريبة جدا أمامك، على بعد نصف متر.',
-    rememberedClose: 'تلك العقبة اقتربت الآن، على بعد متر واحد، توقف.',
-    suddenClose: 'توقف، ظهرت عقبة مفاجئة أمامك، على بعد متر واحد.',
-    clearPath: 'الطريق نظيف، استمر في المشي بشكل مستقيم وببطء.',
+    started: 'تم تشغيل العصا الذكية. سأستمر في إعلامك بالطريق.',
+    stopClose: 'توقف، توجد عقبة أمامك.',
+    clearPath: 'الطريق نظيف، تقدم للأمام.',
     camError: 'يرجى السماح بإذن الكاميرا',
     netError: 'قم بتشغيل الإنترنت، لم يتم تحميل النموذج.'
   },
   'pa-IN': {
     loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ਹੈ।',
-    started: 'ਸਮਾਰਟ ਕੈਨ ਚਾਲੂ ਹੋ ਗਿਆ ਹੈ। ਮੈਂ ਰੁਕਾਵਟਾਂ ਬਾਰੇ ਦੱਸਦੀ ਰਹਾਂਗੀ।',
-    stopClose: 'ਰੁਕ ਜਾਓ, ਰੁਕਾਵਟ ਬਹੁਤ ਨੇੜੇ ਹੈ, ਅੱਧਾ ਮੀਟਰ ਦੂਰ ਹੈ।',
-    midClose: 'ਸਾਹਮਣੇ ਰੁਕਾਵਟ ਹੈ, 1 ਮੀਟਰ ਦੂਰ ਹੈ, ਹੌਲੀ ਖੱਬੇ ਹੋ ਜਾਓ।',
-    farClose: 'ਸਾਹਮਣੇ ਰੁਕਾਵਟ ਹੈ, 2 ਮੀਟਰ ਦੂਰ ਹੈ, ਹੌਲੀ ਚੱلو।',
-    wallClose: 'ਰੁਕ ਜਾਓ, ਸਾਹਮਣੇ ਵੱਡੀ ਰੁਕਾਵਟ ਬਹੁਤ ਨੇੜੇ ਹੈ, ਅੱਧਾ ਮੀਟਰ ਦੂਰ।',
-    rememberedClose: 'ਉਹ ਰੁਕਾਵਟ ਹੁਣ ਨੇੜੇ ਆ ਗਈ ਹੈ, 1 ਮੀਟਰ ਤੇ ਹੈ, ਰੁਕ ਜਾਓ।',
-    suddenClose: 'ਰੁਕ ਜਾਓ, ਸਾਹਮਣੇ अचानक ਰੁਕਾਵਟ ਆਈ ਹੈ, 1 ਮੀਟਰ ਤੇ ਹੈ।',
-    clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਹੌਲੀ-ਹੌਲੀ ਸਿੱਧੇ ਚਲते ਜਾਓ।',
+    started: 'ਸਮਾਰਟ ਕੈਨ ਚਾਲੂ ਹੋ ਗਿਆ ਹੈ। ਮੈਂ ਰਸਤੇ ਬਾਰੇ ਦੱਸਦੀ ਰਹਾਂਗੀ।',
+    stopClose: 'ਰੁਕ ਜਾਓ, ਸਾਹਮਣੇ ਰੁਕਾਵਟ ਹੈ।',
+    clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਅੱਗੇ ਵਧੋ।',
     camError: 'ਕਿਰਪਾ ਕਰਕੇ ਕੈਮਰੇ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ',
     netError: 'ਇੰਟਰਨੈਟ ਚਾਲੂ ਕਰੋ, ਮਾਡਲ ਲੋਡ ਨਹੀਂ ਹੋਇਆ।'
   },
   'ps-PK': {
     loading: 'سنډر چالان کیږي.',
-    started: 'سمارټ کین چالان شو. زه به تاسو ته د خنډونو په اړه خبر درکړم.',
-    stopClose: 'وګرځئ، خنډ ډیر نږدې دی، نیم متر واټن لري.',
-    midClose: 'مخکې خنډ شته، ۱ متر واټن لري، په کراره کیڼ لور ته شئ.',
-    farClose: 'مخکې خنډ شته، ۲ متره واټن لري، په کراره روان شئ.',
-    wallClose: 'وګرځئ، مخکې لوی خنډ ډیر نږدې دی، نیم متر.',
-    rememberedClose: 'هغه خنډ اوس نږدې شوی، ۱ متر واټن لري، ودریږئ.',
-    suddenClose: 'وګرځئ, مخکې ناڅاپه خنډ راغلی، ۱ متر.',
-    clearPath: 'لاره پاکه ده، په کراره سیده روان شئ.',
+    started: 'سمارټ کین چالان شو. زه به تاسو ته د لارې په اړه خبر درکړم.',
+    stopClose: 'وګرځئ، مخکې خنډ شته.',
+    clearPath: 'لاره پاکه ده، مخکې لاړ شئ.',
     camError: 'مهرباني وکړئ د کامرې اجازه ورکړئ',
     netError: 'انټرنیټ چالان کړئ، ماډل بار نشو.'
   },
   'sd-PK': {
     loading: 'سينسر چالو ٿي رهيو آهي.',
-    started: 'سمارٽ ڪين چالو ٿي ويو آهي. مان توهان کي رڪاوٽن بابت ٻڌائيندي رهندس.',
-    stopClose: 'بيهي وڃو، رڪاوٽ تمام ويجھو آهي، اڌ ميٽر جي فاصلي تي.',
-    midClose: 'سامهون رڪاوٽ آهي، 1 ميٽر پري آهي، آهستي کاٻي پاسي ٿيو.',
-    farClose: 'سامهون رڪاوٽ آهي، 2 ميٽر پري آهي، آهستي هلو.',
-    wallClose: 'بيهي وڃو, سامهون وڏي رڪاوٽ بلڪل ويجھو آهي، اڌ ميٽر تي.',
-    rememberedClose: 'اها رڪاوٽ هاڻي ويجھو اچي وئي آهي، 1 ميٽر تي آهي، بيهي وڃو.',
-    suddenClose: 'بيهي وڃو، سامهون اڻڄاتل رڪاوٽ آئي آهي، 1 ميٽر تي.',
-    clearPath: 'رستو صاف آهي، آهستي سڌو هلبو وڃو.',
+    started: 'سمارٽ ڪين چالو ٿي ويو آهي. مان توهان کي رستي بابت ٻڌائيندي رهندس.',
+    stopClose: 'بيهي وڃو، سامهون رڪاوٽ آهي.',
+    clearPath: 'رستو صاف آهي، اڳيان وڌو.',
     camError: 'مهرباني ڪري ڪمري جي اجازت ڏيو',
     netError: 'انٽرنيٽ چالو ڪريو، ماڊل لوڊ نه ٿيو.'
   }
@@ -266,19 +229,19 @@ function speakText(t){
   window.speechSynthesis.speak(u);
 }
 
-function playTone(){
+function playHurdleTone(){
   try{
     if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
     const o=audioCtx.createOscillator(); const g=audioCtx.createGain();
     o.connect(g); g.connect(audioCtx.destination);
     o.frequency.value=880; o.type='sine';
-    g.gain.setValueAtTime(0.18, audioCtx.currentTime);
+    g.gain.setValueAtTime(0.2, audioCtx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.3);
     o.start(); o.stop(audioCtx.currentTime+0.3);
   }catch(e){}
 }
 
-// Very loud, extremely prominent high-gain beep for clear path alert
+// Extremely loud, sharp high-gain beep for clear path alert
 function playClearTone(){
   try{
     if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
@@ -286,17 +249,15 @@ function playClearTone(){
     o.connect(g); g.connect(audioCtx.destination);
     o.frequency.value=750;
     o.type='triangle';
-    g.gain.setValueAtTime(0.85, audioCtx.currentTime); // Maximum loudness
+    g.gain.setValueAtTime(0.85, audioCtx.currentTime); // Maximum volume loudness
     g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.45);
     o.start(); o.stop(audioCtx.currentTime+0.45);
   }catch(e){}
 }
 
-function vibrateLevel(level){
+function vibrateHurdle(){
   if(!navigator.vibrate) return;
-  if(level===3) navigator.vibrate([400,100,400,100,400]);
-  else if(level===2) navigator.vibrate([200,100,200]);
-  else if(level===1) navigator.vibrate([100]);
+  navigator.vibrate([300,100,300]);
 }
 
 async function ensureCamera(){
@@ -339,75 +300,42 @@ async function detectLoop(){
     return;
   }
 
-  const now = Date.now();
   let found = [];
   try{
     const preds = await model.detect(video);
-    found = preds.filter(p => p.score > 0.4);
-    found.sort((a,b) => (b.bbox[2]*b.bbox[3]) - (a.bbox[2]*a.bbox[3]));
+    found = preds.filter(p => p.score > 0.35);
   }catch(e){}
 
   const info = getScreenInfo();
   const isWall = info.variance < 20;
-  let speakMsg = "", level = 0, currentCategory = "clear";
+  let speakMsg = "", currentCategory = "clear", hasHurdle = false;
 
-  if(found.length > 0){
-    rememberedObj = found[0].class; rememberedTime = now;
-    const box = found[0].bbox;
-    const currentArea = (box[2]*box[3]) / (video.videoWidth*video.videoHeight) * 100;
-
-    // Stable distance calculation with smooth threshold buffer to eliminate jitter/flapping while stationary
-    if(stableBoxSize === 0) {
-      stableBoxSize = currentArea;
-    } else {
-      // Smooth out minor AI model bounding box fluctuations when phone is kept still
-      stableBoxSize = (stableBoxSize * 0.7) + (currentArea * 0.3);
-    }
-
-    if(stableBoxSize > 25){ speakMsg = getMsg('stopClose'); level = 3; currentCategory = "stopClose"; }
-    else if(stableBoxSize > 10){ speakMsg = getMsg('midClose'); level = 2; currentCategory = "midClose"; }
-    else { speakMsg = getMsg('farClose'); level = 1; currentCategory = "farClose"; }
+  if(found.length > 0 || isWall || info.change > 15){
+    speakMsg = getMsg('stopClose');
+    currentCategory = "hurdle";
+    hasHurdle = true;
   } else {
-    stableBoxSize = 0;
-    if(isWall){
-      speakMsg = getMsg('wallClose'); level = 3; currentCategory = "wallClose";
-    } else if(now - rememberedTime < 5000 && rememberedObj){
-      speakMsg = getMsg('rememberedClose'); level = 2; currentCategory = "midClose";
-    } else if(info.change > 15){
-      speakMsg = getMsg('suddenClose'); level = 2; currentCategory = "midClose";
-    } else {
-      speakMsg = getMsg('clearPath'); level = 0; currentCategory = "clear";
-    }
+    speakMsg = getMsg('clearPath');
+    currentCategory = "clear";
+    hasHurdle = false;
   }
 
-  // Instant response on genuine environment change with a strict stability latch for static objects
-  const isCategoryChanged = (currentCategory !== lastAnnouncedCategory);
-  
-  if (isCategoryChanged) {
-    consecutiveMatches = 1;
+  // Instant response as soon as window/category changes (hurdle <-> clear path)
+  if (currentCategory !== lastAnnouncedCategory) {
     lastAnnouncedCategory = currentCategory;
-  } else {
-    consecutiveMatches++;
-  }
-
-  const timeElapsed = now - lastSpeakTime;
-
-  // For obstacles or clear path, require at least 3 consistent reads to lock in before speaking, 
-  // preventing sudden false jumps in distance tier while the phone is completely still.
-  if(consecutiveMatches >= 3 && (speakMsg !== lastSpoken || timeElapsed > 6000)) {
-    lastSpoken = speakMsg; 
-    lastSpeakTime = now;
-    if(level > 0){ 
-      playTone(); 
-      vibrateLevel(level); 
+    lastSpoken = speakMsg;
+    
+    if(hasHurdle){
+      playHurdleTone();
+      vibrateHurdle();
     } else {
-      playClearTone(); // Extremely loud, sharp sound notification for clear path
+      playClearTone(); // Extremely loud distinct tone for clear path
     }
     speakText(speakMsg);
   }
 
   if(isLive) {
-    setTimeout(() => requestAnimationFrame(detectLoop), 500); // Fast responsive loop
+    setTimeout(() => requestAnimationFrame(detectLoop), 250); // Ultra-fast loop for immediate detection update
   }
 }
 
