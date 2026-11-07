@@ -164,7 +164,6 @@ const micBtn = document.getElementById('micBtn');
 let stream = null, isLive = false, model = null, audioCtx = null, lastAvg = 0;
 let lastSpokenTime = 0;
 let waitingForUserReady = false;
-let currentObstacleName = "";
 let currentSafeDirection = "straight";
 
 let stairMode = false;
@@ -174,10 +173,9 @@ let lastStairCheckTime = 0;
 
 let currentHeading = "شمال (North)";
 
-// کمپاس (سمت معلوم کرنے کے لیے)
 if (window.DeviceOrientationEvent) {
   window.addEventListener('deviceorientation', (event) => {
-    let alpha = event.alpha; // compass direction
+    let alpha = event.alpha;
     if (alpha !== null) {
       if (alpha >= 315 || alpha < 45) currentHeading = "شمال (North)";
       else if (alpha >= 45 && alpha < 135) currentHeading = "مشرق (East)";
@@ -405,7 +403,6 @@ function getScreenInfo(){
   return {variance, change, verticalTilt, leftAvg, rightAvg};
 }
 
-// وائس ریکگنیشن (بول کر ریڈی ہونے کے لیے)
 function startVoiceRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
@@ -423,7 +420,6 @@ function startVoiceRecognition() {
     waitingForUserReady = false;
     micBtn.style.display = "none";
     
-    // دیکھنا کہ کس طرف راستہ صاف ہے
     const info = getScreenInfo();
     if (info.leftAvg > info.rightAvg + 10) {
       currentSafeDirection = "left";
@@ -474,7 +470,6 @@ async function detectLoop(){
   const info = getScreenInfo();
   let now = Date.now();
 
-  // سٹیئرز (سیڑھیاں) کی درست شناخت
   let potentialStairCondition = (info.change > 6 && info.change < 25 && Math.abs(info.verticalTilt) > 10);
 
   if (potentialStairCondition) {
@@ -526,7 +521,78 @@ async function detectLoop(){
       speakText(alertText);
       statusEl.innerText = "OBSTACLE: " + objName.toUpperCase();
 
-      // رکاوٹ آنے پر وائس پرامپٹ شروع کرنا
       waitingForUserReady = true;
       micBtn.style.display = "block";
-      setTimeout
+      setTimeout(() => {
+        speakText(getMsg('readyPrompt'));
+      }, 2500);
+
+    } else {
+      let clearText = getMsg('clear');
+      lastSpokenTime = now;
+      playClearTone();
+      speakText(clearText);
+      statusEl.innerText = "STATUS: GO AHEAD - CLEAR (" + currentHeading + ")";
+    }
+  }
+
+  if(isLive) {
+    setTimeout(() => requestAnimationFrame(detectLoop), 300);
+  }
+}
+
+document.getElementById('startBtn').addEventListener('click', async () => {
+  statusEl.innerText = "STATUS: LOADING...";
+  speakText(getMsg('loading'));
+  
+  if(!await ensureCamera()) {
+    statusEl.innerText = "STATUS: OFF";
+    return;
+  }
+
+  try {
+    if(!model) {
+      model = await cocoSsd.load();
+    }
+  } catch(e) {
+    speakText(getMsg('netError'));
+    statusEl.innerText = "STATUS: OFF";
+    return;
+  }
+
+  isLive = true;
+  statusEl.innerText = "STATUS: LIVE";
+  document.getElementById('startBtn').style.display = "none";
+  document.getElementById('stopBtn').style.display = "block";
+  speakText(getMsg('started'));
+  requestAnimationFrame(detectLoop);
+});
+
+document.getElementById('stopBtn').addEventListener('click', () => {
+  isLive = false; 
+  if(stream) {
+    stream.getTracks().forEach(t => t.stop());
+  }
+  stream = null; 
+  video.srcObject = null;
+  window.speechSynthesis.cancel();
+  stairMode = false;
+  stairStepCount = 0;
+  waitingForUserReady = false;
+  micBtn.style.display = "none";
+  statusEl.innerText = "STATUS: OFF";
+  document.getElementById('startBtn').style.display = "block";
+  document.getElementById('stopBtn').style.display = "none";
+});
+
+document.getElementById('openMapsBtn').addEventListener('click', () => {
+  const q = document.getElementById('destinationInput').value.trim();
+  if(!q){ 
+    speakText('Pehle upar likhen kahan jana hai.'); 
+    return; 
+  }
+  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`, '_blank');
+});
+</script>
+</body>
+</html>
