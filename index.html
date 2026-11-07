@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Your eyes smart cane created by Humaira Sardar</title>
+<title>Smart Cane Application</title>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@latest"></script>
 <style>
@@ -25,7 +25,7 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 <body>
 <div class="top">
 <h2>SMART CANE</h2>
-<div class="sub">Your eyes smart cane created by Humaira Sardar</div>
+<div class="sub">Advanced AI Navigation Assistant</div>
 
 <label>SELECT LANGUAGE</label>
 <select id="voiceLanguage">
@@ -136,7 +136,7 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 </select>
 
 <label>DESTINATION</label>
-<input type="text" id="destinationInput" placeholder="e.g. Okara Bazar">
+<input type="text" id="destinationInput" placeholder="e.g. City Center">
 <button id="openMapsBtn" class="btn-map">OPEN MAPS</button>
 
 <div id="status">STATUS: OFF</div>
@@ -148,10 +148,10 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 </div>
 
 <script>
-const video=document.getElementById('webcam');
-const statusEl=document.getElementById('status');
-const langSel=document.getElementById('voiceLanguage');
-let stream=null, isLive=false, model=null, audioCtx=null, lastAvg=0;
+const video = document.getElementById('webcam');
+const statusEl = document.getElementById('status');
+const langSel = document.getElementById('voiceLanguage');
+let stream = null, isLive = false, model = null, audioCtx = null, lastAvg = 0;
 let lastSpokenTime = 0;
 
 let stairMode = false;
@@ -159,13 +159,14 @@ let stairStepCount = 0;
 let stairDirection = 'up';
 let lastStairCheckTime = 0;
 
-const dict = {
+const translations = {
   'ur-PK': {
     loading: 'سنسور آن ہو رہا ہے۔',
     started: 'اسمارٹ کین آن ہو گیا ہے۔ تمام چھوٹے، بڑے ابجیکٹس اور راستے کی رکاوٹوں کی شناخت جاری ہے۔',
     camError: 'کیمرہ کی اجازت دیں',
     netError: 'انٹرنیٹ آن کریں، ماڈل لوڈ نہیں ہوا۔',
     clear: 'رستہ صاف ہے، آگے بڑھیں۔',
+    stopClose: 'رک جائیں، سامنے رکاوٹ ہے۔',
     stairsStart: 'سیڑھیاں شروع ہو چکی ہیں۔',
     stairsEnd: 'سیڑھیاں ختم ہو گئی ہیں، اب یہاں رک جائیں۔',
     stairUpMsg: 'اوپر کی طرف سیڑھی نمبر',
@@ -200,6 +201,7 @@ const dict = {
     camError: 'Please allow camera permissions',
     netError: 'Turn on internet, model failed to load.',
     clear: 'Path is clear, move ahead.',
+    stopClose: 'Stop, obstacle ahead.',
     stairsStart: 'Stairs have started.',
     stairsEnd: 'Stairs have ended, stop here.',
     stairUpMsg: 'Going up, step number',
@@ -234,6 +236,7 @@ const dict = {
     camError: 'कृपया कैमरे की अनुमति दें',
     netError: 'इंटरनेट चालू करें, मॉडल लोड नहीं हुआ।',
     clear: 'रास्ता साफ़ है, आगे बढ़ें।',
+    stopClose: 'रुक जाइए, सामने बाधा है।',
     stairsStart: 'सीढ़ियाँ शुरू हो चुकी हैं।',
     stairsEnd: 'सीढ़ियाँ समाप्त हो गई हैं, यहाँ रुक जाइए।',
     stairUpMsg: 'ऊपर जाते हुए, सीढ़ी संख्या',
@@ -268,6 +271,7 @@ const dict = {
     camError: 'يرجى السماح بإذن الكاميرا',
     netError: 'قم بتشغيل الإنترنت، لم يتم تحميل النموذج.',
     clear: 'الطريق نظيف، تقدم للأمام.',
+    stopClose: 'توقف، توجد عقبة.',
     stairsStart: 'بدأت السلالم.',
     stairsEnd: 'انتهت السلالم، توقف هنا.',
     stairUpMsg: 'صعود، رقم الدرجة',
@@ -319,40 +323,40 @@ function getObjName(objKey) {
 
 function speakText(t){
   window.speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(t);
-  u.lang=langSel.value; 
-  u.rate=1.0;
+  const u = new SpeechSynthesisUtterance(t);
+  u.lang = langSel.value; 
+  u.rate = 1.0;
   window.speechSynthesis.speak(u);
 }
 
 function playHurdleTone(){
   try{
-    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-    const o=audioCtx.createOscillator(); const g=audioCtx.createGain();
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
     o.connect(g); g.connect(audioCtx.destination);
-    o.frequency.value=880; o.type='sine';
+    o.frequency.value = 880; o.type = 'sine';
     g.gain.setValueAtTime(0.2, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.3);
-    o.start(); o.stop(audioCtx.currentTime+0.3);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+    o.start(); o.stop(audioCtx.currentTime + 0.3);
   }catch(e){}
 }
 
 function playClearTone(){
   try{
-    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-    const o=audioCtx.createOscillator(); const g=audioCtx.createGain();
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
     o.connect(g); g.connect(audioCtx.destination);
-    o.frequency.value=750;
-    o.type='triangle';
+    o.frequency.value = 750;
+    o.type = 'triangle';
     g.gain.setValueAtTime(0.85, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.45);
-    o.start(); o.stop(audioCtx.currentTime+0.45);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
+    o.start(); o.stop(audioCtx.currentTime + 0.45);
   }catch(e){}
 }
 
 function vibrateHurdle(){
   if(!navigator.vibrate) return;
-  navigator.vibrate([300,100,300]);
+  navigator.vibrate([300, 100, 300]);
 }
 
 async function ensureCamera(){
@@ -379,26 +383,26 @@ async function ensureCamera(){
 }
 
 function getScreenInfo(){
-  if(!video.videoWidth) return {variance:100, change:0, verticalTilt:0};
-  const c=document.createElement('canvas'); c.width=60; c.height=45;
-  const ctx=c.getContext('2d'); ctx.drawImage(video,0,0,60,45);
-  const d=ctx.getImageData(0,0,60,45).data;
-  let avg=0; for(let i=0;i<d.length;i+=4){ avg+=(d[i]+d[i+1]+d[i+2])/3; } avg=avg/(60*45);
-  let variance=0; for(let i=0;i<d.length;i+=4){ variance+=Math.abs((d[i]+d[i+1]+d[i+2])/3 - avg); } variance=variance/(60*45);
-  let change=Math.abs(avg - lastAvg); lastAvg=avg;
+  if(!video.videoWidth) return {variance: 100, change: 0, verticalTilt: 0};
+  const c = document.createElement('canvas'); c.width = 60; c.height = 45;
+  const ctx = c.getContext('2d'); ctx.drawImage(video, 0, 0, 60, 45);
+  const d = ctx.getImageData(0, 0, 60, 45).data;
+  let avg = 0; for(let i = 0; i < d.length; i += 4){ avg += (d[i] + d[i+1] + d[i+2]) / 3; } avg = avg / (60 * 45);
+  let variance = 0; for(let i = 0; i < d.length; i += 4){ variance += Math.abs((d[i] + d[i+1] + d[i+2]) / 3 - avg); } variance = variance / (60 * 45);
+  let change = Math.abs(avg - lastAvg); lastAvg = avg;
 
   let topSum = 0, bottomSum = 0;
   const halfPixels = (60 * 22);
-  for(let y=0; y<22; y++){
-    for(let x=0; x<60; x++){
+  for(let y = 0; y < 22; y++){
+    for(let x = 0; x < 60; x++){
       let idx = (y * 60 + x) * 4;
-      topSum += (d[idx] + d[idx+1] + d[idx+2])/3;
+      topSum += (d[idx] + d[idx+1] + d[idx+2]) / 3;
     }
   }
-  for(let y=23; y<45; y++){
-    for(let x=0; x<60; x++){
+  for(let y = 23; y < 45; y++){
+    for(let x = 0; x < 60; x++){
       let idx = (y * 60 + x) * 4;
-      bottomSum += (d[idx] + d[idx+1] + d[idx+2])/3;
+      bottomSum += (d[idx] + d[idx+1] + d[idx+2]) / 3;
     }
   }
   let verticalTilt = (topSum / halfPixels) - (bottomSum / halfPixels);
@@ -407,8 +411,10 @@ function getScreenInfo(){
 }
 
 async function detectLoop(){
-  if(!isLive || !model || !video.videoWidth) {
-    if(isLive) requestAnimationFrame(detectLoop);
+  if(!isLive) return;
+
+  if(!model || !video.videoWidth) {
+    requestAnimationFrame(detectLoop);
     return;
   }
 
@@ -473,7 +479,7 @@ async function detectLoop(){
       speakText(alertText);
       statusEl.innerText = "OBSTACLE: " + uniqueNames.toUpperCase();
     } else if (info.variance < 20 || info.change > 15) {
-      let wallText = getMsg('stopClose') || 'رک جائیں، سامنے رکاوٹ ہے۔';
+      let wallText = getMsg('stopClose');
       lastSpokenTime = now;
       playHurdleTone();
       vibrateHurdle();
@@ -493,42 +499,56 @@ async function detectLoop(){
   }
 }
 
-document.getElementById('startBtn').addEventListener('click', async ()=>{
-  statusEl.innerText="STATUS: LOADING...";
+document.getElementById('startBtn').addEventListener('click', async () => {
+  statusEl.innerText = "STATUS: LOADING...";
   speakText(getMsg('loading'));
-  if(!await ensureCamera()) return;
-  try{ if(!model) model = await cocoSsd.load(); }
-  catch(e){ speakText(getMsg('netError')); return; }
+  
+  if(!await ensureCamera()) {
+    statusEl.innerText = "STATUS: OFF";
+    return;
+  }
+
+  try {
+    if(!model) {
+      model = await cocoSsd.load();
+    }
+  } catch(e) {
+    speakText(getMsg('netError'));
+    statusEl.innerText = "STATUS: OFF";
+    return;
+  }
+
   isLive = true;
-  statusEl.innerText="STATUS: LIVE";
-  document.getElementById('startBtn').style.display="none";
-  document.getElementById('stopBtn').style.display="block";
+  statusEl.innerText = "STATUS: LIVE";
+  document.getElementById('startBtn').style.display = "none";
+  document.getElementById('stopBtn').style.display = "block";
   speakText(getMsg('started'));
   requestAnimationFrame(detectLoop);
 });
 
-document.getElementById('stopBtn').addEventListener('click', ()=>{
+document.getElementById('stopBtn').addEventListener('click', () => {
   isLive = false; 
-  if(stream) stream.getTracks().forEach(t => t.stop());
-  stream = null; video.srcObject = null;
+  if(stream) {
+    stream.getTracks().forEach(t => t.stop());
+  }
+  stream = null; 
+  video.srcObject = null;
   window.speechSynthesis.cancel();
   stairMode = false;
   stairStepCount = 0;
-  statusEl.innerText="STATUS: OFF";
-  document.getElementById('startBtn').style.display="block";
-  document.getElementById('stopBtn').style.display="none";
+  statusEl.innerText = "STATUS: OFF";
+  document.getElementById('startBtn').style.display = "block";
+  document.getElementById('stopBtn').style.display = "none";
 });
 
-document.getElementById('openMapsBtn').addEventListener('click', ()=>{
+document.getElementById('openMapsBtn').addEventListener('click', () => {
   const q = document.getElementById('destinationInput').value.trim();
-  if(!q){ speakText('Pehle upar likhen kahan jana hai.'); return; }
-  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`,'_blank');
+  if(!q){ 
+    speakText('Pehle upar likhen kahan jana hai.'); 
+    return; 
+  }
+  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`, '_blank');
 });
 </script>
 </body>
 </html>
-<!-- WhatsApp Review & Contact Section created by Humaira Sardar -->
-<div style="margin-top: 25px; padding: 15px; background: #1f2937; border-radius: 12px; border: 1px solid #374151; text-align: center;">
-  <p style="color: #00ffcc; font-size: 14px; font-weight: bold; margin: 0 0 10px 0;">Share your valuable reviews and suggestions directly on WhatsApp</p>
-  <a href="https://wa.me/923030133274?text=Hello%20Humaira,%20I%20want%20to%20share%20feedback%20about%20Smart%20Cane:" target="_blank" style="display: block; background: #25d366; color: #fff; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 15px;">💬 Contact on WhatsApp </a>
-</div>
