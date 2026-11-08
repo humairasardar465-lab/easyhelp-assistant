@@ -20,7 +20,7 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 .btn-main{background:#00ffcc;color:#000}
 .btn-map{background:#0284c7;color:#fff}
 .btn-stop{background:#ef4444;color:#fff}
-.btn-wa{background:#25D366;color:#fff;text-decoration:none;display:block;text-align:center}
+.btn-wa{background:#25D366;color:#fff;text-decoration:none;display:block;text-align:center;padding:14px;font-size:16px;border-radius:10px;margin-top:10px;font-weight:700;width:100%}
 #status{text-align:center;margin:10px 0;font-weight:700;font-size:14px}
 </style>
 </head>
@@ -146,10 +146,11 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 <button id="startBtn" class="btn-main">START - SENSOR ON</button>
 <button id="stopBtn" class="btn-stop" style="display:none;">STOP</button>
 
-<!-- WhatsApp Contact Button added -->
-<a href="https://wa.me/923030133274" target="_blank" class="btn-wa">CONTACT WHATSAPP: 03030133274</a>
-
+<!-- Video element placed above WhatsApp -->
 <video id="webcam" autoplay playsinline muted></video>
+
+<!-- WhatsApp Contact Button placed at the very bottom with hidden number -->
+<a href="https://wa.me/923030133274" target="_blank" class="btn-wa">CONTACT WHATSAPP</a>
 </div>
 
 <script>
@@ -200,7 +201,7 @@ const translations = {
     loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ਹੈ।',
     started: 'ਸਮਾਰਟ ਕੇਨ ਚਾਲੂ ਹੈ।',
     stopClose: 'ਰੁਕ ਜਾਓ, ਰੁਕਾਵਟ!',
-    clearPath: 'ਰਸਤਾ ਸਾਫ਼ है!',
+    clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ!',
     camError: 'ਕੈਮਰਾ ਅਨੁਮਤੀ ਦਿਓ',
     netError: 'ਇੰਟਰਨੈਟ ਜਾਂ ਮਾਡਲ ਸਮੱਸਿਆ'
   }
@@ -257,12 +258,15 @@ async function startCamera() {
       audio: false
     });
     video.srcObject = stream;
-    video.addEventListener('loadeddata', predictWebcam);
-    isLive = true;
-    statusEl.innerText = getT('started');
-    speak(getT('started'));
-    startBtn.style.display = 'none';
-    stopBtn.style.display = 'block';
+    video.onloadedmetadata = () => {
+      video.play();
+      isLive = true;
+      statusEl.innerText = getT('started');
+      speak(getT('started'));
+      startBtn.style.display = 'none';
+      stopBtn.style.display = 'block';
+      window.requestAnimationFrame(predictWebcam);
+    };
   } catch (err) {
     console.error(err);
     statusEl.innerText = getT('camError');
@@ -274,18 +278,22 @@ let lastVideoTime = -1;
 async function predictWebcam() {
   if (!isLive || !objectDetector) return;
 
-  if (video.currentTime !== lastVideoTime) {
+  if (video.currentTime !== lastVideoTime && video.readyState >= 2) {
     lastVideoTime = video.currentTime;
-    const startTimeMs = performance.now();
-    const detections = objectDetector.detectForVideo(video, startTimeMs);
+    try {
+      const startTimeMs = performance.now();
+      const detections = objectDetector.detectForVideo(video, startTimeMs);
 
-    if (detections.detections.length > 0) {
-      const closest = detections.detections[0];
-      const category = closest.categories[0].categoryName;
-      statusEl.innerText = `${getT('stopClose')} (${category})`;
-      speak(getT('stopClose'));
-    } else {
-      statusEl.innerText = getT('clearPath');
+      if (detections && detections.detections && detections.detections.length > 0) {
+        const closest = detections.detections[0];
+        const category = closest.categories[0].categoryName;
+        statusEl.innerText = `${getT('stopClose')} (${category})`;
+        speak(getT('stopClose'));
+      } else {
+        statusEl.innerText = getT('clearPath');
+      }
+    } catch (e) {
+      console.error(e);
     }
   }
 
