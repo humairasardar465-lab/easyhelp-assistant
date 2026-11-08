@@ -153,32 +153,14 @@ const statusEl=document.getElementById('status');
 const langSel=document.getElementById('voiceLanguage');
 let stream=null, isLive=false, model=null, lastSpoken="", lastSpeakTime=0, audioCtx=null, lastAvg=0;
 let lastAnnouncedCategory = null; 
-let currentHeadingDirection = 'مشرق'; // Default direction tracker
-
-// Compass orientation tracking for precise direction (Mashriq/Maghrib/Shumal/Junoub)
-if (window.DeviceOrientationEvent) {
-  window.addEventListener('deviceorientation', (event) => {
-    let compass = event.webkitCompassHeading || event.alpha;
-    if (compass !== null && compass !== undefined) {
-      // Normalizing compass heading to 0-360 degrees
-      let deg = 360 - compass;
-      if (deg >= 337.5 || deg < 22.5) currentHeadingDirection = 'شمال';
-      else if (deg >= 22.5 && deg < 112.5) currentHeadingDirection = 'مشرق';
-      else if (deg >= 112.5 && deg < 157.5) currentHeadingDirection = 'مشرق جنوب';
-      else if (deg >= 157.5 && deg < 202.5) currentHeadingDirection = 'جنوب';
-      else if (deg >= 202.5 && deg < 247.5) currentHeadingDirection = 'مغرب جنوب';
-      else if (deg >= 247.5 && deg < 292.5) currentHeadingDirection = 'مغرب';
-      else if (deg >= 292.5 && deg < 337.5) currentHeadingDirection = 'شمال مغرب';
-    }
-  }, true);
-}
+let currentHeadingDirection = ''; // Removed confusing compass directions completely
 
 const translations = {
   'ur-PK': {
     loading: 'سنسور آن ہو رہا ہے۔',
-    started: 'اسمارٹ کین آن ہے۔', // Shortened to 2-3 words
-    stopClose: 'رک جائیں، رکاوٹ!', // Shortened to 2-3 words
-    clearPath: 'رستہ صاف ہے!', // Shortened to 2-3 words
+    started: 'اسمارٹ کین آن ہے۔',
+    stopClose: 'رک جائیں، رکاوٹ!',
+    clearPath: 'رستہ صاف ہے!',
     camError: 'کیمرہ کی اجازت دیں',
     netError: 'انٹرنیٹ آن کریں'
   },
@@ -210,7 +192,7 @@ const translations = {
     loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ਹੈ।',
     started: 'ਸਮਾਰਟ ਕੈਨ ਚਾਲੂ ਹੈ।',
     stopClose: 'ਰੁਕ ਜਾਓ, ਰੁਕਾਵਟ!',
-    clearPath: 'ਰਸਤਾ ਸਾਫ਼ है!',
+    clearPath: 'ਰਸਤਾ ਸਾਫ਼ ہے!',
     camError: 'ਕੈਮਰਾ ਇਜਾਜ਼ਤ ਦਿਓ',
     netError: 'ਇੰਟਰਨੈਟ ਚਾਲੂ ਕਰੋ'
   },
@@ -325,23 +307,23 @@ async function detectLoop(){
   }catch(e){}
 
   const info = getScreenInfo();
-  const isWall = info.variance < 20;
+  // Adjusted thresholds for reliable table/obstacle detection (avoiding false clear states)
+  const isWall = info.variance < 15;
   let speakMsg = "", currentCategory = "clear", hasHurdle = false;
 
-  if(found.length > 0 || isWall || info.change > 15){
-    // Include exact face direction (e.g. Mashriq/Maghrib) in 2-3 word sentences
-    speakMsg = `${currentHeadingDirection}: ${getMsg('stopClose')}`;
+  if(found.length > 0 || isWall || info.change > 12){
+    speakMsg = getMsg('stopClose');
     currentCategory = "hurdle";
     hasHurdle = true;
   } else {
-    speakMsg = `${currentHeadingDirection}: ${getMsg('clearPath')}`;
+    speakMsg = getMsg('clearPath');
     currentCategory = "clear";
     hasHurdle = false;
   }
 
-  // Check timing to ensure updates fire rapidly (every 1.5 seconds instead of 3 seconds)
+  // Force announcement immediately whenever obstacle status changes, and repeat continuously until condition changes
   const now = Date.now();
-  if (currentCategory !== lastAnnouncedCategory || (now - lastSpeakTime > 1500)) {
+  if (currentCategory !== lastAnnouncedCategory || (now - lastSpeakTime > 1200)) {
     lastAnnouncedCategory = currentCategory;
     lastSpeakTime = now;
     lastSpoken = speakMsg;
@@ -356,7 +338,7 @@ async function detectLoop(){
   }
 
   if(isLive) {
-    setTimeout(() => requestAnimationFrame(detectLoop), 250);
+    setTimeout(() => requestAnimationFrame(detectLoop), 200);
   }
 }
 
