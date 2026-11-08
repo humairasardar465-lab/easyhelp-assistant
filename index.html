@@ -146,10 +146,10 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 <button id="startBtn" class="btn-main">START - SENSOR ON</button>
 <button id="stopBtn" class="btn-stop" style="display:none;">STOP</button>
 
-<!-- Video element placed above WhatsApp -->
+<!-- Video element -->
 <video id="webcam" autoplay playsinline muted></video>
 
-<!-- WhatsApp Contact Button placed at the very bottom with hidden number -->
+<!-- WhatsApp Contact Button at the very bottom -->
 <a href="https://wa.me/923030133274" target="_blank" class="btn-wa">CONTACT WHATSAPP</a>
 </div>
 
@@ -287,8 +287,12 @@ async function predictWebcam() {
       if (detections && detections.detections && detections.detections.length > 0) {
         const closest = detections.detections[0];
         const category = closest.categories[0].categoryName;
-        statusEl.innerText = `${getT('stopClose')} (${category})`;
-        speak(getT('stopClose'));
+        const confidence = Math.round(closest.categories[0].score * 100);
+        
+        if (confidence > 45) {
+          statusEl.innerText = `${getT('stopClose')} (${category})`;
+          speak(`${getT('stopClose')} ${category}`);
+        }
       } else {
         statusEl.innerText = getT('clearPath');
       }
