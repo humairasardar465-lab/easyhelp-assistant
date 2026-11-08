@@ -158,7 +158,8 @@ const destinationInput = document.getElementById('destinationInput');
 
 let stream = null, isLive = false, objectDetector = null, imageSegmenter = null;
 let lastSpoken = "", lastSpeakTime = 0, lastClearSoundTime = 0, lastBeepTime = 0, lastObstacleSpeakTime = 0, lastClearSpeakTime = 0, lastObstacleKey = "";
-let frameCount = 0, isWallOrStairAhead = false;
+let frameCount = 0, isWallOrStairAhead = false, nothingCount = 0, wasObstacle = false;
+let pendingSpeech = null;
 let audioCtx = null;
 let canvasCtx = null, offscreenCanvas = null;
 
@@ -167,7 +168,7 @@ const translations = {
     loading: 'سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔',
     started: 'اسمارٹ کین آن ہے۔ کیمرہ اور سنسور ایکٹو ہیں۔',
     stopClose: 'رک جائیں، سامنے رکاوٹ ہے: ',
-    wallAhead: 'رک جائیں، سامنے دیوار یا سیڑھیاں ہیں!',
+    wallAhead: 'رک جائیں، سامنے دیوار ہو سکتی ہے!',
     clearPath: 'رستہ صاف ہے، آگے بڑھیں۔',
     camError: 'کیمرہ کی اجازت دیں',
     netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ'
@@ -176,7 +177,7 @@ const translations = {
     loading: 'Sensor turning on. Please wait.',
     started: 'Smart Cane is on. Camera active.',
     stopClose: 'Stop, obstacle ahead: ',
-    wallAhead: 'Stop, wall or stairs ahead!',
+    wallAhead: 'Stop, wall might be ahead!',
     clearPath: 'Path is clear, move forward.',
     camError: 'Allow camera access',
     netError: 'Internet or model loading issue'
@@ -185,7 +186,7 @@ const translations = {
     loading: 'सेंसर चालू हो रहा है।',
     started: 'स्मार्ट केन चालू है।',
     stopClose: 'रुकिए, रुकावट है: ',
-    wallAhead: 'रुकिए, सामने दीवार या सीढ़ियाँ हैं!',
+    wallAhead: 'रुकिए, सामने दीवार हो सकती है!',
     clearPath: 'रास्ता साफ है, आगे बढ़ें।',
     camError: 'कैमरा अनुमति दें',
     netError: 'इंटरनेट या मॉडल समस्या'
@@ -194,7 +195,7 @@ const translations = {
     loading: 'جاري تشغيل المستشعر.',
     started: 'العصا الذكية تعمل.',
     stopClose: 'توقف، عقبة أمامك: ',
-    wallAhead: 'توقف، جدار أو سلالم أمامك!',
+    wallAhead: 'توقف، قد يكون هناك جدار!',
     clearPath: 'الطريق نظيف، تقدم.',
     camError: 'السماح بالكاميرا',
     netError: 'مشكلة في الإنترنت أو النموذج'
@@ -203,7 +204,7 @@ const translations = {
     loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ਹੈ।',
     started: 'ਸਮਾਰਟ ਕੇਨ ਚਾਲੂ ਹੈ।',
     stopClose: 'ਰੁਕ ਜਾਓ, ਰੁਕਾਵਟ ਹੈ: ',
-    wallAhead: 'ਰੁਕ ਜਾਓ, ਸਾਹਮਣੇ ਕੰਧ ਜਾਂ ਪੌੜੀਆਂ ਹਨ!',
+    wallAhead: 'ਰੁਕ ਜਾਓ, ਸਾਹਮਣੇ ਕੰਧ ਹੋ ਸਕਦੀ ਹੈ!',
     clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ!',
     camError: 'ਕੈਮਰਾ ਅਨੁਮਤੀ ਦਿਓ',
     netError: 'ਇੰਟਰਨੈਟ ਜਾਂ ਮਾਡਲ ਸਮੱਸਿਆ'
@@ -212,7 +213,7 @@ const translations = {
     loading: 'سنسور روان دی. مهرباني وکئ انتظار وکئ.',
     started: 'سمارټ کین روان دی.',
     stopClose: 'ددرېږئ، خنډ شته: ',
-    wallAhead: 'ددرېږئ، مخکې دیوال یا زینې دي!',
+    wallAhead: 'ددرېږئ، مخکې دیوال کیدی شي!',
     clearPath: 'لار سمه ده، مخکې لاړ شئ.',
     camError: 'د کامرې اجازه ورکړئ',
     netError: 'د انټرنیټ ستونزه'
@@ -221,7 +222,7 @@ const translations = {
     loading: 'سنسور در حال روشن شدن است.',
     started: 'اسمارت کین روشن است.',
     stopClose: 'توقف کنید، مانع: ',
-    wallAhead: 'توقف کنید، دیوار یا پله جلو است!',
+    wallAhead: 'توقف کنید، دیوار ممکن است جلو باشد!',
     clearPath: 'مسیر تمیز است، جلو بروید.',
     camError: 'اجازه دسترسی به دوربین',
     netError: 'مشکل اینترنت'
@@ -238,7 +239,7 @@ const allNames = {
   },
   'pa-IN': {
     'person': 'ਬੰਦਾ', 'chair': 'ਕੁਰਸੀ', 'table': 'ਮੇਜ਼', 'bottle': 'ਬੋਤਲ',
-    'car': 'ਕਾਰ', 'bus': 'ਬੱਸ', 'motorcycle': 'ਮੋਟਰਸਾਈਕਲ', 'bicycle': 'ਸਾਈਕਲ'
+    'car': 'ਕਾਰ', 'bus': 'ਬੱਸ', 'motorcycle': 'ਮੋਟਰਸਾਈਕल', 'bicycle': 'ਸਾਈਕਲ'
   },
   'ar-SA': {
     'person': 'شخص', 'chair': 'كرسي', 'table': 'طاولة', 'bottle': 'زجاجة',
@@ -309,17 +310,32 @@ function playBeep(type) {
 
 function speak(text) {
   if (!text) return;
+  if (!('speechSynthesis' in window)) return;
+
+  if (window.speechSynthesis.speaking) {
+    pendingSpeech = text;
+    return;
+  }
+
   const now = Date.now();
   if (text === lastSpoken && now - lastSpeakTime < 4000) return;
+
   lastSpoken = text;
   lastSpeakTime = now;
+  pendingSpeech = null;
 
-  if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = langSel.value;
-    window.speechSynthesis.speak(utterance);
-  }
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = langSel.value;
+  
+  utterance.onend = () => {
+    if (pendingSpeech) {
+      const nextText = pendingSpeech;
+      pendingSpeech = null;
+      speak(nextText);
+    }
+  };
+
+  window.speechSynthesis.speak(utterance);
 }
 
 async function initDetector() {
@@ -444,7 +460,6 @@ function checkWallAndStairs() {
           }
         }
         
-        // Strict check: > 0.95 uniform ratio to avoid false positives in open fields or sky
         if (totalCenter > 0 && (centerUniformCount / totalCenter) > 0.95) {
           isWallOrStairAhead = true;
           return;
@@ -471,7 +486,6 @@ async function predictWebcam() {
     lastVideoTime = video.currentTime;
     frameCount++;
 
-    // Run wall/stair check every 5th frame for performance and stability
     if (frameCount % 5 === 0) {
       checkWallAndStairs();
     }
@@ -481,8 +495,14 @@ async function predictWebcam() {
       const detections = objectDetector.detectForVideo(video, startTimeMs);
       const hasObjectDetected = detections && detections.detections && detections.detections.length > 0;
 
-      // If wall or stairs detected by segmenter AND no other known object is detected
-      if (isWallOrStairAhead && !hasObjectDetected) {
+      if (!hasObjectDetected) {
+        nothingCount++;
+      } else {
+        nothingCount = 0;
+      }
+
+      if (isWallOrStairAhead && !hasObjectDetected && nothingCount >= 5) {
+        wasObstacle = true;
         statusEl.innerText = getT('wallAhead');
         
         const now = Date.now();
@@ -518,12 +538,15 @@ async function predictWebcam() {
         const localizedName = getLocalizedName(rawCategory);
         const confidence = Math.round(closest.categories[0].score * 100);
         
-        if (confidence >= 50) {
+        const requiredConfidence = 50;
+
+        if (confidence >= requiredConfidence) {
           const videoWidth = video.videoWidth || 640;
           const videoArea = videoWidth * (video.videoHeight || 480);
           const sizeRatio = maxArea / videoArea;
           
           if (sizeRatio >= 0.005) {
+            wasObstacle = true;
             let distanceText = "";
             const lang = langSel.value;
             if (lang.startsWith('en')) {
@@ -592,7 +615,11 @@ function handleClearPath() {
     playBeep('clear');
   }
 
-  if (now - lastClearSpeakTime > 4000) {
+  if (wasObstacle) {
+    wasObstacle = false;
+    lastClearSpeakTime = now;
+    speak(getT('clearPath'));
+  } else if (now - lastClearSpeakTime > 8000) {
     lastClearSpeakTime = now;
     speak(getT('clearPath'));
   }
@@ -602,6 +629,7 @@ function stopCamera() {
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel();
   }
+  pendingSpeech = null;
   if ('vibrate' in navigator) {
     try { navigator.vibrate(0); } catch(e){}
   }
