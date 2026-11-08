@@ -169,6 +169,7 @@ const translations = {
     started: 'اسمارٹ کین آن ہے۔ کیمرہ اور سنسور ایکٹو ہیں۔',
     stopClose: 'رک جائیں، سامنے رکاوٹ ہے: ',
     wallAhead: 'رک جائیں، سامنے دیوار ہو سکتی ہے!',
+    unknownObstacle: 'رک جائیں، سامنے نامعلوم رکاوٹ ہے!',
     clearPath: 'رستہ صاف ہے، آگے بڑھیں۔',
     camError: 'کیمرہ کی اجازت دیں',
     netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ'
@@ -178,6 +179,7 @@ const translations = {
     started: 'Smart Cane is on. Camera active.',
     stopClose: 'Stop, obstacle ahead: ',
     wallAhead: 'Stop, wall might be ahead!',
+    unknownObstacle: 'Stop, unknown obstacle ahead!',
     clearPath: 'Path is clear, move forward.',
     camError: 'Allow camera access',
     netError: 'Internet or model loading issue'
@@ -187,6 +189,7 @@ const translations = {
     started: 'स्मार्ट केन चालू है।',
     stopClose: 'रुकिए, रुकावट है: ',
     wallAhead: 'रुकिए, सामने दीवार हो सकती है!',
+    unknownObstacle: 'रुकिए, सामने अज्ञात बाधा है!',
     clearPath: 'रास्ता साफ है, आगे बढ़ें।',
     camError: 'कैमरा अनुमति दें',
     netError: 'इंटरनेट या मॉडल समस्या'
@@ -196,6 +199,7 @@ const translations = {
     started: 'العصا الذكية تعمل.',
     stopClose: 'توقف، عقبة أمامك: ',
     wallAhead: 'توقف، قد يكون هناك جدار!',
+    unknownObstacle: 'توقف، عقبة مجهولة أمامك!',
     clearPath: 'الطريق نظيف، تقدم.',
     camError: 'السماح بالكاميرا',
     netError: 'مشكلة في الإنترنت أو النموذج'
@@ -205,6 +209,7 @@ const translations = {
     started: 'ਸਮਾਰਟ ਕੇਨ ਚਾਲੂ ਹੈ।',
     stopClose: 'ਰੁਕ ਜਾਓ, ਰੁਕਾਵਟ ਹੈ: ',
     wallAhead: 'ਰੁਕ ਜਾਓ, ਸਾਹਮਣੇ ਕੰਧ ਹੋ ਸਕਦੀ ਹੈ!',
+    unknownObstacle: 'ਰੁਕ ਜਾਓ, ਸਾਹਮਣੇ ਅਣਜਾਣ ਰੁਕਾਵਟ ਹੈ!',
     clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ!',
     camError: 'ਕੈਮਰਾ ਅਨੁਮਤੀ ਦਿਓ',
     netError: 'ਇੰਟਰਨੈਟ ਜਾਂ ਮਾਡਲ ਸਮੱਸਿਆ'
@@ -214,6 +219,7 @@ const translations = {
     started: 'سمارټ کین روان دی.',
     stopClose: 'ددرېږئ، خنډ شته: ',
     wallAhead: 'ددرېږئ، مخکې دیوال کیدی شي!',
+    unknownObstacle: 'ددرېږئ، نامعلوم خنډ شته!',
     clearPath: 'لار سمه ده، مخکې لاړ شئ.',
     camError: 'د کامرې اجازه ورکړئ',
     netError: 'د انټرنیټ ستونزه'
@@ -223,6 +229,7 @@ const translations = {
     started: 'اسمارت کین روشن است.',
     stopClose: 'توقف کنید، مانع: ',
     wallAhead: 'توقف کنید، دیوار ممکن است جلو باشد!',
+    unknownObstacle: 'توقف کنید، مانع ناشناخته جلو است!',
     clearPath: 'مسیر تمیز است، جلو بروید.',
     camError: 'اجازه دسترسی به دوربین',
     netError: 'مشکل اینترنت'
@@ -239,7 +246,7 @@ const allNames = {
   },
   'pa-IN': {
     'person': 'ਬੰਦਾ', 'chair': 'ਕੁਰਸੀ', 'table': 'ਮੇਜ਼', 'bottle': 'ਬੋਤਲ',
-    'car': 'ਕਾਰ', 'bus': 'ਬੱਸ', 'motorcycle': 'ਮੋਟਰਸਾਈਕल', 'bicycle': 'ਸਾਈਕਲ'
+    'car': 'ਕਾਰ', 'bus': 'ਬੱਸ', 'motorcycle': 'ਮੋਟਰਸਾਈਕਲ', 'bicycle': 'ਸਾਈਕਲ'
   },
   'ar-SA': {
     'person': 'شخص', 'chair': 'كرسي', 'table': 'طاولة', 'bottle': 'زجاجة',
@@ -358,7 +365,7 @@ async function initDetector() {
         modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite",
         delegate: "CPU"
       },
-      scoreThreshold: 0.5,
+      scoreThreshold: 0.2,
       runningMode: "VIDEO"
     });
   } catch (err) {
@@ -460,7 +467,7 @@ function checkWallAndStairs() {
           }
         }
         
-        if (totalCenter > 0 && (centerUniformCount / totalCenter) > 0.95) {
+        if (totalCenter > 0 && (centerUniformCount / totalCenter) > 0.90) {
           isWallOrStairAhead = true;
           return;
         }
@@ -486,7 +493,7 @@ async function predictWebcam() {
     lastVideoTime = video.currentTime;
     frameCount++;
 
-    if (frameCount % 5 === 0) {
+    if (frameCount % 3 === 0) {
       checkWallAndStairs();
     }
 
@@ -501,7 +508,7 @@ async function predictWebcam() {
         nothingCount = 0;
       }
 
-      if (isWallOrStairAhead && !hasObjectDetected && nothingCount >= 5) {
+      if (isWallOrStairAhead && !hasObjectDetected && nothingCount >= 3) {
         wasObstacle = true;
         statusEl.innerText = getT('wallAhead');
         
@@ -538,7 +545,7 @@ async function predictWebcam() {
         const localizedName = getLocalizedName(rawCategory);
         const confidence = Math.round(closest.categories[0].score * 100);
         
-        const requiredConfidence = 50;
+        const requiredConfidence = 20;
 
         if (confidence >= requiredConfidence) {
           const videoWidth = video.videoWidth || 640;
@@ -587,13 +594,13 @@ async function predictWebcam() {
               speak(`${getT('stopClose')} ${localizedName}، ${distanceText}، ${sideText}`);
             }
           } else {
-            handleClearPath();
+            handleUnknownOrClear();
           }
         } else {
-          handleClearPath();
+          handleUnknownOrClear();
         }
       } else {
-        handleClearPath();
+        handleUnknownOrClear();
       }
     } catch (e) {
       console.error(e);
@@ -602,6 +609,25 @@ async function predictWebcam() {
 
   if (isLive) {
     window.requestAnimationFrame(predictWebcam);
+  }
+}
+
+function handleUnknownOrClear() {
+  const now = Date.now();
+  if (nothingCount < 3 && video.readyState >= 2) {
+    wasObstacle = true;
+    statusEl.innerText = getT('unknownObstacle');
+    if (now - lastBeepTime > 600) {
+      lastBeepTime = now;
+      playBeep('obstacle');
+      triggerVibration();
+    }
+    if (now - lastObstacleSpeakTime > 4000) {
+      lastObstacleSpeakTime = now;
+      speak(getT('unknownObstacle'));
+    }
+  } else {
+    handleClearPath();
   }
 }
 
@@ -619,7 +645,7 @@ function handleClearPath() {
     wasObstacle = false;
     lastClearSpeakTime = now;
     speak(getT('clearPath'));
-  } else if (now - lastClearSpeakTime > 8000) {
+  } else if (now - lastClearSpeakTime > 10000) {
     lastClearSpeakTime = now;
     speak(getT('clearPath'));
   }
