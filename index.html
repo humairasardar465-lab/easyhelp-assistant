@@ -3,17 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Cane & GPS Navigation - Created By Humaira Sardar</title>
-<script type="module">
-import { ObjectDetector, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs";
-window.ObjectDetector = ObjectDetector;
-window.FilesetResolver = FilesetResolver;
-</script>
+<title>Your eyes smart cane created by Humaira Sardar</title>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@latest"></script>
 <style>
 *{box-sizing:border-box}
 body{font-family:Arial,sans-serif;background:#0a0f1e;color:#fff;margin:0;padding:16px}
 .top{max-width:620px;margin:auto;background:#111827;padding:22px;border-radius:16px}
-h2{text-align:center;color:#00ffcc;margin:0}
+h2{text-align:center;color:#00ffcc;margin:0;letter-spacing:1px}
 .sub{text-align:center;font-size:12px;color:#94a3b8;margin:6px 0 14px}
 label{display:block;color:#00ffcc;font-size:13px;font-weight:700;margin:14px 0 6px}
 select,input{width:100%;padding:12px;border-radius:10px;border:1px solid #374151;background:#1f2937;color:#fff;font-size:15px}
@@ -22,382 +19,381 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 .btn-main{background:#00ffcc;color:#000}
 .btn-map{background:#0284c7;color:#fff}
 .btn-stop{background:#ef4444;color:#fff}
-.btn-narrate{background:#7c3aed;color:#fff}
-#status{text-align:center;margin:10px 0;font-weight:700}
-#gpsStatus{text-align:center;font-size:13px;color:#38bdf8;margin:8px 0;font-weight:bold;}
+#status{text-align:center;margin:10px 0;font-weight:700;font-size:14px}
 </style>
 </head>
 <body>
 <div class="top">
-<h2 id="uiTitle">SMART CANE & GPS</h2>
-<div class="sub" id="uiSub">Your Eyes Smart Cane Created By Humaira Sardar</div>
+<h2>SMART CANE</h2>
+<div class="sub">Your eyes smart cane created by Humaira Sardar</div>
 
-<label id="lblLang">SELECT LANGUAGE - HAR LANGUAGE</label>
+<label>SELECT LANGUAGE</label>
 <select id="voiceLanguage">
-<option value="ur-PK" selected>اردو (پاکستان) - Urdu Pakistan</option>
-<option value="en-US">English (US)</option>
-<option value="hi-IN">हिन्दी - Hindi</option>
-<option value="ar-SA">العربية - Arabic</option>
-<option value="pa-PK">پنجابی - Punjabi Pakistan</option>
-<option value="ps-PK">پښتو - Pashto</option>
-<option value="sd-PK">سنڌي - Sindhi</option>
-<option value="bn-BD">বাংলা - Bengali</option>
-<option value="fa-IR">فارسی - Persian</option>
-<option value="tr-TR">Türkçe - Turkish</option>
-<option value="zh-CN">中文 - Chinese</option>
-<option value="es-ES">Español - Spanish</option>
-<option value="fr-FR">Français - French</option>
-<option value="de-DE">Deutsch - German</option>
-<option value="ja-JP">日本語 - Japanese</option>
-<option value="ko-KR">한국어 - Korean</option>
-<option value="ru-RU">Русский - Russian</option>
-<option value="it-IT">Italiano - Italian</option>
-<option value="id-ID">Bahasa Indonesia - Indonesian</option>
-<option value="vi-VN">Tiếng Việt - Vietnamese</option>
-<option value="th-TH">ไทย - Thai</option>
-<option value="nl-NL">Nederlands - Dutch</option>
-<option value="pl-PL">Polski - Polish</option>
-<option value="uk-UA">Українська - Ukrainian</option>
-<option value="el-GR">Ελληνικά - Greek</option>
-<option value="he-IL">עברית - Hebrew</option>
-<option value="sv-SE">Svenska - Swedish</option>
-<option value="no-NO">Norsk - Norwegian</option>
-<option value="fi-FI">Suomi - Finnish</option>
-<option value="da-DK">Dansk - Danish</option>
-<option value="cs-CZ">Čeština - Czech</option>
-<option value="hu-HU">Magyar - Hungarian</option>
-<option value="ro-RO">Română - Romanian</option>
-<option value="ms-MY">Bahasa Melayu - Malay</option>
-<option value="fil-PH">Filipino</option>
-<option value="sw-KE">Kiswahili - Swahili</option>
-<option value="af-ZA">Afrikaans</option>
-<option value="sq-AL">Shqip - Albanian</option>
-<option value="am-ET">አማርኛ - Amharic</option>
-<option value="hy-AM">Հայերեն - Armenian</option>
-<option value="az-AZ">Azərbaycan - Azerbaijani</option>
-<option value="eu-ES">Euskara - Basque</option>
-<option value="be-BY">Беларуская - Belarusian</option>
-<option value="bs-BA">Bosanski - Bosnian</option>
-<option value="bg-BG">Български - Bulgarian</option>
-<option value="ca-ES">Català - Catalan</option>
-<option value="hr-HR">Hrvatski - Croatian</option>
-<option value="et-EE">Eesti - Estonian</option>
-<option value="gl-ES">Galego - Galician</option>
-<option value="ka-GE">ქართული - Georgian</option>
-<option value="gu-IN">ગુજરાતી - Gujarati</option>
-<option value="is-IS">Íslenska - Icelandic</option>
-<option value="ga-IE">Gaeilge - Irish</option>
-<option value="jv-ID">Basa Jawa - Javanese</option>
-<option value="kn-IN">ಕನ್ನಡ - Kannada</option>
-<option value="kk-KZ">Қазақ тілі - Kazakh</option>
-<option value="km-KH">ខ្មែរ - Khmer</option>
-<option value="ky-KG">Кыргызча - Kyrgyz</option>
-<option value="lo-LA">ລາວ - Lao</option>
-<option value="lv-LV">Latviešu - Latvian</option>
-<option value="lt-LT">Lietuvių - Lithuanian</option>
-<option value="mk-MK">Македонски - Macedonian</option>
-<option value="mg-MG">Malagasy</option>
-<option value="ml-IN">മലയാളം - Malayalam</option>
-<option value="mt-MT">Malti - Maltese</option>
-<option value="mi-NZ">Māori</option>
-<option value="mr-IN">मराठी - Marathi</option>
-<option value="mn-MN">Монгол - Mongolian</option>
-<option value="ne-NP">नेपाली - Nepali</option>
-<option value="pt-BR">Português - Portuguese</option>
-<option value="qu-PE">Runa Simi - Quechua</option>
-<option value="sm-ZWC">Samoan</option>
-<option value="sr-RS">Српски - Serbian</option>
-<option value="sn-ZW">Shona</option>
-<option value="si-LK">සිංහල - Sinhala</option>
-<option value="sk-SK">Slovenčina - Slovak</option>
-<option value="sl-SI">Slovenščina - Slovenian</option>
-<option value="so-SO">Soomaali - Somali</option>
-<option value="su-ID">Basa Sunda - Sundanese</option>
-<option value="tg-TJ">Тоҷикӣ - Tajik</option>
-<option value="ta-IN">தமிழ் - Tamil</option>
-<option value="te-IN">తెలుగు - Telugu</option>
-<option value="uz-UZ">Oʻzbekcha - Uzbek</option>
-<option value="cy-GB">Cymraeg - Welsh</option>
-<option value="yi-YI">ייִדיש - Yiddish</option>
-<option value="yo-NG">Yorùbá</option>
-<option value="zu-ZA">IsiZulu - Zulu</option>
+<option value="ur-PK" selected>اردو (Pakistan)</option>
+<option value="en-US">English (United States)</option>
+<option value="hi-IN">हिन्दी (India)</option>
+<option value="ar-SA">العربية (Saudi Arabia)</option>
+<option value="pa-IN">ਪੰਜਾਬੀ (India)</option>
+<option value="ps-PK">پښتو (Pakistan)</option>
+<option value="sd-PK">سنڌي (Pakistan)</option>
+<option value="bn-BD">বাংলা (Bangladesh)</option>
+<option value="fa-IR">فارسی (Iran)</option>
+<option value="tr-TR">Türkçe (Turkey)</option>
+<option value="zh-CN">中文 (Chinese)</option>
+<option value="es-ES">Español (Spain)</option>
+<option value="fr-FR">Français (France)</option>
+<option value="de-DE">Deutsch (Germany)</option>
+<option value="ja-JP">日本語 (Japan)</option>
+<option value="ko-KR">한국어 (Korea)</option>
+<option value="ru-RU">Русский (Russia)</option>
+<option value="it-IT">Italiano (Italy)</option>
+<option value="id-ID">Bahasa Indonesia (Indonesia)</option>
+<option value="vi-VN">Tiếng Việt (Vietnam)</option>
+<option value="th-TH">ไทย (Thailand)</option>
+<option value="nl-NL">Nederlands (Netherlands)</option>
+<option value="pl-PL">Polski (Poland)</option>
+<option value="uk-UA">Українська (Ukraine)</option>
+<option value="el-GR">Ελληνικά (Greece)</option>
+<option value="he-IL">עברית (Israel)</option>
+<option value="sv-SE">Svenska (Sweden)</option>
+<option value="no-NO">Norsk (Norway)</option>
+<option value="fi-FI">Suomi (Finland)</option>
+<option value="da-DK">Dansk (Denmark)</option>
+<option value="cs-CZ">Čeština (Czech Republic)</option>
+<option value="hu-HU">Magyar (Hungary)</option>
+<option value="ro-RO">Română (Romania)</option>
+<option value="ms-MY">Bahasa Melayu (Malaysia)</option>
+<option value="fil-PH">Filipino (Philippines)</option>
+<option value="sw-KE">Kiswahili (Kenya)</option>
+<option value="af-ZA">Afrikaans (South Africa)</option>
+<option value="sq-AL">Shqip (Albania)</option>
+<option value="am-ET">አማርኛ (Ethiopia)</option>
+<option value="hy-AM">Հայերեն (Armenia)</option>
+<option value="az-AZ">Azərbaycan dili (Azerbaijan)</option>
+<option value="eu-ES">Euskara (Basque)</option>
+<option value="be-BY">Беларуская (Belarus)</option>
+<option value="bs-BA">Bosanski (Bosnia)</option>
+<option value="bg-BG">Български (Bulgaria)</option>
+<option value="ca-ES">Català (Catalan)</option>
+<option value="hr-HR">Hrvatski (Croatia)</option>
+<option value="et-EE">Eesti (Estonia)</option>
+<option value="gl-ES">Galego (Galician)</option>
+<option value="ka-GE">ქართული (Georgia)</option>
+<option value="gu-IN">ગુજરાતી (India)</option>
+<option value="is-IS">Íslenska (Iceland)</option>
+<option value="ga-IE">Gaeilge (Ireland)</option>
+<option value="jv-JA">Basa Jawa (Java)</option>
+<option value="kn-IN">ಕನ್ನಡ (India)</option>
+<option value="kk-KZ">Қазақ тілі (Kazakhstan)</option>
+<option value="km-KH">ខ្មែរ (Cambodia)</option>
+<option value="ky-KG">Кыргызча (Kyrgyzstan)</option>
+<option value="lo-LA">ລາວ (Laos)</option>
+<option value="lv-LV">Latviešu (Latvia)</option>
+<option value="lt-LT">Lietuvių (Lithuania)</option>
+<option value="mk-MK">Македонски (Macedonia)</option>
+<option value="mg-MG">Malagasy (Madagascar)</option>
+<option value="ml-IN">മലയാളം (India)</option>
+<option value="mt-MT">Malti (Malta)</option>
+<option value="mi-NZ">Māori (New Zealand)</option>
+<option value="mr-IN">मराठी (India)</option>
+<option value="mn-MN">Монгол (Mongolia)</option>
+<option value="ne-NP">नेपाली (Nepal)</option>
+<option value="fa-AF">دری (Afghanistan)</option>
+<option value="pt-BR">Português (Brazil)</option>
+<option value="pt-PT">Português (Portugal)</option>
+<option value="pa-PK">پنجابی (Pakistan)</option>
+<option value="qu-PE">Runa Simi (Quechua)</option>
+<option value="sm-SM">Gagana Samoa (Samoa)</option>
+<option value="sr-RS">Српски (Serbia)</option>
+<option value="sn-ZW">chiShona (Zimbabwe)</option>
+<option value="si-LK">සිංහල (Sri Lanka)</option>
+<option value="sk-SK">Slovenčina (Slovakia)</option>
+<option value="sl-SI">Slovenščina (Slovenia)</option>
+<option value="so-SO">Soomaaliga (Somalia)</option>
+<option value="su-SU">Basa Sunda (Sundanese)</option>
+<option value="sw-TZ">Kiswahili (Tanzania)</option>
+<option value="tg-TJ">Тоҷикӣ (Tajikistan)</option>
+<option value="ta-IN">தமிழ் (India)</option>
+<option value="ta-LK">தமிழ் (Sri Lanka)</option>
+<option value="te-IN">తెలుగు (India)</option>
+<option value="uz-UZ">Oʻzbekcha (Uzbekistan)</option>
+<option value="cy-GB">Cymraeg (Wales)</option>
+<option value="yi-YI">ייִדיש (Yiddish)</option>
+<option value="yo-NG">Yorùbá (Nigeria)</option>
+<option value="zu-ZA">isiZulu (South Africa)</option>
+<option value="am-AM">Հայերեն (Western Armenia)</option>
+<option value="as-IN">অসমীয়া (Assam)</option>
+<option value="bn-IN">বাংলা (India)</option>
+<option value="en-GB">English (United Kingdom)</option>
+<option value="en-CA">English (Canada)</option>
+<option value="en-AU">English (Australia)</option>
+<option value="en-IN">English (India)</option>
+<option value="es-MX">Español (Mexico)</option>
+<option value="es-AR">Español (Argentina)</option>
+<option value="fr-CA">Français (Canada)</option>
+<option value="zh-TW">中文 (Traditional)</option>
+<option value="zh-HK">中文 (Hong Kong)</option>
 </select>
 
-<label id="lblDest">DESTINATION / MANZIL</label>
+<label>DESTINATION</label>
 <input type="text" id="destinationInput" placeholder="e.g. Okara Bazar">
-<button id="openMapsBtn" class="btn-map">OPEN MAPS / NAVIGATE</button>
+<button id="openMapsBtn" class="btn-map">OPEN MAPS</button>
 
 <div id="status">STATUS: OFF</div>
-<div id="gpsStatus">GPS: WAITING FOR LOCATION...</div>
 
-<button id="startBtn" class="btn-main">START - SENSOR & GPS ON</button>
-<button id="narrateBtn" class="btn-narrate">BATAYEN - AAS PAAS KYA HAI?</button>
+<button id="startBtn" class="btn-main">START - SENSOR ON</button>
 <button id="stopBtn" class="btn-stop" style="display:none;">STOP</button>
-<video id="webcam" autoplay playsinline muted></video>
-</div>
 
-<div style="margin-top:20px;padding:15px;background:#1f2937;border-radius:12px;text-align:center;">
-<p style="color:#00ffcc;font-weight:bold;">Share Your Reviews On WhatsApp</p>
-<a href="https://wa.me/923030133274?text=Hello%20Humaira,%20Feedback%20About%20Smart%20Cane:" target="_blank" style="display:block;background:#25d366;color:#fff;padding:12px;border-radius:10px;text-decoration:none;font-weight:bold;">Contact On WhatsApp</a>
+<video id="webcam" autoplay playsinline muted></video>
 </div>
 
 <script>
 const video=document.getElementById('webcam');
 const statusEl=document.getElementById('status');
-const gpsStatusEl=document.getElementById('gpsStatus');
 const langSel=document.getElementById('voiceLanguage');
+let stream=null, isLive=false, model=null, lastSpoken="", lastSpeakTime=0, audioCtx=null, lastAvg=0;
+let lastAnnouncedCategory = null; 
+let currentHeadingDirection = 'مشرق'; // Default direction tracker
 
-let stream=null, isLive=false, detector=null, audioCtx=null, lastSpoken="", lastSpeakTime=0;
-let watchId=null, lastLat=null, lastLon=null, targetCoords=null;
-
-// UI Labels Translation Map
-const UI_TEXT = {
-  "ur-PK": { title: "سمارٹ کین اور جی پی ایس", sub: "آپ کی آنکھیں - تخلیق کردہ: حمیرا سردار", lblLang: "زبان منتخب کریں", lblDest: "منزل کا نام (Destination)", btnMap: "گوگل میپس لائیو نیویگیشن", btnStart: "اسٹارٹ - سینسر اور جی پی ایس آن", btnNarrate: "بتائیں - آس پاس کیا ہے؟", btnStop: "بند کریں" },
-  "en-US": { title: "SMART CANE & GPS", sub: "Your Eyes Smart Cane Created By Humaira Sardar", lblLang: "SELECT LANGUAGE", lblDest: "DESTINATION", btnMap: "OPEN MAPS NAVIGATION", btnStart: "START - SENSOR & GPS ON", btnNarrate: "TELL ME - WHAT'S AROUND?", btnStop: "STOP" },
-  "hi-IN": { title: "स्मार्ट केन और जीपीएस", sub: "आपकी आंखें स्मार्ट केन - हुमैरा सरदार द्वारा निर्मित", lblLang: "भाषा चुनें", lblDest: "गंतव्य", btnMap: "मैप्स नेविगेशन खोलें", btnStart: "शुरू करें - सेंसर और जीपीएस ऑन", btnNarrate: "बताएं - आसपास क्या है?", btnStop: "बंद करें" },
-  "ar-SA": { title: "العصا الذكية ونظام تحديد المواقع", sub: "عصا الذكية الخاصة بك - إعداد حميرة سردار", lblLang: "اختر اللغة", lblDest: "وجهة السفر", btnMap: "فتح التنقل الخرائط", btnStart: "ابدأ - المستشعر وGPS يعملان", btnNarrate: "أخبرني - ما حولك؟", btnStop: "إيقاف" }
-};
-
-function updateUI() {
-  const l = langSel.value;
-  const t = UI_TEXT[l] || UI_TEXT["en-US"];
-  document.getElementById('uiTitle').innerText = t.title;
-  document.getElementById('uiSub').innerText = t.sub;
-  document.getElementById('lblLang').innerText = t.lblLang;
-  document.getElementById('lblDest').innerText = t.lblDest;
-  document.getElementById('openMapsBtn').innerText = t.btnMap;
-  document.getElementById('startBtn').innerText = t.btnStart;
-  document.getElementById('narrateBtn').innerText = t.btnNarrate;
-  document.getElementById('stopBtn').innerText = t.btnStop;
+// Compass orientation tracking for precise direction (Mashriq/Maghrib/Shumal/Junoub)
+if (window.DeviceOrientationEvent) {
+  window.addEventListener('deviceorientation', (event) => {
+    let compass = event.webkitCompassHeading || event.alpha;
+    if (compass !== null && compass !== undefined) {
+      // Normalizing compass heading to 0-360 degrees
+      let deg = 360 - compass;
+      if (deg >= 337.5 || deg < 22.5) currentHeadingDirection = 'شمال';
+      else if (deg >= 22.5 && deg < 112.5) currentHeadingDirection = 'مشرق';
+      else if (deg >= 112.5 && deg < 157.5) currentHeadingDirection = 'مشرق جنوب';
+      else if (deg >= 157.5 && deg < 202.5) currentHeadingDirection = 'جنوب';
+      else if (deg >= 202.5 && deg < 247.5) currentHeadingDirection = 'مغرب جنوب';
+      else if (deg >= 247.5 && deg < 292.5) currentHeadingDirection = 'مغرب';
+      else if (deg >= 292.5 && deg < 337.5) currentHeadingDirection = 'شمال مغرب';
+    }
+  }, true);
 }
-langSel.addEventListener('change', updateUI);
 
-const ALL_WORDS = {
-  "chair":"kursi", "dining table":"table", "table":"table", "bed":"bed", "couch":"sofa", "sofa":"sofa", "door":"darwaza", "window":"khidki", "toilet":"toilet", "bench":"bench", "book":"kitab", "laptop":"laptop", "cell phone":"mobile", "bottle":"botal", "cup":"glass", "bowl":"katora", "spoon":"chamach", "clock":"ghari", "mirror":"sheesha", "lamp":"lamp", "fan":"pankha", "refrigerator":"fridge", "oven":"oven", "sink":"sink", "bathtub":"bathtub", "pillow":"takiya", "blanket":"kambal",
-  "shoe":"joota", "sandal":"chappal", "backpack":"bag", "handbag":"bag", "suitcase":"suitcase", "umbrella":"chhatri", "hat":"topi", "glasses":"chashma", "tie":"tie",
-  "person":"insan", "dog":"kutta", "cat":"billi", "bird":"parinda", "cow":"gaaye", "buffalo":"bhains", "goat":"bakri", "sheep":"bher", "horse":"ghora", "donkey":"gadha", "camel":"oonth", "monkey":"bandar", "chicken":"murghi", "duck":"battakh", "pig":"suar", "mouse":"chooha", "snake":"saanp", "elephant":"haathi", "bear":"reech", "zebra":"zebra", "giraffe":"zirafa",
-  "bicycle":"cycle", "motorcycle":"bike", "car":"gari", "bus":"bus", "truck":"truck", "traffic light":"signal", "fire hydrant":"hydrant", "stop sign":"stop board", "parking meter":"parking meter",
-  "water":"paani", "mud":"keechad", "drain":"naali", "brick":"eent", "stone":"patthar", "hole":"garha", "step":"seedhi ka step", "stairs":"seerhiyan", "broken road":"tooti hui sarak", "sand":"rait", "gravel":"bajri", "pole":"khamba", "wall":"deewar", "road":"sarak", "puddle":"paani ka jama hua hissa",
-  "banana":"kela", "apple":"seb", "orange":"santra", "pizza":"pizza", "cake":"cake", "sandwich":"sandwich", "broccoli":"broccoli", "carrot":"gajar", "hot dog":"hot dog", "donut":"donut",
-  "kite":"patang", "ball":"ball", "skateboard":"skateboard", "surfboard":"surfboard", "tennis racket":"racket", "baseball bat":"bat", "frisbee":"frisbee", "skis":"skis", "snowboard":"snowboard",
-  "unknown":"koi anjaan rukawat"
+const translations = {
+  'ur-PK': {
+    loading: 'سنسور آن ہو رہا ہے۔',
+    started: 'اسمارٹ کین آن ہے۔', // Shortened to 2-3 words
+    stopClose: 'رک جائیں، رکاوٹ!', // Shortened to 2-3 words
+    clearPath: 'رستہ صاف ہے!', // Shortened to 2-3 words
+    camError: 'کیمرہ کی اجازت دیں',
+    netError: 'انٹرنیٹ آن کریں'
+  },
+  'en-US': {
+    loading: 'Sensor turning on.',
+    started: 'Smart Cane is on.',
+    stopClose: 'Stop, obstacle!',
+    clearPath: 'Path is clear!',
+    camError: 'Allow camera access',
+    netError: 'Turn on internet'
+  },
+  'hi-IN': {
+    loading: 'सेंसर चालू हो रहा है।',
+    started: 'स्मार्ट केन चालू है।',
+    stopClose: 'रुकिए, रुकावट!',
+    clearPath: 'रास्ता साफ़ है!',
+    camError: 'कैमरा अनुमति दें',
+    netError: 'इंटरनेट चालू करें'
+  },
+  'ar-SA': {
+    loading: 'جاري تشغيل المستشعر.',
+    started: 'العصا الذكية تعمل.',
+    stopClose: 'توقف، عقبة!',
+    clearPath: 'الطريق نظيف!',
+    camError: 'السماح بالكاميرا',
+    netError: 'تشغيل الإنترنت'
+  },
+  'pa-IN': {
+    loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ਹੈ।',
+    started: 'ਸਮਾਰਟ ਕੈਨ ਚਾਲੂ ਹੈ।',
+    stopClose: 'ਰੁਕ ਜਾਓ, ਰੁਕਾਵਟ!',
+    clearPath: 'ਰਸਤਾ ਸਾਫ਼ है!',
+    camError: 'ਕੈਮਰਾ ਇਜਾਜ਼ਤ ਦਿਓ',
+    netError: 'ਇੰਟਰਨੈਟ ਚਾਲੂ ਕਰੋ'
+  },
+  'ps-PK': {
+    loading: 'سنډر چالان کیږي.',
+    started: 'سمارټ کین چالان دی.',
+    stopClose: 'وګرځئ، خنډ!',
+    clearPath: 'لاره پاکه ده!',
+    camError: 'د کامرې اجازه',
+    netError: 'انټرنیټ چالان'
+  },
+  'sd-PK': {
+    loading: 'سينسر چالو ٿي رهيو آهي.',
+    started: 'سمارٽ ڪين چالو آهي.',
+    stopClose: 'بيهي وڃو، رڪاوٽ!',
+    clearPath: 'رستو صاف آهي!',
+    camError: 'ڪمري جي اجازت',
+    netError: 'انٽرنيٽ چالو'
+  }
 };
 
-const TRANSLATE = {
-  "ur-PK": {left:"بائیں طرف", center:"درمیان میں", right:"دائیں طرف", front:"سامنے", clear:"راستہ صاف ہے", stop:"رک جائیں", close:"بہت قریب ہے", far:"دور است", gpsActive:"جی پی ایس لوکیشن ایکٹیو ہے"},
-  "hi-IN": {left:"बाईं ओर", center:"बीच में", right:"दाईं ओर", front:"सामने", clear:"रास्ता साफ है", stop:"रुके", close:"बहुत पास है", far:"दूर है", gpsActive:"जीपीएस सक्रिय है"},
-  "en-US": {left:"on the left side", center:"in the center", right:"on the right side", front:"in front", clear:"path is clear", stop:"stop", close:"very close", far:"far", gpsActive:"GPS is active"},
-  "ar-SA": {left:"على اليسار", center:"في المنتصف", right:"على اليمين", front:"أمامك", clear:"الطريق صافٍ", stop:"قِف", close:"قريب جداً", far:"بعيد", gpsActive:"GPS نشط"}
-};
-
-function T(key){
-  const l=langSel.value;
-  if(TRANSLATE[l] && TRANSLATE[l][key]) return TRANSLATE[l][key];
-  if(TRANSLATE['en-US'][key]) return TRANSLATE['en-US'][key];
-  return key;
+function getMsg(key) {
+  const lang = langSel.value;
+  if(translations[lang] && translations[lang][key]) {
+    return translations[lang][key];
+  }
+  return translations['en-US'][key] || key;
 }
 
 function speakText(t){
   window.speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(t);
-  u.lang=langSel.value; u.rate=0.95;
+  u.lang=langSel.value; 
+  u.rate=1.0;
   window.speechSynthesis.speak(u);
 }
 
-function playTone(f){
+function playHurdleTone(){
   try{
     if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-    const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+    const o=audioCtx.createOscillator(); const g=audioCtx.createGain();
     o.connect(g); g.connect(audioCtx.destination);
-    o.frequency.value=f; o.type='sine';
-    g.gain.setValueAtTime(0.25, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.4);
-    o.start(); o.stop(audioCtx.currentTime+0.4);
+    o.frequency.value=880; o.type='sine';
+    g.gain.setValueAtTime(0.2, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.3);
+    o.start(); o.stop(audioCtx.currentTime+0.3);
   }catch(e){}
 }
 
-function vibrateLevel(level){
+function playClearTone(){
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    const o=audioCtx.createOscillator(); const g=audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.frequency.value=750;
+    o.type='triangle';
+    g.gain.setValueAtTime(0.85, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.45);
+    o.start(); o.stop(audioCtx.currentTime+0.45);
+  }catch(e){}
+}
+
+function vibrateHurdle(){
   if(!navigator.vibrate) return;
-  if(level===3) navigator.vibrate([400,100,400,100,400]);
-  else if(level===2) navigator.vibrate([200,100,200]);
-  else if(level===1) navigator.vibrate([100]);
+  navigator.vibrate([300,100,300]);
 }
 
 async function ensureCamera(){
   if(stream && video.srcObject) return true;
-  try{ 
-    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false}); 
-    video.srcObject=stream; 
-    await video.play(); 
-    return true; 
-  } catch(e){ 
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { exact: "environment" }, width: { ideal: 640 }, height: { ideal: 480 } },
+      audio: false
+    });
+    video.srcObject = stream; await video.play(); return true;
+  }catch(e){
     try{ 
-      stream=await navigator.mediaDevices.getUserMedia({video:true,audio:false}); 
-      video.srcObject=stream; 
-      await video.play(); 
-      return true; 
-    } catch(e2){ 
-      speakText('Camera ki ijazat dein'); 
-      return false; 
-    } 
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false }); 
+      video.srcObject = stream; await video.play(); return true; 
+    }catch(e2){
+      try{
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        video.srcObject = stream; await video.play(); return true;
+      }catch(e3){
+        speakText(getMsg('camError')); return false;
+      }
+    }
   }
 }
 
-async function loadStrongModel(){
-  statusEl.innerText="STATUS: LOADING STRONG MODEL...";
-  const vision=await window.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
-  detector=await window.ObjectDetector.createFromOptions(vision,{
-    baseOptions:{ modelAssetPath:"https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite2/float32/1/efficientdet_lite2.tflite", delegate:"GPU" },
-    scoreThreshold:0.25, runningMode:"VIDEO", maxResults:15
-  });
+function getScreenInfo(){
+  if(!video.videoWidth) return {variance:100, change:0};
+  const c=document.createElement('canvas'); c.width=60; c.height=45;
+  const ctx=c.getContext('2d'); ctx.drawImage(video,0,0,60,45);
+  const d=ctx.getImageData(0,0,60,45).data;
+  let avg=0; for(let i=0;i<d.length;i+=4){ avg+=(d[i]+d[i+1]+d[i+2])/3; } avg=avg/(60*45);
+  let variance=0; for(let i=0;i<d.length;i+=4){ variance+=Math.abs((d[i]+d[i+1]+d[i+2])/3 - avg); } variance=variance/(60*45);
+  let change=Math.abs(avg - lastAvg); lastAvg=avg;
+  return {variance, change};
 }
 
-// GPS Tracking & Voice Guidance
-function startGPS() {
-  if (!navigator.geolocation) {
-    gpsStatusEl.innerText = "GPS: Not supported by browser";
+async function detectLoop(){
+  if(!isLive || !model || !video.videoWidth) {
+    if(isLive) requestAnimationFrame(detectLoop);
     return;
   }
-  watchId = navigator.geolocation.watchPosition(
-    (position) => {
-      const lat = position.coords.latitude;
-      const lon = position.coords.longitude;
-      lastLat = lat;
-      lastLon = lon;
-      gpsStatusEl.innerText = `GPS Active: Lat ${lat.toFixed(4)}, Lon ${lon.toFixed(4)}`;
-    },
-    (error) => {
-      gpsStatusEl.innerText = "GPS Error: " + error.message;
-    },
-    { enableHighAccuracy: true, maximumAge: 10000, timeout: 20000 }
-  );
-}
 
-function stopGPS() {
-  if (watchId !== null) {
-    navigator.geolocation.clearWatch(watchId);
-    watchId = null;
+  let found = [];
+  try{
+    const preds = await model.detect(video);
+    found = preds.filter(p => p.score > 0.35);
+  }catch(e){}
+
+  const info = getScreenInfo();
+  const isWall = info.variance < 20;
+  let speakMsg = "", currentCategory = "clear", hasHurdle = false;
+
+  if(found.length > 0 || isWall || info.change > 15){
+    // Include exact face direction (e.g. Mashriq/Maghrib) in 2-3 word sentences
+    speakMsg = `${currentHeadingDirection}: ${getMsg('stopClose')}`;
+    currentCategory = "hurdle";
+    hasHurdle = true;
+  } else {
+    speakMsg = `${currentHeadingDirection}: ${getMsg('clearPath')}`;
+    currentCategory = "clear";
+    hasHurdle = false;
   }
-  gpsStatusEl.innerText = "GPS: OFF";
-}
 
-async function detectNow(isNarrate=false){
-  if(!isLive || !detector || !video.videoWidth || video.paused || video.ended) return;
-  const now=Date.now();
-  const results=detector.detectForVideo(video, now);
-  let dets=(results.detections||[]).filter(d=>d.categories[0].score>0.25);
-  
-  const canvas=document.createElement('canvas'); canvas.width=60; canvas.height=45;
-  const ctx=canvas.getContext('2d'); ctx.drawImage(video,0,0,60,45);
-  const imgData=ctx.getImageData(0,0,60,45).data;
-  let bottomBlue=0, bottomBrown=0, bottomDark=0;
-  for(let y=30;y<45;y++){ 
-    for(let x=0;x<60;x++){ 
-      let i=(y*60+x)*4; 
-      let r=imgData[i], g=imgData[i+1], b=imgData[i+2]; 
-      if(b>r+20 && b>g+10) bottomBlue++; 
-      if(r>80 && r>g+20 && g<100) bottomBrown++; 
-      if(r<40 && g<40 && b<40) bottomDark++; 
-    } 
-  }
-  let roadHazard=null;
-  if(bottomBlue>250) roadHazard="paani";
-  else if(bottomBrown>250) roadHazard="keechad";
-  else if(bottomDark>350) roadHazard="garha ya naali";
-
-  let leftItems=[], centerItems=[], rightItems=[];
-  dets.forEach(det=>{
-    const nameEn=det.categories[0].categoryName.toLowerCase();
-    const name=ALL_WORDS[nameEn] || nameEn;
-    const box=det.boundingBox;
-    const cx=box.originX + box.width/2;
-    const vw=video.videoWidth;
-    if(cx < vw*0.33) leftItems.push(name);
-    else if(cx > vw*0.66) rightItems.push(name);
-    else centerItems.push(name);
-  });
-  if(roadHazard) centerItems.push(roadHazard);
-
-  let speakMsg="", level=0;
-  if(isNarrate || now-lastSpeakTime>4000){
-    if(leftItems.length===0 && centerItems.length===0 && rightItems.length===0){
-      speakMsg=`${T('clear')}, ${T('front')} kuch nahi hai.`;
-      level=0;
+  // Check timing to ensure updates fire rapidly (every 1.5 seconds instead of 3 seconds)
+  const now = Date.now();
+  if (currentCategory !== lastAnnouncedCategory || (now - lastSpeakTime > 1500)) {
+    lastAnnouncedCategory = currentCategory;
+    lastSpeakTime = now;
+    lastSpoken = speakMsg;
+    
+    if(hasHurdle){
+      playHurdleTone();
+      vibrateHurdle();
     } else {
-      let parts=[];
-      if(leftItems.length>0) parts.push(`${T('left')} ${leftItems.join(", ")} hai`);
-      if(centerItems.length>0) parts.push(`${T('center')} ${centerItems.join(", ")} hai`);
-      if(rightItems.length>0) parts.push(`${T('right')} ${rightItems.join(", ")} hai`);
-      
-      if(centerItems.length>0){
-        let safe = leftItems.length===0 ? T('left') : T('right');
-        speakMsg=`${T('stop')}, ${parts.join(", ")}. ${safe} ${T('clear')} hai, udhar ho jayen.`;
-        level=3;
-      } else {
-        speakMsg=`${parts.join(", ")}. ${T('front')} ${T('clear')} hai.`;
-        level=1;
-      }
-      if(roadHazard){
-        speakMsg=`${T('stop')}, ${T('center')} ${roadHazard} hai, paer bachakar chalen.`;
-        level=3;
-      }
+      playClearTone();
     }
-    if(speakMsg && (speakMsg!==lastSpoken || isNarrate || now-lastSpeakTime>4000)){
-      lastSpoken=speakMsg; lastSpeakTime=now;
-      if(level>0){ playTone(880); vibrateLevel(level); } else { playTone(600); }
-      speakText(speakMsg);
-    }
+    speakText(speakMsg);
+  }
+
+  if(isLive) {
+    setTimeout(() => requestAnimationFrame(detectLoop), 250);
   }
 }
 
 document.getElementById('startBtn').addEventListener('click', async ()=>{
   statusEl.innerText="STATUS: LOADING...";
-  speakText('Sensor aur GPS on ho rahe hain.');
+  speakText(getMsg('loading'));
   if(!await ensureCamera()) return;
-  try{ await loadStrongModel(); } catch(e){ speakText('Internet on karein.'); statusEl.innerText="STATUS: ERROR"; return; }
-  
-  isLive=true;
-  statusEl.innerText="STATUS: LIVE - SENSOR & GPS ON";
+  try{ if(!model) model = await cocoSsd.load(); }
+  catch(e){ speakText(getMsg('netError')); return; }
+  isLive = true;
+  statusEl.innerText="STATUS: LIVE";
   document.getElementById('startBtn').style.display="none";
   document.getElementById('stopBtn').style.display="block";
-  
-  startGPS();
-  speakText('Smart Cane aur GPS navigation shuru ho gaya hai. Aap chal sakte hain.');
-  
-  setInterval(()=>{
-    if(isLive) detectNow(false);
-  }, 2500);
-});
-
-document.getElementById('narrateBtn').addEventListener('click', ()=>{ 
-  if(!isLive){ speakText('Pehle START dabayen.'); return; } 
-  speakText('Rukiye, aas paas dekh kar batati hoon.'); 
-  setTimeout(()=>detectNow(true),600); 
+  speakText(getMsg('started'));
+  requestAnimationFrame(detectLoop);
 });
 
 document.getElementById('stopBtn').addEventListener('click', ()=>{
-  isLive=false; 
-  stopGPS();
-  if(stream) stream.getTracks().forEach(t=>t.stop()); 
-  stream=null; 
-  video.srcObject=null; 
-  window.speechSynthesis.cancel(); 
+  isLive = false; 
+  if(stream) stream.getTracks().forEach(t => t.stop());
+  stream = null; video.srcObject = null;
+  window.speechSynthesis.cancel();
   statusEl.innerText="STATUS: OFF";
-  document.getElementById('startBtn').style.display="block"; 
+  document.getElementById('startBtn').style.display="block";
   document.getElementById('stopBtn').style.display="none";
 });
 
 document.getElementById('openMapsBtn').addEventListener('click', ()=>{
-  const q=document.getElementById('destinationInput').value.trim();
-  if(!q){ speakText('Pehle destination likhen.'); return; }
-  speakText('Google Maps navigation khul raha hai.');
-  // Agar GPS location maujood hai toh current location se directions kholen
-  if(lastLat && lastLon){
-    window.open(`https://www.google.com/maps/dir/?api=1&origin=${lastLat},${lastLon}&destination=${encodeURIComponent(q)}&travelmode=walking`,'_blank');
-  } else {
-    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`,'_blank');
-  }
+  const q = document.getElementById('destinationInput').value.trim();
+  if(!q){ speakText('Pehle upar likhen kahan jana hai.'); return; }
+  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`,'_blank');
 });
 </script>
 </body>
 </html>
+<!-- WhatsApp Review & Contact Section created by Humaira Sardar -->
+<div style="margin-top: 25px; padding: 15px; background: #1f2937; border-radius: 12px; border: 1px solid #374151; text-align: center;">
+  <p style="color: #00ffcc; font-size: 14px; font-weight: bold; margin: 0 0 10px 0;">Share your valuable reviews and suggestions directly on WhatsApp</p>
+  <a href="https://wa.me/923030133274?text=Hello%20Humaira,%20I%20want%20to%20share%20feedback%20about%20Smart%20Cane:" target="_blank" style="display: block; background: #25d366; color: #fff; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 15px;">💬 Contact on WhatsApp </a>
+</div>
