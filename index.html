@@ -313,10 +313,11 @@ async function initDetector() {
     const vision = await FilesetResolver.forVisionTasks(
       "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm"
     );
+    // Changed delegate from GPU to CPU to ensure universal compatibility across all mobile devices
     objectDetector = await ObjectDetector.createFromOptions(vision, {
       baseOptions: {
         modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite",
-        delegate: "GPU"
+        delegate: "CPU"
       },
       scoreThreshold: 0.3,
       runningMode: "VIDEO"
