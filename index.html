@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Your eyes smart cane created by Humaira Sardar</title>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@latest"></script>
+<!-- MediaPipe Object Detection CDN Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js" crossorigin="anonymous"></script>
 <style>
 *{box-sizing:border-box}
 body{font-family:Arial,sans-serif;background:#0a0f1e;color:#fff;margin:0;padding:16px}
@@ -151,9 +151,8 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 const video=document.getElementById('webcam');
 const statusEl=document.getElementById('status');
 const langSel=document.getElementById('voiceLanguage');
-let stream=null, isLive=false, model=null, lastSpoken="", lastSpeakTime=0, audioCtx=null, lastAvg=0;
+let stream=null, isLive=false, objectDetector=null, lastSpoken="", lastSpeakTime=0, audioCtx=null, lastAvg=0;
 let lastAnnouncedCategory = null; 
-let currentHeadingDirection = ''; // Removed confusing compass directions completely
 
 const translations = {
   'ur-PK': {
@@ -192,7 +191,7 @@ const translations = {
     loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ਹੈ।',
     started: 'ਸਮਾਰਟ ਕੈਨ ਚਾਲੂ ਹੈ।',
     stopClose: 'ਰੁਕ ਜਾਓ, ਰੁਕਾਵਟ!',
-    clearPath: 'ਰਸਤਾ ਸਾਫ਼ ہے!',
+    clearPath: 'ਰਸਤਾ ਸਾਫ਼ है!',
     camError: 'ਕੈਮਰਾ ਇਜਾਜ਼ਤ ਦਿਓ',
     netError: 'ਇੰਟਰਨੈਟ ਚਾਲੂ ਕਰੋ'
   },
@@ -295,19 +294,20 @@ function getScreenInfo(){
 }
 
 async function detectLoop(){
-  if(!isLive || !model || !video.videoWidth) {
+  if(!isLive || !objectDetector || !video.videoWidth) {
     if(isLive) requestAnimationFrame(detectLoop);
     return;
   }
 
   let found = [];
   try{
-    const preds = await model.detect(video);
-    found = preds.filter(p => p.score > 0.35);
+    const detections = objectDetector.detect(video);
+    if(detections && detections.detections) {
+      found = detections.detections.filter(d => d.categories[0].score > 0.35);
+    }
   }catch(e){}
 
   const info = getScreenInfo();
-  // Adjusted thresholds for reliable table/obstacle detection (avoiding false clear states)
   const isWall = info.variance < 15;
   let speakMsg = "", currentCategory = "clear", hasHurdle = false;
 
@@ -321,7 +321,6 @@ async function detectLoop(){
     hasHurdle = false;
   }
 
-  // Force announcement immediately whenever obstacle status changes, and repeat continuously until condition changes
   const now = Date.now();
   if (currentCategory !== lastAnnouncedCategory || (now - lastSpeakTime > 1200)) {
     lastAnnouncedCategory = currentCategory;
@@ -346,8 +345,21 @@ document.getElementById('startBtn').addEventListener('click', async ()=>{
   statusEl.innerText="STATUS: LOADING...";
   speakText(getMsg('loading'));
   if(!await ensureCamera()) return;
-  try{ if(!model) model = await cocoSsd.load(); }
-  catch(e){ speakText(getMsg('netError')); return; }
+  try{
+    if(!objectDetector){
+      const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm");
+      objectDetector = await ObjectDetector.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath: `https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite`,
+          delegate: "GPU"
+        },
+        scoreThreshold: 0.35,
+        runningMode: "VIDEO"
+      });
+    }
+  } catch(e){
+    speakText(getMsg('netError')); return;
+  }
   isLive = true;
   statusEl.innerText="STATUS: LIVE";
   document.getElementById('startBtn').style.display="none";
