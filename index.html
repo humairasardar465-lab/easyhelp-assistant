@@ -157,7 +157,7 @@ const openMapsBtn = document.getElementById('openMapsBtn');
 const destinationInput = document.getElementById('destinationInput');
 
 let stream = null, isLive = false, objectDetector = null, imageSegmenter = null;
-let lastSpoken = "", lastSpeakTime = 0, lastClearSoundTime = 0, lastBeepTime = 0, lastObstacleSpeakTime = 0, lastClearSpeakTime = 0, lastObstacleKey = "";
+let lastSpoken = "", lastSpeakTime = 0, lastClearSoundTime = 0, lastBeepTime = 0, lastObstacleSpeakTime = 0, lastClearSpeakTime = 0;
 let frameCount = 0, isWallOrStairAhead = false, nothingCount = 0, wasObstacle = false;
 let pendingSpeech = null;
 let audioCtx = null;
@@ -167,7 +167,7 @@ const translations = {
   'ur-PK': {
     loading: 'سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔',
     started: 'اسمارٹ کین آن ہے۔ کیمرہ اور سنسور ایکٹو ہیں۔',
-    stopClose: 'رک جائیں، سامنے رکاوٹ ہے: ',
+    stopClose: 'الرٹ ہو جاؤ، آگے ',
     wallAhead: 'رک جائیں، سامنے دیوار ہو سکتی ہے!',
     unknownObstacle: 'رک جائیں، سامنے نامعلوم رکاوٹ ہے!',
     clearPath: 'رستہ صاف ہے، آگے بڑھیں۔',
@@ -177,7 +177,7 @@ const translations = {
   'en-US': {
     loading: 'Sensor turning on. Please wait.',
     started: 'Smart Cane is on. Camera active.',
-    stopClose: 'Stop, obstacle ahead: ',
+    stopClose: 'Alert, ahead is ',
     wallAhead: 'Stop, wall might be ahead!',
     unknownObstacle: 'Stop, unknown obstacle ahead!',
     clearPath: 'Path is clear, move forward.',
@@ -187,7 +187,7 @@ const translations = {
   'hi-IN': {
     loading: 'सेंसर चालू हो रहा है।',
     started: 'स्मार्ट केन चालू है।',
-    stopClose: 'रुकिए, रुकावट है: ',
+    stopClose: 'अलर्ट, आगे ',
     wallAhead: 'रुकिए, सामने दीवार हो सकती है!',
     unknownObstacle: 'रुकिए, सामने अज्ञात बाधा है!',
     clearPath: 'रास्ता साफ है, आगे बढ़ें।',
@@ -197,7 +197,7 @@ const translations = {
   'ar-SA': {
     loading: 'جاري تشغيل المستشعر.',
     started: 'العصا الذكية تعمل.',
-    stopClose: 'توقف، عقبة أمامك: ',
+    stopClose: 'تنبيه، أمامك ',
     wallAhead: 'توقف، قد يكون هناك جدار!',
     unknownObstacle: 'توقف، عقبة مجهولة أمامك!',
     clearPath: 'الطريق نظيف، تقدم.',
@@ -207,17 +207,17 @@ const translations = {
   'pa-IN': {
     loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ਹੈ।',
     started: 'ਸਮਾਰਟ ਕੇਨ ਚਾਲੂ ਹੈ।',
-    stopClose: 'ਰੁਕ ਜਾਓ, ਰੁਕਾਵਟ ਹੈ: ',
+    stopClose: 'ਅਲਰਟ, ਅੱਗੇ ',
     wallAhead: 'ਰੁਕ ਜਾਓ, ਸਾਹਮਣੇ ਕੰਧ ਹੋ ਸਕਦੀ ਹੈ!',
     unknownObstacle: 'ਰੁਕ ਜਾਓ, ਸਾਹਮਣੇ ਅਣਜਾਣ ਰੁਕਾਵਟ ਹੈ!',
     clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ!',
     camError: 'ਕੈਮਰਾ ਅਨੁਮਤੀ ਦਿਓ',
-    netError: 'ਇੰਟਰਨੈਟ ਜਾਂ ਮਾਡਲ ਸਮੱਸਿਆ'
+    netError: 'ਇੰਟਰਨੈਟ ਜਾਂ ਮਾਡل ਸਮੱਸਿਆ'
   },
   'ps-PK': {
     loading: 'سنسور روان دی. مهرباني وکئ انتظار وکئ.',
     started: 'سمارټ کین روان دی.',
-    stopClose: 'ددرېږئ، خنډ شته: ',
+    stopClose: 'خبردار، مخکې ',
     wallAhead: 'ددرېږئ، مخکې دیوال کیدی شي!',
     unknownObstacle: 'ددرېږئ، نامعلوم خنډ شته!',
     clearPath: 'لار سمه ده، مخکې لاړ شئ.',
@@ -227,7 +227,7 @@ const translations = {
   'fa-IR': {
     loading: 'سنسور در حال روشن شدن است.',
     started: 'اسمارت کین روشن است.',
-    stopClose: 'توقف کنید، مانع: ',
+    stopClose: 'هشدار، جلو ',
     wallAhead: 'توقف کنید، دیوار ممکن است جلو باشد!',
     unknownObstacle: 'توقف کنید، مانع ناشناخته جلو است!',
     clearPath: 'مسیر تمیز است، جلو بروید.',
@@ -238,31 +238,38 @@ const translations = {
 
 const allNames = {
   'ur-PK': {
-    'person': 'آدمی', 'chair': 'کرسی', 'table': 'ٹیبل', 'bottle': 'بوتل',
-    'cup': 'کپ', 'laptop': 'لیپ ٹاپ', 'cell phone': 'موبایل', 'book': 'کتاب',
-    'potted plant': 'گملا', 'car': 'کار', 'bus': 'بس', 'truck': 'ٹرک',
-    'motorcycle': 'موٹر سائیکل', 'bicycle': 'سائیکل', 'dog': 'کتا', 'cat': 'بلی',
-    'bed': 'بیڈ', 'couch': 'صوفہ', 'door': 'دروازہ'
+    'person': 'آدمی ہے', 'chair': 'کرسی ہے', 'table': 'ٹیبل ہے', 'bottle': 'بوتل ہے',
+    'cup': 'کپ ہے', 'laptop': 'لیپ ٹاپ ہے', 'cell phone': 'موبایل ہے', 'book': 'کتاب ہے',
+    'potted plant': 'گملا ہے', 'car': 'کار ہے', 'bus': 'بس ہے', 'truck': 'ٹرک ہے',
+    'motorcycle': 'موٹر سائیکل ہے', 'bicycle': 'سائیکل ہے', 'dog': 'کتا ہے', 'cat': 'بلی ہے',
+    'bed': 'بیڈ ہے', 'couch': 'صوفہ ہے', 'door': 'دروازہ ہے'
   },
-  'pa-IN': {
-    'person': 'ਬੰਦਾ', 'chair': 'ਕੁਰਸੀ', 'table': 'ਮੇਜ਼', 'bottle': 'ਬੋਤਲ',
-    'car': 'ਕਾਰ', 'bus': 'ਬੱਸ', 'motorcycle': 'ਮੋਟਰਸਾਈਕਲ', 'bicycle': 'ਸਾਈਕਲ'
+  'en-US': {
+    'person': 'person', 'chair': 'chair', 'table': 'table', 'bottle': 'bottle',
+    'cup': 'cup', 'laptop': 'laptop', 'cell phone': 'phone', 'book': 'book',
+    'potted plant': 'plant', 'car': 'car', 'bus': 'bus', 'truck': 'truck',
+    'motorcycle': 'motorcycle', 'bicycle': 'bicycle', 'dog': 'dog', 'cat': 'cat',
+    'bed': 'bed', 'couch': 'couch', 'door': 'door'
+  },
+  'hi-IN': {
+    'person': 'व्यक्ति है', 'chair': 'कुर्सी है', 'table': 'मेज़ है', 'bottle': 'बोतल है',
+    'car': 'कार है', 'bus': 'बस है', 'motorcycle': 'मोटरसाइकिल है', 'bicycle': 'साइकिल है'
   },
   'ar-SA': {
     'person': 'شخص', 'chair': 'كرسي', 'table': 'طاولة', 'bottle': 'زجاجة',
     'car': 'سيارة', 'bus': 'حافلة', 'motorcycle': 'دراجة نارية', 'bicycle': 'دراجة'
   },
-  'hi-IN': {
-    'person': 'व्यक्ति', 'chair': 'कुर्सी', 'table': 'मेज़', 'bottle': 'बोतल',
-    'car': 'कार', 'bus': 'बस', 'motorcycle': 'मोटरसाइकिल', 'bicycle': 'साइकिल'
+  'pa-IN': {
+    'person': 'ਬੰਦਾ ਹੈ', 'chair': 'ਕੁਰਸੀ ਹੈ', 'table': 'ਮੇਜ਼ ਹੈ', 'bottle': 'ਬੋਤल ਹੈ',
+    'car': 'ਕਾਰ ਹੈ', 'bus': 'ਬੱਸ ਹੈ', 'motorcycle': 'ਮੋਟਰਸਾਈਕਲ ਹੈ', 'bicycle': 'ਸਾਈਕਲ ਹੈ'
   },
   'ps-PK': {
-    'person': 'کس', 'chair': 'څوکۍ', 'table': 'میز', 'bottle': 'بوتل',
-    'car': 'موټر', 'bus': 'بس'
+    'person': 'کس دی', 'chair': 'څوکۍ ده', 'table': 'میز دی', 'bottle': 'بوتل دی',
+    'car': 'موټر دی', 'bus': 'بس دی'
   },
   'fa-IR': {
-    'person': 'فرد', 'chair': 'صندلی', 'table': 'میز', 'bottle': 'بطری',
-    'car': 'ماشین', 'bus': 'اتوبوس'
+    'person': 'فرد است', 'chair': 'صندلی است', 'table': 'میز است', 'bottle': 'بطری است',
+    'car': 'ماشین است', 'bus': 'اتوبوس است'
   }
 };
 
@@ -557,31 +564,7 @@ async function predictWebcam() {
           
           if (sizeRatio >= 0.005) {
             wasObstacle = true;
-            let distanceText = "";
-            const lang = langSel.value;
-            if (lang.startsWith('en')) {
-              if (sizeRatio > 0.25) distanceText = "very close, stop!";
-              else if (sizeRatio > 0.1) distanceText = "close, careful!";
-              else distanceText = "a bit far";
-            } else {
-              if (sizeRatio > 0.25) distanceText = "بہت قریب ہے، رک جائیں!";
-              else if (sizeRatio > 0.1) distanceText = "قریب ہے، دھیان سے!";
-              else distanceText = "تھوڑا دور ہے";
-            }
-
-            const boxCenterX = closest.boundingBox.originX + (closest.boundingBox.width / 2);
-            let sideText = "";
-            if (lang.startsWith('en')) {
-              if (boxCenterX < videoWidth * 0.35) sideText = "on the left";
-              else if (boxCenterX > videoWidth * 0.65) sideText = "on the right";
-              else sideText = "right in front";
-            } else {
-              if (boxCenterX < videoWidth * 0.35) sideText = "بائیں طرف ہے";
-              else if (boxCenterX > videoWidth * 0.65) sideText = "دائیں طرف ہے";
-              else sideText = "بالکل سامنے ہے";
-            }
-
-            statusEl.innerText = `${getT('stopClose')} ${localizedName} (${distanceText}, ${sideText})`;
+            statusEl.innerText = `${getT('stopClose')} ${localizedName}`;
             
             const now = Date.now();
             if (now - lastBeepTime > 600) {
@@ -590,11 +573,9 @@ async function predictWebcam() {
               triggerVibration();
             }
 
-            const currentKey = `${rawCategory}_${distanceText}_${sideText}`;
-            if (currentKey !== lastObstacleKey || now - lastObstacleSpeakTime > 6000) {
-              lastObstacleKey = currentKey;
+            if (now - lastObstacleSpeakTime > 6000) {
               lastObstacleSpeakTime = now;
-              speak(`${getT('stopClose')} ${localizedName}، ${distanceText}، ${sideText}`);
+              speak(`${getT('stopClose')} ${localizedName}`);
             }
           } else {
             handleUnknownOrClear();
@@ -625,6 +606,7 @@ function handleUnknownOrClear() {
       playBeep('obstacle');
       triggerVibration();
     }
+
     if (now - lastObstacleSpeakTime > 6000) {
       lastObstacleSpeakTime = now;
       speak(getT('unknownObstacle'));
@@ -635,7 +617,6 @@ function handleUnknownOrClear() {
 }
 
 function handleClearPath() {
-  lastObstacleKey = "";
   statusEl.innerText = getT('clearPath');
   
   const now = Date.now();
