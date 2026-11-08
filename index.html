@@ -163,6 +163,7 @@ const openMapsBtn = document.getElementById('openMapsBtn');
 const destinationInput = document.getElementById('destinationInput');
 
 let stream = null, isLive = false, objectDetector = null, lastSpoken = "", lastSpeakTime = 0;
+let audioCtx = null;
 
 const translations = {
   'ur-PK': {
@@ -185,7 +186,7 @@ const translations = {
     loading: 'सेंसर चालू हो रहा है।',
     started: 'स्मार्ट केन चालू है।',
     stopClose: 'रुकिए, रुकावट!',
-    clearPath: 'रास्ता साफ है!',
+    clearPath: 'रास्ता साफ़ है!',
     camError: 'कैमरा अनुमति दें',
     netError: 'इंटरनेट या मॉडल समस्या'
   },
@@ -215,15 +216,59 @@ function getT(key) {
   return translations['en-US'][key] || key;
 }
 
+// Web Audio API for Beep Tones (Different tones for Clear vs Obstacle)
+function playBeep(type) {
+  try {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    if (type === 'clear') {
+      // Soft single beep for Clear Path
+      osc.frequency.setValueAtTime(440, audioCtx.currentTime); // A4 note
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.15);
+    } else if (type === 'obstacle') {
+      // Sharp double beep for Obstacle Warning
+      osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Higher pitch
+      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.1);
+      
+      setTimeout(() => {
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.connect(gain2);
+        gain2.connect(audioCtx.destination);
+        osc2.frequency.setValueAtTime(880, audioCtx.currentTime);
+        gain2.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        osc2.start();
+        osc2.stop(audioCtx.currentTime + 0.1);
+      }, 150);
+    }
+  } catch (e) {
+    console.log(e);
+  }
+}
+
 function speak(text) {
   if (!text) return;
   const now = Date.now();
-  if (text === lastSpoken && now - lastSpeakTime < 5000) return;
-  
+  if (text === lastSpoken && now - lastSpeakTime < 4000) return;
   lastSpoken = text;
   lastSpeakTime = now;
 
   if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = langSel.value;
     window.speechSynthesis.speak(utterance);
@@ -242,7 +287,7 @@ async function initDetector() {
         modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite",
         delegate: "GPU"
       },
-      scoreThreshold: 0.5,
+      scoreThreshold: 0.4,
       runningMode: "VIDEO"
     });
   } catch (err) {
@@ -275,11 +320,15 @@ async function startCamera() {
 }
 
 let lastVideoTime = -1;
+let frameCounter = 0;
+
 async function predictWebcam() {
   if (!isLive || !objectDetector) return;
 
   if (video.currentTime !== lastVideoTime && video.readyState >= 2) {
     lastVideoTime = video.currentTime;
+    frameCounter++;
+
     try {
       const startTimeMs = performance.now();
       const detections = objectDetector.detectForVideo(video, startTimeMs);
@@ -289,12 +338,17 @@ async function predictWebcam() {
         const category = closest.categories[0].categoryName;
         const confidence = Math.round(closest.categories[0].score * 100);
         
-        if (confidence > 45) {
+        if (confidence > 40) {
           statusEl.innerText = `${getT('stopClose')} (${category})`;
+          playBeep('obstacle'); // Play warning beep tone
           speak(`${getT('stopClose')} ${category}`);
         }
       } else {
         statusEl.innerText = getT('clearPath');
+        // Play clear path soft single beep every few frames to avoid constant noise
+        if (frameCounter % 30 === 0) {
+          playBeep('clear');
+        }
       }
     } catch (e) {
       console.error(e);
