@@ -5,8 +5,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Your eyes smart cane created by Humaira Sardar</title>
-<!-- MediaPipe Tasks Vision CDN -->
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/vision_bundle.js" crossorigin="anonymous"></script>
+<!-- MediaPipe Tasks Vision ES Module CDN -->
+<script type="module">
+  import { FilesetResolver, ObjectDetector } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/+esm";
+  window.FilesetResolver = FilesetResolver;
+  window.ObjectDetector = ObjectDetector;
+  window.dispatchEvent(new Event('mediapipe-loaded'));
+</script>
 <style>
 *{box-sizing:border-box}
 body{font-family:Arial,sans-serif;background:#0a0f1e;color:#fff;margin:0;padding:16px}
@@ -189,7 +194,7 @@ const translations = {
   'pa-IN': {
     loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ਹੈ।',
     started: 'ਸਮਾਰਟ ਕੇਨ ਚਾਲੂ ਹੈ।',
-    stopClose: 'ਰੁਕ ਜਾਓ, ਰੁਕਾਵਟ ہے: ',
+    stopClose: 'ਰੁਕ ਜਾਓ, ਰੁਕਾਵਟ ਹੈ: ',
     clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ!',
     camError: 'ਕੈਮਰਾ ਅਨੁਮਤੀ ਦਿਓ',
     netError: 'ਇੰਟਰਨੈਟ ਜਾਂ ਮਾਡਲ ਸਮੱਸਿਆ'
@@ -308,13 +313,21 @@ function speak(text) {
 
 async function initDetector() {
   if (objectDetector) return;
+  
+  // Wait for module to load if not ready yet
+  if (!window.FilesetResolver || !window.ObjectDetector) {
+    await new Promise(resolve => {
+      window.addEventListener('mediapipe-loaded', resolve, { once: true });
+      setTimeout(resolve, 3000); // fallback timeout
+    });
+  }
+
   try {
     statusEl.innerText = getT('loading');
-    const vision = await FilesetResolver.forVisionTasks(
+    const vision = await window.FilesetResolver.forVisionTasks(
       "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm"
     );
-    // Changed delegate from GPU to CPU to ensure universal compatibility across all mobile devices
-    objectDetector = await ObjectDetector.createFromOptions(vision, {
+    objectDetector = await window.ObjectDetector.createFromOptions(vision, {
       baseOptions: {
         modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite",
         delegate: "CPU"
@@ -331,6 +344,7 @@ async function initDetector() {
 
 async function startCamera() {
   try {
+    await initDetector();
     if (!objectDetector) {
       statusEl.innerText = getT('netError');
       speak(getT('netError'));
@@ -468,7 +482,6 @@ function stopCamera() {
 }
 
 startBtn.addEventListener('click', async () => {
-  await initDetector();
   await startCamera();
 });
 
