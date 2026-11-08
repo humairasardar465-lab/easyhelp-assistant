@@ -157,9 +157,10 @@ const openMapsBtn = document.getElementById('openMapsBtn');
 const destinationInput = document.getElementById('destinationInput');
 
 let stream = null, isLive = false, objectDetector = null, imageSegmenter = null;
-let lastSpoken = "", lastSpeakTime = 0, lastClearSoundTime = 0, lastBeepTime = 0, lastObstacleSpeakTime = 0, lastClearSpeakTime = 0;
-let frameCount = 0, isWallOrStairAhead = false, nothingCount = 0, wasObstacle = false;
-let pendingSpeech = null;
+let lastSpoken = "", lastSpeakTime = 0, lastClearSoundTime = 0, lastBeepTime = 0, lastClearSpeakTime = 0;
+let frameCount = 0, isWallOrStairAhead = false, nothingCount = 0;
+let currentMode = "clear"; // Master state: "clear" or "obstacle"
+let lastObstacleName = ""; // Tracks last spoken obstacle name for instant switching
 let audioCtx = null;
 let canvasCtx = null, offscreenCanvas = null;
 
@@ -260,7 +261,7 @@ const allNames = {
     'car': 'سيارة', 'bus': 'حافلة', 'motorcycle': 'دراجة نارية', 'bicycle': 'دراجة'
   },
   'pa-IN': {
-    'person': 'ਬੰਦਾ ਹੈ', 'chair': 'ਕੁਰਸੀ ਹੈ', 'table': 'ਮੇਜ਼ ਹੈ', 'bottle': 'ਬੋਤल ਹੈ',
+    'person': 'ਬੰਦਾ ਹੈ', 'chair': 'ਕੁਰਸੀ ਹੈ', 'table': 'ਮੇਜ਼ ਹੈ', 'bottle': 'ਬੋਤਲ ਹੈ',
     'car': 'ਕਾਰ ਹੈ', 'bus': 'ਬੱਸ ਹੈ', 'motorcycle': 'ਮੋਟਰਸਾਈਕਲ ਹੈ', 'bicycle': 'ਸਾਈਕਲ ਹੈ'
   },
   'ps-PK': {
@@ -329,29 +330,16 @@ function speak(text) {
   if (!text) return;
   if (!('speechSynthesis' in window)) return;
 
-  if (window.speechSynthesis.speaking) {
-    pendingSpeech = text;
-    return;
-  }
-
   const now = Date.now();
-  if (text === lastSpoken && now - lastSpeakTime < 6000) return;
+  if (text === lastSpoken && now - lastSpeakTime < 4000) return;
+
+  window.speechSynthesis.cancel();
 
   lastSpoken = text;
   lastSpeakTime = now;
-  pendingSpeech = null;
 
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = langSel.value;
-  
-  utterance.onend = () => {
-    if (pendingSpeech) {
-      const nextText = pendingSpeech;
-      pendingSpeech = null;
-      speak(nextText);
-    }
-  };
-
   window.speechSynthesis.speak(utterance);
 }
 
@@ -519,20 +507,21 @@ async function predictWebcam() {
       }
 
       if (isWallOrStairAhead && !hasObjectDetected && nothingCount >= 3) {
-        wasObstacle = true;
-        statusEl.innerText = getT('wallAhead');
-        
         const now = Date.now();
-        if (now - lastBeepTime > 600) {
+        const wallText = getT('wallAhead');
+        if (currentMode !== "obstacle" || lastObstacleName !== wallText) {
+          currentMode = "obstacle";
+          lastObstacleName = wallText;
+          triggerVibration();
+          speak(wallText);
+        }
+        statusEl.innerText = wallText;
+        
+        if (now - lastBeepTime > 1000) {
           lastBeepTime = now;
           playBeep('obstacle');
-          triggerVibration();
         }
 
-        if (now - lastObstacleSpeakTime > 6000) {
-          lastObstacleSpeakTime = now;
-          speak(getT('wallAhead'));
-        }
         if (isLive) {
           window.requestAnimationFrame(predictWebcam);
         }
@@ -563,19 +552,20 @@ async function predictWebcam() {
           const sizeRatio = maxArea / videoArea;
           
           if (sizeRatio >= 0.005) {
-            wasObstacle = true;
-            statusEl.innerText = `${getT('stopClose')} ${localizedName}`;
+            const fullObstacleText = `${getT('stopClose')} ${localizedName}`;
+            statusEl.innerText = fullObstacleText;
             
             const now = Date.now();
-            if (now - lastBeepTime > 600) {
-              lastBeepTime = now;
-              playBeep('obstacle');
+            if (currentMode !== "obstacle" || lastObstacleName !== fullObstacleText) {
+              currentMode = "obstacle";
+              lastObstacleName = fullObstacleText;
               triggerVibration();
+              speak(fullObstacleText);
             }
 
-            if (now - lastObstacleSpeakTime > 6000) {
-              lastObstacleSpeakTime = now;
-              speak(`${getT('stopClose')} ${localizedName}`);
+            if (now - lastBeepTime > 1000) {
+              lastBeepTime = now;
+              playBeep('obstacle');
             }
           } else {
             handleUnknownOrClear();
@@ -599,17 +589,18 @@ async function predictWebcam() {
 function handleUnknownOrClear() {
   const now = Date.now();
   if (nothingCount === 0 && video.readyState >= 2) {
-    wasObstacle = true;
-    statusEl.innerText = getT('unknownObstacle');
-    if (now - lastBeepTime > 600) {
-      lastBeepTime = now;
-      playBeep('obstacle');
+    const unknownText = getT('unknownObstacle');
+    statusEl.innerText = unknownText;
+    if (currentMode !== "obstacle" || lastObstacleName !== unknownText) {
+      currentMode = "obstacle";
+      lastObstacleName = unknownText;
       triggerVibration();
+      speak(unknownText);
     }
 
-    if (now - lastObstacleSpeakTime > 6000) {
-      lastObstacleSpeakTime = now;
-      speak(getT('unknownObstacle'));
+    if (now - lastBeepTime > 1000) {
+      lastBeepTime = now;
+      playBeep('obstacle');
     }
   } else {
     handleClearPath();
@@ -617,19 +608,22 @@ function handleUnknownOrClear() {
 }
 
 function handleClearPath() {
+  const now = Date.now();
+  if (currentMode !== "clear") {
+    currentMode = "clear";
+    lastObstacleName = "";
+    speak(getT('clearPath'));
+    lastClearSpeakTime = now;
+  }
+  
   statusEl.innerText = getT('clearPath');
   
-  const now = Date.now();
-  if (now - lastClearSoundTime > 800) {
+  if (now - lastClearSoundTime > 1500) {
     lastClearSoundTime = now;
     playBeep('clear');
   }
 
-  if (wasObstacle) {
-    wasObstacle = false;
-    lastClearSpeakTime = now;
-    speak(getT('clearPath'));
-  } else if (now - lastClearSpeakTime > 10000) {
+  if (now - lastClearSpeakTime > 10000) {
     lastClearSpeakTime = now;
     speak(getT('clearPath'));
   }
@@ -639,7 +633,6 @@ function stopCamera() {
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel();
   }
-  pendingSpeech = null;
   if ('vibrate' in navigator) {
     try { navigator.vibrate(0); } catch(e){}
   }
