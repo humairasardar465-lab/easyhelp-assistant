@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Your eyes smart cane created by Humaira Sardar</title>
+<!-- MediaPipe Tasks Vision CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/vision_bundle.js" crossorigin="anonymous"></script>
 <style>
 *{box-sizing:border-box}
 body{font-family:Arial,sans-serif;background:#0a0f1e;color:#fff;margin:0;padding:16px}
@@ -128,7 +130,7 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 <option value="en-IN">English (India)</option>
 <option value="es-MX">Español (Mexico)</option>
 <option value="es-AR">Español (Argentina)</option>
-<option value="fr-CA">Français (Canada)</option>
+<option value="fr-FR">Français (Canada)</option>
 <option value="zh-TW">中文 (Traditional)</option>
 <option value="zh-HK">中文 (Hong Kong)</option>
 </select>
@@ -149,9 +151,8 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 const video=document.getElementById('webcam');
 const statusEl=document.getElementById('status');
 const langSel=document.getElementById('voiceLanguage');
-let stream=null, isLive=false, lastSpoken="", audioCtx=null, lastAvg=0;
+let stream=null, isLive=false, objectDetector=null, lastSpoken="", lastSpeakTime=0, audioCtx=null, lastAvg=0;
 let lastAnnouncedCategory = null; 
-let hurdleHoldCounter = 0; // Stability counter to prevent immediate false clear states
 
 const translations = {
   'ur-PK': {
@@ -159,215 +160,33 @@ const translations = {
     started: 'اسمارٹ کین آن ہے۔',
     stopClose: 'رک جائیں، رکاوٹ!',
     clearPath: 'رستہ صاف ہے!',
-    camError: 'کیمرہ کی اجازت دیں'
+    camError: 'کیمرہ کی اجازت دیں',
+    netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ'
   },
   'en-US': {
     loading: 'Sensor turning on.',
     started: 'Smart Cane is on.',
     stopClose: 'Stop, obstacle!',
     clearPath: 'Path is clear!',
-    camError: 'Allow camera access'
+    camError: 'Allow camera access',
+    netError: 'Internet or model loading issue'
   },
   'hi-IN': {
     loading: 'सेंसर चालू हो रहा है।',
     started: 'स्मार्ट केन चालू है।',
     stopClose: 'रुकिए, रुकावट!',
     clearPath: 'रास्ता साफ़ है!',
-    camError: 'कैमरा अनुमति दें'
+    camError: 'कैमरा अनुमति दें',
+    netError: 'इंटरनेट या मॉडल समस्या'
   },
   'ar-SA': {
     loading: 'جاري تشغيل المستشعر.',
     started: 'العصا الذكية تعمل.',
     stopClose: 'توقف، عقبة!',
     clearPath: 'الطريق نظيف!',
-    camError: 'السماح بالكاميرا'
+    camError: 'السماح بالكاميرا',
+    netError: 'مشكلة في الإنترنت أو النموذج'
   },
   'pa-IN': {
     loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ਹੈ।',
-    started: 'ਸਮਾਰਟ ਕੈਨ ਚਾਲੂ ਹੈ।',
-    stopClose: 'ਰੁਕ ਜਾਓ, ਰੁਕਾਵਟ!',
-    clearPath: 'ਰਸਤਾ ਸਾਫ਼ है!',
-    camError: 'ਕੈਮਰਾ ਇਜਾਜ਼ਤ ਦਿਓ'
-  },
-  'ps-PK': {
-    loading: 'سنډر چالان کیږي.',
-    started: 'سمارټ کین چالان دی.',
-    stopClose: 'وګرځئ، خنډ!',
-    clearPath: 'لاره پاکه ده!',
-    camError: 'د کامرې اجازه'
-  },
-  'sd-PK': {
-    loading: 'سينسر چالو ٿي رهيو آهي.',
-    started: 'سمارٽ ڪين چالو آهي.',
-    stopClose: 'بيهي وڃو، رڪاوٽ!',
-    clearPath: 'رستو صاف آهي!',
-    camError: 'ڪمري جي اجازت'
-  }
-};
-
-function getMsg(key) {
-  const lang = langSel.value;
-  if(translations[lang] && translations[lang][key]) {
-    return translations[lang][key];
-  }
-  return translations['en-US'][key] || key;
-}
-
-function speakText(t){
-  window.speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(t);
-  u.lang=langSel.value; 
-  u.rate=1.0;
-  window.speechSynthesis.speak(u);
-}
-
-function playHurdleTone(){
-  try{
-    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-    const o=audioCtx.createOscillator(); const g=audioCtx.createGain();
-    o.connect(g); g.connect(audioCtx.destination);
-    o.frequency.value=880; o.type='sine';
-    g.gain.setValueAtTime(0.2, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.3);
-    o.start(); o.stop(audioCtx.currentTime+0.3);
-  }catch(e){}
-}
-
-function playClearTone(){
-  try{
-    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-    const o=audioCtx.createOscillator(); const g=audioCtx.createGain();
-    o.connect(g); g.connect(audioCtx.destination);
-    o.frequency.value=750;
-    o.type='triangle';
-    g.gain.setValueAtTime(0.85, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+0.45);
-    o.start(); o.stop(audioCtx.currentTime+0.45);
-  }catch(e){}
-}
-
-function vibrateHurdle(){
-  if(!navigator.vibrate) return;
-  navigator.vibrate([300,100,300]);
-}
-
-async function ensureCamera(){
-  if(stream && video.srcObject) return true;
-  try{
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { exact: "environment" }, width: { ideal: 640 }, height: { ideal: 480 } },
-      audio: false
-    });
-    video.srcObject = stream; await video.play(); return true;
-  }catch(e){
-    try{ 
-      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false }); 
-      video.srcObject = stream; await video.play(); return true; 
-    }catch(e2){
-      try{
-        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-        video.srcObject = stream; await video.play(); return true;
-      }catch(e3){
-        speakText(getMsg('camError')); return false;
-      }
-    }
-  }
-}
-
-function getScreenInfo(){
-  if(!video.videoWidth) return {variance:100, change:0};
-  const c=document.createElement('canvas'); c.width=60; c.height=45;
-  const ctx=c.getContext('2d'); ctx.drawImage(video,0,0,60,45);
-  const d=ctx.getImageData(0,0,60,45).data;
-  let avg=0; for(let i=0;i<d.length;i+=4){ avg+=(d[i]+d[i+1]+d[i+2])/3; } avg=avg/(60*45);
-  let variance=0; for(let i=0;i<d.length;i+=4){ variance+=Math.abs((d[i]+d[i+1]+d[i+2])/3 - avg); } variance=variance/(60*45);
-  let change=Math.abs(avg - lastAvg); lastAvg=avg;
-  return {variance, change};
-}
-
-async function detectLoop(){
-  if(!isLive || !video.videoWidth) {
-    if(isLive) requestAnimationFrame(detectLoop);
-    return;
-  }
-
-  const info = getScreenInfo();
-  // Enhanced sensitivity for obstacles and tables/walls (expanded thresholds)
-  const isHurdleDetected = (info.variance < 25 || info.change > 8);
-  let speakMsg = "", currentCategory = "clear", hasHurdle = false;
-
-  if(isHurdleDetected){
-    hurdleHoldCounter = 10; // Keep hurdle active for several frames to prevent instant flickering to clear path
-    speakMsg = getMsg('stopClose');
-    currentCategory = "hurdle";
-    hasHurdle = true;
-  } else {
-    if (hurdleHoldCounter > 0) {
-      hurdleHoldCounter--;
-      speakMsg = getMsg('stopClose');
-      currentCategory = "hurdle";
-      hasHurdle = true;
-    } else {
-      speakMsg = getMsg('clearPath');
-      currentCategory = "clear";
-      hasHurdle = false;
-    }
-  }
-
-  // Instant announcement whenever state changes
-  const now = Date.now();
-  if (currentCategory !== lastAnnouncedCategory || (hasHurdle && now - lastSpeakTime > 2000)) {
-    lastAnnouncedCategory = currentCategory;
-    lastSpeakTime = now;
-    lastSpoken = speakMsg;
     
-    if(hasHurdle){
-      playHurdleTone();
-      vibrateHurdle();
-    } else {
-      playClearTone();
-    }
-    speakText(speakMsg);
-  }
-
-  if(isLive) {
-    setTimeout(() => requestAnimationFrame(detectLoop), 150);
-  }
-}
-
-document.getElementById('startBtn').addEventListener('click', async ()=>{
-  statusEl.innerText="STATUS: LOADING...";
-  speakText(getMsg('loading'));
-  if(!await ensureCamera()) return;
-  
-  isLive = true;
-  statusEl.innerText="STATUS: LIVE";
-  document.getElementById('startBtn').style.display="none";
-  document.getElementById('stopBtn').style.display="block";
-  speakText(getMsg('started'));
-  requestAnimationFrame(detectLoop);
-});
-
-document.getElementById('stopBtn').addEventListener('click', ()=>{
-  isLive = false; 
-  if(stream) stream.getTracks().forEach(t => t.stop());
-  stream = null; video.srcObject = null;
-  window.speechSynthesis.cancel();
-  statusEl.innerText="STATUS: OFF";
-  document.getElementById('startBtn').style.display="block";
-  document.getElementById('stopBtn').style.display="none";
-});
-
-document.getElementById('openMapsBtn').addEventListener('click', ()=>{
-  const q = document.getElementById('destinationInput').value.trim();
-  if(!q){ speakText('Pehle upar likhen kahan jana hai.'); return; }
-  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`,'_blank');
-});
-</script>
-</body>
-</html>
-<!-- WhatsApp Review & Contact Section created by Humaira Sardar -->
-<div style="margin-top: 25px; padding: 15px; background: #1f2937; border-radius: 12px; border: 1px solid #374151; text-align: center;">
-  <p style="color: #00ffcc; font-size: 14px; font-weight: bold; margin: 0 0 10px 0;">Share your valuable reviews and suggestions directly on WhatsApp</p>
-  <a href="https://wa.me/923030133274?text=Hello%20Humaira,%20I%20want%20to%20share%20feedback%20about%20Smart%20Cane:" target="_blank" style="display: block; background: #25d366; color: #fff; padding: 12px; border-radius: 10px; text-decoration: none; font-weight: bold; font-size: 15px;">💬 Contact on WhatsApp </a>
-</div>
