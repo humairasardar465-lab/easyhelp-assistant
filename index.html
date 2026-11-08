@@ -151,6 +151,7 @@ const statusEl=document.getElementById('status');
 const langSel=document.getElementById('voiceLanguage');
 let stream=null, isLive=false, lastSpoken="", audioCtx=null, lastAvg=0;
 let lastAnnouncedCategory = null; 
+let hurdleHoldCounter = 0; // Stability counter to prevent immediate false clear states
 
 const translations = {
   'ur-PK': {
@@ -291,23 +292,33 @@ async function detectLoop(){
   }
 
   const info = getScreenInfo();
-  // Pure ultra-fast pixel/motion analysis - 100% offline friendly, zero model download errors
-  const isHurdleDetected = (info.variance < 15 || info.change > 10);
+  // Enhanced sensitivity for obstacles and tables/walls (expanded thresholds)
+  const isHurdleDetected = (info.variance < 25 || info.change > 8);
   let speakMsg = "", currentCategory = "clear", hasHurdle = false;
 
   if(isHurdleDetected){
+    hurdleHoldCounter = 10; // Keep hurdle active for several frames to prevent instant flickering to clear path
     speakMsg = getMsg('stopClose');
     currentCategory = "hurdle";
     hasHurdle = true;
   } else {
-    speakMsg = getMsg('clearPath');
-    currentCategory = "clear";
-    hasHurdle = false;
+    if (hurdleHoldCounter > 0) {
+      hurdleHoldCounter--;
+      speakMsg = getMsg('stopClose');
+      currentCategory = "hurdle";
+      hasHurdle = true;
+    } else {
+      speakMsg = getMsg('clearPath');
+      currentCategory = "clear";
+      hasHurdle = false;
+    }
   }
 
   // Instant announcement whenever state changes
-  if (currentCategory !== lastAnnouncedCategory) {
+  const now = Date.now();
+  if (currentCategory !== lastAnnouncedCategory || (hasHurdle && now - lastSpeakTime > 2000)) {
     lastAnnouncedCategory = currentCategory;
+    lastSpeakTime = now;
     lastSpoken = speakMsg;
     
     if(hasHurdle){
