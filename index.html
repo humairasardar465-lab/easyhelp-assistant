@@ -108,7 +108,7 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 <option value="fa-AF">دری (Afghanistan)</option>
 <option value="pt-BR">Português (Brazil)</option>
 <option value="pt-PT">Português (Portugal)</option>
-<option value="pa-PK">پنجابی (Pakistan)</option>
+<option value="pa-PK">ਪੰਜਾਬੀ (Pakistan)</option>
 <option value="qu-PE">Runa Simi (Quechua)</option>
 <option value="sm-SM">Gagana Samoa (Samoa)</option>
 <option value="sr-RS">Српски (Serbia)</option>
@@ -155,7 +155,7 @@ const stopBtn = document.getElementById('stopBtn');
 const openMapsBtn = document.getElementById('openMapsBtn');
 const destinationInput = document.getElementById('destinationInput');
 
-let stream = null, isLive = false, objectDetector = null, lastSpoken = "", lastSpeakTime = 0, lastClearSoundTime = 0;
+let stream = null, isLive = false, objectDetector = null, lastSpoken = "", lastSpeakTime = 0, lastClearSoundTime = 0, lastBeepTime = 0, lastObstacleSpeakTime = 0, lastClearSpeakTime = 0, lastObstacleKey = "";
 let audioCtx = null;
 
 const translations = {
@@ -299,7 +299,7 @@ function playBeep(type) {
 function speak(text) {
   if (!text) return;
   const now = Date.now();
-  if (text === lastSpoken && now - lastSpeakTime < 2500) return;
+  if (text === lastSpoken && now - lastSpeakTime < 4000) return;
   lastSpoken = text;
   lastSpeakTime = now;
 
@@ -314,11 +314,10 @@ function speak(text) {
 async function initDetector() {
   if (objectDetector) return;
   
-  // Wait for module to load if not ready yet
   if (!window.FilesetResolver || !window.ObjectDetector) {
     await new Promise(resolve => {
       window.addEventListener('mediapipe-loaded', resolve, { once: true });
-      setTimeout(resolve, 3000); // fallback timeout
+      setTimeout(resolve, 3000);
     });
   }
 
@@ -332,7 +331,7 @@ async function initDetector() {
         modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite",
         delegate: "CPU"
       },
-      scoreThreshold: 0.3,
+      scoreThreshold: 0.6,
       runningMode: "VIDEO"
     });
   } catch (err) {
@@ -344,6 +343,8 @@ async function initDetector() {
 
 async function startCamera() {
   try {
+    if (isLive || stream) return;
+
     await initDetector();
     if (!objectDetector) {
       statusEl.innerText = getT('netError');
@@ -407,54 +408,59 @@ async function predictWebcam() {
         const localizedName = getLocalizedName(rawCategory);
         const confidence = Math.round(closest.categories[0].score * 100);
         
-        if (confidence > 30) {
+        if (confidence >= 60) {
           const videoWidth = video.videoWidth || 640;
           const videoArea = videoWidth * (video.videoHeight || 480);
           const sizeRatio = maxArea / videoArea;
           
-          let distanceText = "";
-          const lang = langSel.value;
-          if (lang.startsWith('en')) {
-            if (sizeRatio > 0.25) distanceText = "very close, stop!";
-            else if (sizeRatio > 0.1) distanceText = "close, careful!";
-            else distanceText = "a bit far";
-          } else {
-            if (sizeRatio > 0.25) distanceText = "بہت قریب ہے، رک جائیں!";
-            else if (sizeRatio > 0.1) distanceText = "قریب ہے، دھیان سے!";
-            else distanceText = "تھوڑا دور ہے";
-          }
+          if (sizeRatio >= 0.02) {
+            let distanceText = "";
+            const lang = langSel.value;
+            if (lang.startsWith('en')) {
+              if (sizeRatio > 0.25) distanceText = "very close, stop!";
+              else if (sizeRatio > 0.1) distanceText = "close, careful!";
+              else distanceText = "a bit far";
+            } else {
+              if (sizeRatio > 0.25) distanceText = "بہت قریب ہے، رک جائیں!";
+              else if (sizeRatio > 0.1) distanceText = "قریب ہے، دھیان سے!";
+              else distanceText = "تھوڑا دور ہے";
+            }
 
-          const boxCenterX = closest.boundingBox.originX + (closest.boundingBox.width / 2);
-          let sideText = "";
-          if (lang.startsWith('en')) {
-            if (boxCenterX < videoWidth * 0.35) sideText = "on the left";
-            else if (boxCenterX > videoWidth * 0.65) sideText = "on the right";
-            else sideText = "right in front";
-          } else {
-            if (boxCenterX < videoWidth * 0.35) sideText = "بائیں طرف ہے";
-            else if (boxCenterX > videoWidth * 0.65) sideText = "دائیں طرف ہے";
-            else sideText = "بالکل سامنے ہے";
-          }
+            const boxCenterX = closest.boundingBox.originX + (closest.boundingBox.width / 2);
+            let sideText = "";
+            if (lang.startsWith('en')) {
+              if (boxCenterX < videoWidth * 0.35) sideText = "on the left";
+              else if (boxCenterX > videoWidth * 0.65) sideText = "on the right";
+              else sideText = "right in front";
+            } else {
+              if (boxCenterX < videoWidth * 0.35) sideText = "بائیں طرف ہے";
+              else if (boxCenterX > videoWidth * 0.65) sideText = "دائیں طرف ہے";
+              else sideText = "بالکل سامنے ہے";
+            }
 
-          statusEl.innerText = `${getT('stopClose')} ${localizedName} (${distanceText}, ${sideText})`;
-          playBeep('obstacle');
-          triggerVibration();
-          speak(`${getT('stopClose')} ${localizedName}، ${distanceText}، ${sideText}`);
+            statusEl.innerText = `${getT('stopClose')} ${localizedName} (${distanceText}, ${sideText})`;
+            
+            const now = Date.now();
+            if (now - lastBeepTime > 600) {
+              lastBeepTime = now;
+              playBeep('obstacle');
+              triggerVibration();
+            }
+
+            const currentKey = `${rawCategory}_${distanceText}_${sideText}`;
+            if (currentKey !== lastObstacleKey || now - lastObstacleSpeakTime > 4000) {
+              lastObstacleKey = currentKey;
+              lastObstacleSpeakTime = now;
+              speak(`${getT('stopClose')} ${localizedName}، ${distanceText}، ${sideText}`);
+            }
+          } else {
+            handleClearPath();
+          }
+        } else {
+          handleClearPath();
         }
       } else {
-        statusEl.innerText = getT('clearPath');
-        
-        // Gentle tick sound every 800ms
-        const now = Date.now();
-        if (now - lastClearSoundTime > 800) {
-          lastClearSoundTime = now;
-          playBeep('clear');
-        }
-
-        // Speak clear path strictly every 2.5 seconds using precise milliseconds
-        if (now - lastSpeakTime > 2500) {
-          speak(getT('clearPath'));
-        }
+        handleClearPath();
       }
     } catch (e) {
       console.error(e);
@@ -466,7 +472,26 @@ async function predictWebcam() {
   }
 }
 
+function handleClearPath() {
+  lastObstacleKey = "";
+  statusEl.innerText = getT('clearPath');
+  
+  const now = Date.now();
+  if (now - lastClearSoundTime > 800) {
+    lastClearSoundTime = now;
+    playBeep('clear');
+  }
+
+  if (now - lastClearSpeakTime > 4000) {
+    lastClearSpeakTime = now;
+    speak(getT('clearPath'));
+  }
+}
+
 function stopCamera() {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+  }
   if ('vibrate' in navigator) {
     try { navigator.vibrate(0); } catch(e){}
   }
