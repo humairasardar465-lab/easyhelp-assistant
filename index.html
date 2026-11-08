@@ -38,8 +38,8 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 <option value="pa-IN">ਪੰਜਾਬੀ (India)</option>
 <option value="ps-PK">پښتو (Pakistan)</option>
 <option value="sd-PK">سنڌي (Pakistan)</option>
-<option value="bn-BD">বাংলা (Bangladesh)</option>
 <option value="fa-IR">فارسی (Iran)</option>
+<option value="bn-BD">বাংলা (Bangladesh)</option>
 <option value="tr-TR">Türkçe (Turkey)</option>
 <option value="zh-CN">中文 (Chinese)</option>
 <option value="es-ES">Español (Spain)</option>
@@ -123,18 +123,6 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 <option value="yi-YI">ייִדיש (Yiddish)</option>
 <option value="yo-NG">Yorùbá (Nigeria)</option>
 <option value="zu-ZA">isiZulu (South Africa)</option>
-<option value="am-AM">Հայերեն (Western Armenia)</option>
-<option value="as-IN">অসমীয়া (Assam)</option>
-<option value="bn-IN">বাংলা (India)</option>
-<option value="en-GB">English (United Kingdom)</option>
-<option value="en-CA">English (Canada)</option>
-<option value="en-AU">English (Australia)</option>
-<option value="en-IN">English (India)</option>
-<option value="es-MX">Español (Mexico)</option>
-<option value="es-AR">Español (Argentina)</option>
-<option value="fr-FR">Français (Canada)</option>
-<option value="zh-TW">中文 (Traditional)</option>
-<option value="zh-HK">中文 (Hong Kong)</option>
 </select>
 
 <label>DESTINATION</label>
@@ -162,7 +150,7 @@ const stopBtn = document.getElementById('stopBtn');
 const openMapsBtn = document.getElementById('openMapsBtn');
 const destinationInput = document.getElementById('destinationInput');
 
-let stream = null, isLive = false, objectDetector = null, lastSpoken = "", lastSpeakTime = 0;
+let stream = null, isLive = false, objectDetector = null, lastSpoken = "", lastSpeakTime = 0, lastClearSoundTime = 0;
 let audioCtx = null;
 
 const translations = {
@@ -205,8 +193,62 @@ const translations = {
     clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ!',
     camError: 'ਕੈਮਰਾ ਅਨੁਮਤੀ ਦਿਓ',
     netError: 'ਇੰਟਰਨੈਟ ਜਾਂ ਮਾਡਲ ਸਮੱਸਿਆ'
+  },
+  'ps-PK': {
+    loading: 'سنسور روان دی. مهرباني وکئ انتظار وکئ.',
+    started: 'سمارټ کین روان دی.',
+    stopClose: 'ددرېږئ، خنډ شته: ',
+    clearPath: 'لار سمه ده، مخکې لاړ شئ.',
+    camError: 'د کامرې اجازه ورکړئ',
+    netError: 'د انټرنیټ ستونزه'
+  },
+  'fa-IR': {
+    loading: 'سنسور در حال روشن شدن است.',
+    started: 'اسمارت کین روشن است.',
+    stopClose: 'توقف کنید، مانع: ',
+    clearPath: 'مسیر تمیز است، جلو بروید.',
+    camError: 'اجازه دسترسی به دوربین',
+    netError: 'مشکل اینترنت'
   }
 };
+
+const allNames = {
+  'ur-PK': {
+    'person': 'آدمی', 'chair': 'کرسی', 'table': 'ٹیبل', 'bottle': 'بوتل',
+    'cup': 'کپ', 'laptop': 'لیپ ٹاپ', 'cell phone': 'موبایل', 'book': 'کتاب',
+    'potted plant': 'گملا', 'car': 'کار', 'bus': 'بس', 'truck': 'ٹرک',
+    'motorcycle': 'موٹر سائیکل', 'bicycle': 'سائیکل', 'dog': 'کتا', 'cat': 'بلی',
+    'bed': 'بیڈ', 'couch': 'صوفہ', 'door': 'دروازہ'
+  },
+  'pa-IN': {
+    'person': 'ਬੰਦਾ', 'chair': 'ਕੁਰਸੀ', 'table': 'ਮੇਜ਼', 'bottle': 'ਬੋਤਲ',
+    'car': 'ਕਾਰ', 'bus': 'ਬੱਸ', 'motorcycle': 'ਮੋਟਰਸਾਈਕਲ', 'bicycle': 'ਸਾਈਕਲ'
+  },
+  'ar-SA': {
+    'person': 'شخص', 'chair': 'كرسي', 'table': 'طاولة', 'bottle': 'زجاجة',
+    'car': 'سيارة', 'bus': 'حافلة', 'motorcycle': 'دراجة نارية', 'bicycle': 'دراجة'
+  },
+  'hi-IN': {
+    'person': 'व्यक्ति', 'chair': 'कुर्सी', 'table': 'मेज़', 'bottle': 'बोतल',
+    'car': 'कार', 'bus': 'बस', 'motorcycle': 'मोटरसाइकिल', 'bicycle': 'साइकिल'
+  },
+  'ps-PK': {
+    'person': 'کس', 'chair': 'څوکۍ', 'table': 'میز', 'bottle': 'بوتل',
+    'car': 'موټر', 'bus': 'بس'
+  },
+  'fa-IR': {
+    'person': 'فرد', 'chair': 'صندلی', 'table': 'میز', 'bottle': 'بطری',
+    'car': 'ماشین', 'bus': 'اتوبوس'
+  }
+};
+
+function getLocalizedName(category) {
+  const lang = langSel.value;
+  if (allNames[lang] && allNames[lang][category]) {
+    return allNames[lang][category];
+  }
+  return category;
+}
 
 function getT(key) {
   const lang = langSel.value;
@@ -214,6 +256,12 @@ function getT(key) {
     return translations[lang][key];
   }
   return translations['en-US'][key] || key;
+}
+
+function triggerVibration() {
+  if ('vibrate' in navigator) {
+    try { navigator.vibrate([200, 100, 200]); } catch (e) {}
+  }
 }
 
 function playBeep(type) {
@@ -230,15 +278,15 @@ function playBeep(type) {
     gain.connect(audioCtx.destination);
 
     if (type === 'clear') {
-      osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
+      osc.frequency.setValueAtTime(659.25, audioCtx.currentTime);
       gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
       osc.start();
       osc.stop(audioCtx.currentTime + 0.1);
     } else if (type === 'obstacle') {
       osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
       osc.start();
-      osc.stop(audioCtx.currentTime + 0.1);
+      osc.stop(audioCtx.currentTime + 0.12);
     }
   } catch (e) {}
 }
@@ -246,7 +294,7 @@ function playBeep(type) {
 function speak(text) {
   if (!text) return;
   const now = Date.now();
-  if (text === lastSpoken && now - lastSpeakTime < 3500) return;
+  if (text === lastSpoken && now - lastSpeakTime < 2500) return;
   lastSpoken = text;
   lastSpeakTime = now;
 
@@ -282,6 +330,12 @@ async function initDetector() {
 
 async function startCamera() {
   try {
+    if (!objectDetector) {
+      statusEl.innerText = getT('netError');
+      speak(getT('netError'));
+      return;
+    }
+
     stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: "environment" },
       audio: false
@@ -304,12 +358,10 @@ async function startCamera() {
 }
 
 let lastVideoTime = -1;
-let frameCounter = 0;
 
 async function predictWebcam() {
   if (!isLive) return;
 
-  // اگر ماڈل ابھی ڈاؤن لوڈ ہو رہا ہو تب بھی لوپ کو چلنے دیں تاکہ ایپ ہینگ نہ ہو
   if (!objectDetector) {
     if (isLive) {
       window.requestAnimationFrame(predictWebcam);
@@ -319,26 +371,74 @@ async function predictWebcam() {
 
   if (video.currentTime !== lastVideoTime && video.readyState >= 2) {
     lastVideoTime = video.currentTime;
-    frameCounter++;
 
     try {
       const startTimeMs = performance.now();
       const detections = objectDetector.detectForVideo(video, startTimeMs);
 
       if (detections && detections.detections && detections.detections.length > 0) {
-        const closest = detections.detections[0];
-        const category = closest.categories[0].categoryName;
+        let closest = detections.detections[0];
+        let maxArea = 0;
+        
+        for (let det of detections.detections) {
+          const area = det.boundingBox.width * det.boundingBox.height;
+          if (area > maxArea) {
+            maxArea = area;
+            closest = det;
+          }
+        }
+
+        const rawCategory = closest.categories[0].categoryName;
+        const localizedName = getLocalizedName(rawCategory);
         const confidence = Math.round(closest.categories[0].score * 100);
         
         if (confidence > 30) {
-          statusEl.innerText = `${getT('stopClose')} ${category}`;
+          const videoWidth = video.videoWidth || 640;
+          const videoArea = videoWidth * (video.videoHeight || 480);
+          const sizeRatio = maxArea / videoArea;
+          
+          let distanceText = "";
+          const lang = langSel.value;
+          if (lang.startsWith('en')) {
+            if (sizeRatio > 0.25) distanceText = "very close, stop!";
+            else if (sizeRatio > 0.1) distanceText = "close, careful!";
+            else distanceText = "a bit far";
+          } else {
+            if (sizeRatio > 0.25) distanceText = "بہت قریب ہے، رک جائیں!";
+            else if (sizeRatio > 0.1) distanceText = "قریب ہے، دھیان سے!";
+            else distanceText = "تھوڑا دور ہے";
+          }
+
+          const boxCenterX = closest.boundingBox.originX + (closest.boundingBox.width / 2);
+          let sideText = "";
+          if (lang.startsWith('en')) {
+            if (boxCenterX < videoWidth * 0.35) sideText = "on the left";
+            else if (boxCenterX > videoWidth * 0.65) sideText = "on the right";
+            else sideText = "right in front";
+          } else {
+            if (boxCenterX < videoWidth * 0.35) sideText = "بائیں طرف ہے";
+            else if (boxCenterX > videoWidth * 0.65) sideText = "دائیں طرف ہے";
+            else sideText = "بالکل سامنے ہے";
+          }
+
+          statusEl.innerText = `${getT('stopClose')} ${localizedName} (${distanceText}, ${sideText})`;
           playBeep('obstacle');
-          speak(`${getT('stopClose')} ${category}`);
+          triggerVibration();
+          speak(`${getT('stopClose')} ${localizedName}، ${distanceText}، ${sideText}`);
         }
       } else {
         statusEl.innerText = getT('clearPath');
-        if (frameCounter % 40 === 0) {
+        
+        // Gentle tick sound every 800ms
+        const now = Date.now();
+        if (now - lastClearSoundTime > 800) {
+          lastClearSoundTime = now;
           playBeep('clear');
+        }
+
+        // Speak clear path strictly every 2.5 seconds using precise milliseconds
+        if (now - lastSpeakTime > 2500) {
+          speak(getT('clearPath'));
         }
       }
     } catch (e) {
@@ -352,6 +452,9 @@ async function predictWebcam() {
 }
 
 function stopCamera() {
+  if ('vibrate' in navigator) {
+    try { navigator.vibrate(0); } catch(e){}
+  }
   isLive = false;
   if (stream) {
     stream.getTracks().forEach(track => track.stop());
