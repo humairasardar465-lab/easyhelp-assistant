@@ -185,7 +185,7 @@ const translations = {
     loading: 'सेंसर चालू हो रहा है।',
     started: 'स्मार्ट केन चालू है।',
     stopClose: 'रुकिए, रुकावट!',
-    clearPath: 'रास्ता साफ़ है!',
+    clearPath: 'रास्ता साफ है!',
     camError: 'कैमरा अनुमति दें',
     netError: 'इंटरनेट या मॉडल समस्या'
   },
@@ -218,12 +218,12 @@ function getT(key) {
 function speak(text) {
   if (!text) return;
   const now = Date.now();
-  if (text === lastSpoken && now - lastSpeakTime < 4000) return;
+  if (text === lastSpoken && now - lastSpeakTime < 5000) return;
+  
   lastSpoken = text;
   lastSpeakTime = now;
 
   if ('speechSynthesis' in window) {
-    window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = langSel.value;
     window.speechSynthesis.speak(utterance);
