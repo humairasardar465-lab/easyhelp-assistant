@@ -307,10 +307,13 @@ function playBeep(type) {
       osc.start();
       osc.stop(audioCtx.currentTime + 0.1);
     } else if (type === 'obstacle') {
-      osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.12);
+      const now = audioCtx.currentTime;
+      osc.frequency.setValueAtTime(220, now);
+      osc.frequency.setValueAtTime(180, now + 0.1);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.setValueAtTime(0.3, now + 0.1);
+      osc.start(now);
+      osc.stop(now + 0.22);
     }
   } catch (e) {}
 }
@@ -325,7 +328,7 @@ function speak(text) {
   }
 
   const now = Date.now();
-  if (text === lastSpoken && now - lastSpeakTime < 4000) return;
+  if (text === lastSpoken && now - lastSpeakTime < 6000) return;
 
   lastSpoken = text;
   lastSpeakTime = now;
@@ -365,7 +368,7 @@ async function initDetector() {
         modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite",
         delegate: "CPU"
       },
-      scoreThreshold: 0.2,
+      scoreThreshold: 0.4,
       runningMode: "VIDEO"
     });
   } catch (err) {
@@ -519,7 +522,7 @@ async function predictWebcam() {
           triggerVibration();
         }
 
-        if (now - lastObstacleSpeakTime > 3000) {
+        if (now - lastObstacleSpeakTime > 6000) {
           lastObstacleSpeakTime = now;
           speak(getT('wallAhead'));
         }
@@ -545,7 +548,7 @@ async function predictWebcam() {
         const localizedName = getLocalizedName(rawCategory);
         const confidence = Math.round(closest.categories[0].score * 100);
         
-        const requiredConfidence = 20;
+        const requiredConfidence = 40;
 
         if (confidence >= requiredConfidence) {
           const videoWidth = video.videoWidth || 640;
@@ -588,7 +591,7 @@ async function predictWebcam() {
             }
 
             const currentKey = `${rawCategory}_${distanceText}_${sideText}`;
-            if (currentKey !== lastObstacleKey || now - lastObstacleSpeakTime > 4000) {
+            if (currentKey !== lastObstacleKey || now - lastObstacleSpeakTime > 6000) {
               lastObstacleKey = currentKey;
               lastObstacleSpeakTime = now;
               speak(`${getT('stopClose')} ${localizedName}، ${distanceText}، ${sideText}`);
@@ -614,7 +617,7 @@ async function predictWebcam() {
 
 function handleUnknownOrClear() {
   const now = Date.now();
-  if (nothingCount < 3 && video.readyState >= 2) {
+  if (nothingCount === 0 && video.readyState >= 2) {
     wasObstacle = true;
     statusEl.innerText = getT('unknownObstacle');
     if (now - lastBeepTime > 600) {
@@ -622,7 +625,7 @@ function handleUnknownOrClear() {
       playBeep('obstacle');
       triggerVibration();
     }
-    if (now - lastObstacleSpeakTime > 4000) {
+    if (now - lastObstacleSpeakTime > 6000) {
       lastObstacleSpeakTime = now;
       speak(getT('unknownObstacle'));
     }
