@@ -167,44 +167,44 @@ let audioCtx = null;
 
 const translations = {
   'ur-PK': {
-    loading: 'سنسور آن ہو رہا ہے۔',
-    started: 'اسمارٹ کین آن ہے۔',
-    stopClose: 'رک جائیں، رکاوٹ!',
-    clearPath: 'رستہ صاف ہے!',
-    camError: 'کیمرہ کی اجازت دیں',
-    netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ'
+    loading: 'سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔',
+    started: 'اسمارٹ کین آن ہے۔ کیمرہ تیار ہے۔',
+    stopClose: 'خطرہ! رک جائیں، سامنے رکاوٹ ہے: ',
+    clearPath: 'رستہ صاف ہے، آپ آگے بڑھ سکتے ہیں۔',
+    camError: 'کیمرہ کی اجازت نہیں ملی۔ براہ کرم پرمٹ دیں۔',
+    netError: 'ماڈل لوڈ ہو رہا ہے یا انٹرنیٹ چیک کریں۔'
   },
   'en-US': {
-    loading: 'Sensor turning on.',
-    started: 'Smart Cane is on.',
-    stopClose: 'Stop, obstacle!',
-    clearPath: 'Path is clear!',
-    camError: 'Allow camera access',
-    netError: 'Internet or model loading issue'
+    loading: 'Sensor is turning on. Please wait.',
+    started: 'Smart Cane is on. Camera is ready.',
+    stopClose: 'Warning! Stop, obstacle ahead: ',
+    clearPath: 'Path is clear, you can walk.',
+    camError: 'Camera access denied. Please allow permission.',
+    netError: 'Loading model or network issue.'
   },
   'hi-IN': {
-    loading: 'सेंसर चालू हो रहा है।',
+    loading: 'सेंसर चालू हो रहा है। कृपया प्रतीक्षा करें।',
     started: 'स्मार्ट केन चालू है।',
-    stopClose: 'रुकिए, रुकावट!',
-    clearPath: 'रास्ता साफ़ है!',
-    camError: 'कैमरा अनुमति दें',
-    netError: 'इंटरनेट या मॉडल समस्या'
+    stopClose: 'खतरा! रुकिए, रुकावट है: ',
+    clearPath: 'रास्ता साफ है, आप आगे बढ़ सकते हैं।',
+    camError: 'कैमरा अनुमति दें।',
+    netError: 'मॉडल या इंटरनेट समस्या।'
   },
   'ar-SA': {
-    loading: 'جاري تشغيل المستشعر.',
+    loading: 'جاري تشغيل المستشعر. يرجى الانتظار.',
     started: 'العصا الذكية تعمل.',
-    stopClose: 'توقف، عقبة!',
-    clearPath: 'الطريق نظيف!',
-    camError: 'السماح بالكاميرا',
-    netError: 'مشكلة في الإنترنت أو النموذج'
+    stopClose: 'تحذير! توقف، عقبة أمامك: ',
+    clearPath: 'الطريق نظيف، يمكنك التقدم.',
+    camError: 'السماح بالكاميرا.',
+    netError: 'مشكلة في تحميل النموذج أو الشبكة.'
   },
   'pa-IN': {
     loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ਹੈ।',
     started: 'ਸਮਾਰਟ ਕੇਨ ਚਾਲੂ ਹੈ।',
-    stopClose: 'ਰੁਕ ਜਾਓ, ਰੁਕਾਵਟ!',
-    clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ!',
-    camError: 'ਕੈਮਰਾ ਅਨੁਮਤੀ ਦਿਓ',
-    netError: 'ਇੰਟਰਨੈਟ ਜਾਂ ਮਾਡਲ ਸਮੱਸਿਆ'
+    stopClose: 'ਖਤਰਾ! ਰੁਕ ਜਾਓ, ਰੁਕਾਵਟ ਹੈ: ',
+    clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਤੁਸੀਂ ਜਾ ਸਕਦੇ ਹੋ।',
+    camError: 'ਕੈਮਰਾ ਅਨੁਮਤੀ ਦਿਓ।',
+    netError: 'ਇੰਟਰਨੈਟ ਜਾਂ ਮਾਡਲ ਸਮੱਸਿਆ।'
   }
 };
 
@@ -216,7 +216,7 @@ function getT(key) {
   return translations['en-US'][key] || key;
 }
 
-// Web Audio API for Beep Tones (Different tones for Clear vs Obstacle)
+// Built-in Web Audio API Beep Tones (Distinct sound for Clear vs Obstacle)
 function playBeep(type) {
   try {
     if (!audioCtx) {
@@ -232,28 +232,33 @@ function playBeep(type) {
     gain.connect(audioCtx.destination);
 
     if (type === 'clear') {
-      // Soft single beep for Clear Path
-      osc.frequency.setValueAtTime(440, audioCtx.currentTime); // A4 note
-      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      // Soft single beep for Clear Path (Pleasant tone)
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5 note
+      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
       osc.start();
-      osc.stop(audioCtx.currentTime + 0.15);
+      osc.stop(audioCtx.currentTime + 0.12);
     } else if (type === 'obstacle') {
-      // Sharp double beep for Obstacle Warning
-      osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Higher pitch
-      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+      // Sharp distinct double beep for Obstacle Warning
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5 note
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
       osc.start();
-      osc.stop(audioCtx.currentTime + 0.1);
+      osc.stop(audioCtx.currentTime + 0.08);
       
       setTimeout(() => {
-        const osc2 = audioCtx.createOscillator();
-        const gain2 = audioCtx.createGain();
-        osc2.connect(gain2);
-        gain2.connect(audioCtx.destination);
-        osc2.frequency.setValueAtTime(880, audioCtx.currentTime);
-        gain2.gain.setValueAtTime(0.2, audioCtx.currentTime);
-        osc2.start();
-        osc2.stop(audioCtx.currentTime + 0.1);
-      }, 150);
+        try {
+          const osc2 = audioCtx.createOscillator();
+          const gain2 = audioCtx.createGain();
+          osc2.type = 'square';
+          osc2.connect(gain2);
+          gain2.connect(audioCtx.destination);
+          osc2.frequency.setValueAtTime(880, audioCtx.currentTime);
+          gain2.gain.setValueAtTime(0.15, audioCtx.currentTime);
+          osc2.start();
+          osc2.stop(audioCtx.currentTime + 0.08);
+        } catch(ex) {}
+      }, 120);
     }
   } catch (e) {
     console.log(e);
@@ -263,7 +268,8 @@ function playBeep(type) {
 function speak(text) {
   if (!text) return;
   const now = Date.now();
-  if (text === lastSpoken && now - lastSpeakTime < 4000) return;
+  // Prevent overlapping repetitive speech within 3 seconds
+  if (text === lastSpoken && now - lastSpeakTime < 3000) return;
   lastSpoken = text;
   lastSpeakTime = now;
 
@@ -271,6 +277,7 @@ function speak(text) {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = langSel.value;
+    utterance.rate = 1.0;
     window.speechSynthesis.speak(utterance);
   }
 }
@@ -287,12 +294,13 @@ async function initDetector() {
         modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite",
         delegate: "GPU"
       },
-      scoreThreshold: 0.4,
+      scoreThreshold: 0.35,
       runningMode: "VIDEO"
     });
   } catch (err) {
     console.error(err);
     statusEl.innerText = getT('netError');
+    speak(getT('netError'));
   }
 }
 
@@ -338,15 +346,15 @@ async function predictWebcam() {
         const category = closest.categories[0].categoryName;
         const confidence = Math.round(closest.categories[0].score * 100);
         
-        if (confidence > 40) {
-          statusEl.innerText = `${getT('stopClose')} (${category})`;
-          playBeep('obstacle'); // Play warning beep tone
+        if (confidence > 35) {
+          statusEl.innerText = `${getT('stopClose')} ${category}`;
+          playBeep('obstacle'); // Distinct warning double beep
           speak(`${getT('stopClose')} ${category}`);
         }
       } else {
         statusEl.innerText = getT('clearPath');
-        // Play clear path soft single beep every few frames to avoid constant noise
-        if (frameCounter % 30 === 0) {
+        // Play soft single clear beep every 45 frames (approx. every 1.5 seconds)
+        if (frameCounter % 45 === 0) {
           playBeep('clear');
         }
       }
