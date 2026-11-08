@@ -20,6 +20,7 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 .btn-main{background:#00ffcc;color:#000}
 .btn-map{background:#0284c7;color:#fff}
 .btn-stop{background:#ef4444;color:#fff}
+.btn-wa{background:#25D366;color:#fff;text-decoration:none;display:block;text-align:center}
 #status{text-align:center;margin:10px 0;font-weight:700;font-size:14px}
 </style>
 </head>
@@ -145,15 +146,22 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 <button id="startBtn" class="btn-main">START - SENSOR ON</button>
 <button id="stopBtn" class="btn-stop" style="display:none;">STOP</button>
 
+<!-- WhatsApp Contact Button added -->
+<a href="https://wa.me/923030133274" target="_blank" class="btn-wa">CONTACT WHATSAPP: 03030133274</a>
+
 <video id="webcam" autoplay playsinline muted></video>
 </div>
 
 <script>
-const video=document.getElementById('webcam');
-const statusEl=document.getElementById('status');
-const langSel=document.getElementById('voiceLanguage');
-let stream=null, isLive=false, objectDetector=null, lastSpoken="", lastSpeakTime=0, audioCtx=null, lastAvg=0;
-let lastAnnouncedCategory = null; 
+const video = document.getElementById('webcam');
+const statusEl = document.getElementById('status');
+const langSel = document.getElementById('voiceLanguage');
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
+const openMapsBtn = document.getElementById('openMapsBtn');
+const destinationInput = document.getElementById('destinationInput');
+
+let stream = null, isLive = false, objectDetector = null, lastSpoken = "", lastSpeakTime = 0;
 
 const translations = {
   'ur-PK': {
@@ -190,4 +198,131 @@ const translations = {
   },
   'pa-IN': {
     loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ਹੈ।',
-    
+    started: 'ਸਮਾਰਟ ਕੇਨ ਚਾਲੂ ਹੈ।',
+    stopClose: 'ਰੁਕ ਜਾਓ, ਰੁਕਾਵਟ!',
+    clearPath: 'ਰਸਤਾ ਸਾਫ਼ है!',
+    camError: 'ਕੈਮਰਾ ਅਨੁਮਤੀ ਦਿਓ',
+    netError: 'ਇੰਟਰਨੈਟ ਜਾਂ ਮਾਡਲ ਸਮੱਸਿਆ'
+  }
+};
+
+function getT(key) {
+  const lang = langSel.value;
+  if (translations[lang] && translations[lang][key]) {
+    return translations[lang][key];
+  }
+  return translations['en-US'][key] || key;
+}
+
+function speak(text) {
+  if (!text) return;
+  const now = Date.now();
+  if (text === lastSpoken && now - lastSpeakTime < 4000) return;
+  lastSpoken = text;
+  lastSpeakTime = now;
+
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = langSel.value;
+    window.speechSynthesis.speak(utterance);
+  }
+}
+
+async function initDetector() {
+  if (objectDetector) return;
+  try {
+    statusEl.innerText = getT('loading');
+    const vision = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm"
+    );
+    objectDetector = await ObjectDetector.createFromOptions(vision, {
+      baseOptions: {
+        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite",
+        delegate: "GPU"
+      },
+      scoreThreshold: 0.5,
+      runningMode: "VIDEO"
+    });
+  } catch (err) {
+    console.error(err);
+    statusEl.innerText = getT('netError');
+  }
+}
+
+async function startCamera() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "environment" },
+      audio: false
+    });
+    video.srcObject = stream;
+    video.addEventListener('loadeddata', predictWebcam);
+    isLive = true;
+    statusEl.innerText = getT('started');
+    speak(getT('started'));
+    startBtn.style.display = 'none';
+    stopBtn.style.display = 'block';
+  } catch (err) {
+    console.error(err);
+    statusEl.innerText = getT('camError');
+    speak(getT('camError'));
+  }
+}
+
+let lastVideoTime = -1;
+async function predictWebcam() {
+  if (!isLive || !objectDetector) return;
+
+  if (video.currentTime !== lastVideoTime) {
+    lastVideoTime = video.currentTime;
+    const startTimeMs = performance.now();
+    const detections = objectDetector.detectForVideo(video, startTimeMs);
+
+    if (detections.detections.length > 0) {
+      const closest = detections.detections[0];
+      const category = closest.categories[0].categoryName;
+      statusEl.innerText = `${getT('stopClose')} (${category})`;
+      speak(getT('stopClose'));
+    } else {
+      statusEl.innerText = getT('clearPath');
+    }
+  }
+
+  if (isLive) {
+    window.requestAnimationFrame(predictWebcam);
+  }
+}
+
+function stopCamera() {
+  isLive = false;
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop());
+    stream = null;
+  }
+  video.srcObject = null;
+  statusEl.innerText = "STATUS: OFF";
+  startBtn.style.display = 'block';
+  stopBtn.style.display = 'none';
+}
+
+startBtn.addEventListener('click', async () => {
+  await initDetector();
+  await startCamera();
+});
+
+stopBtn.addEventListener('click', () => {
+  stopCamera();
+});
+
+openMapsBtn.addEventListener('click', () => {
+  const dest = destinationInput.value.trim();
+  if (dest) {
+    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dest)}`, '_blank');
+  } else {
+    window.open(`https://www.google.com/maps`, '_blank');
+  }
+});
+</script>
+</body>
+</html>
