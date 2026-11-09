@@ -7,10 +7,9 @@
 <title>Your eyes smart cane created by Humaira Sardar</title>
 <!-- MediaPipe Tasks Vision ES Module CDN -->
 <script type="module">
-  import { FilesetResolver, ObjectDetector, ImageSegmenter } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/+esm";
+  import { FilesetResolver, ObjectDetector } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/+esm";
   window.FilesetResolver = FilesetResolver;
   window.ObjectDetector = ObjectDetector;
-  window.ImageSegmenter = ImageSegmenter;
   window.dispatchEvent(new Event('mediapipe-loaded'));
 </script>
 <style>
@@ -156,21 +155,24 @@ const stopBtn = document.getElementById('stopBtn');
 const openMapsBtn = document.getElementById('openMapsBtn');
 const destinationInput = document.getElementById('destinationInput');
 
-let stream = null, isLive = false, objectDetector = null, imageSegmenter = null;
+let stream = null, isLive = false, objectDetector = null;
 let lastSpoken = "", lastSpeakTime = 0, lastClearSoundTime = 0, lastBeepTime = 0, lastClearSpeakTime = 0;
-let frameCount = 0, isWallOrStairAhead = false, nothingCount = 0;
-let currentMode = "clear"; // Master state: "clear" or "obstacle"
-let lastObstacleName = ""; // Tracks last spoken obstacle name for instant switching
+let frameCount = 0, nothingCount = 0;
+let currentMode = "clear"; 
+let lastObstacleName = ""; 
 let audioCtx = null;
-let canvasCtx = null, offscreenCanvas = null;
+
+let isSpeakingObstacle = false;
+let clearWaitCount = 0;
+
+// نئی لائن جو آپ نے بتائی ہے (ہر 4 سیکنڈ بعد بار بار یاد دہانی کے لیے)
+let lastObstacleAlertTime = 0;
 
 const translations = {
   'ur-PK': {
     loading: 'سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔',
     started: 'اسمارٹ کین آن ہے۔ کیمرہ اور سنسور ایکٹو ہیں۔',
-    stopClose: 'الرٹ ہو جاؤ، آگے ',
-    wallAhead: 'رک جائیں، سامنے دیوار ہو سکتی ہے!',
-    unknownObstacle: 'رک جائیں، سامنے نامعلوم رکاوٹ ہے!',
+    stopClose: 'الرٹ ہو جاؤ، آگے رکاوٹ ہے',
     clearPath: 'رستہ صاف ہے، آگے بڑھیں۔',
     camError: 'کیمرہ کی اجازت دیں',
     netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ'
@@ -178,9 +180,7 @@ const translations = {
   'en-US': {
     loading: 'Sensor turning on. Please wait.',
     started: 'Smart Cane is on. Camera active.',
-    stopClose: 'Alert, ahead is ',
-    wallAhead: 'Stop, wall might be ahead!',
-    unknownObstacle: 'Stop, unknown obstacle ahead!',
+    stopClose: 'Alert, obstacle ahead',
     clearPath: 'Path is clear, move forward.',
     camError: 'Allow camera access',
     netError: 'Internet or model loading issue'
@@ -188,9 +188,7 @@ const translations = {
   'hi-IN': {
     loading: 'सेंसर चालू हो रहा है।',
     started: 'स्मार्ट केन चालू है।',
-    stopClose: 'अलर्ट, आगे ',
-    wallAhead: 'रुकिए, सामने दीवार हो सकती है!',
-    unknownObstacle: 'रुकिए, सामने अज्ञात बाधा है!',
+    stopClose: 'अलर्ट, आगे बाधा है',
     clearPath: 'रास्ता साफ है, आगे बढ़ें।',
     camError: 'कैमरा अनुमति दें',
     netError: 'इंटरनेट या मॉडल समस्या'
@@ -198,9 +196,7 @@ const translations = {
   'ar-SA': {
     loading: 'جاري تشغيل المستشعر.',
     started: 'العصا الذكية تعمل.',
-    stopClose: 'تنبيه، أمامك ',
-    wallAhead: 'توقف، قد يكون هناك جدار!',
-    unknownObstacle: 'توقف، عقبة مجهولة أمامك!',
+    stopClose: 'تنبيه، عقبة أمامك',
     clearPath: 'الطريق نظيف، تقدم.',
     camError: 'السماح بالكاميرا',
     netError: 'مشكلة في الإنترنت أو النموذج'
@@ -208,9 +204,7 @@ const translations = {
   'pa-IN': {
     loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ਹੈ।',
     started: 'ਸਮਾਰਟ ਕੇਨ ਚਾਲੂ ਹੈ।',
-    stopClose: 'ਅਲਰਟ, ਅੱਗੇ ',
-    wallAhead: 'ਰੁਕ ਜਾਓ, ਸਾਹਮਣੇ ਕੰਧ ਹੋ ਸਕਦੀ ਹੈ!',
-    unknownObstacle: 'ਰੁਕ ਜਾਓ, ਸਾਹਮਣੇ ਅਣਜਾਣ ਰੁਕਾਵਟ ਹੈ!',
+    stopClose: 'ਅਲਰਟ, ਅੱਗੇ رکاوਟ है',
     clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ!',
     camError: 'ਕੈਮਰਾ ਅਨੁਮਤੀ ਦਿਓ',
     netError: 'ਇੰਟਰਨੈਟ ਜਾਂ ਮਾਡل ਸਮੱਸਿਆ'
@@ -218,9 +212,7 @@ const translations = {
   'ps-PK': {
     loading: 'سنسور روان دی. مهرباني وکئ انتظار وکئ.',
     started: 'سمارټ کین روان دی.',
-    stopClose: 'خبردار، مخکې ',
-    wallAhead: 'ددرېږئ، مخکې دیوال کیدی شي!',
-    unknownObstacle: 'ددرېږئ، نامعلوم خنډ شته!',
+    stopClose: 'خبردار، مخکې خنډ دی',
     clearPath: 'لار سمه ده، مخکې لاړ شئ.',
     camError: 'د کامرې اجازه ورکړئ',
     netError: 'د انټرنیټ ستونزه'
@@ -228,58 +220,15 @@ const translations = {
   'fa-IR': {
     loading: 'سنسور در حال روشن شدن است.',
     started: 'اسمارت کین روشن است.',
-    stopClose: 'هشدار، جلو ',
-    wallAhead: 'توقف کنید، دیوار ممکن است جلو باشد!',
-    unknownObstacle: 'توقف کنید، مانع ناشناخته جلو است!',
+    stopClose: 'هشدار، مانع جلو است',
     clearPath: 'مسیر تمیز است، جلو بروید.',
     camError: 'اجازه دسترسی به دوربین',
     netError: 'مشکل اینترنت'
   }
 };
 
-const allNames = {
-  'ur-PK': {
-    'person': 'آدمی ہے', 'chair': 'کرسی ہے', 'table': 'ٹیبل ہے', 'bottle': 'بوتل ہے',
-    'cup': 'کپ ہے', 'laptop': 'لیپ ٹاپ ہے', 'cell phone': 'موبایل ہے', 'book': 'کتاب ہے',
-    'potted plant': 'گملا ہے', 'car': 'کار ہے', 'bus': 'بس ہے', 'truck': 'ٹرک ہے',
-    'motorcycle': 'موٹر سائیکل ہے', 'bicycle': 'سائیکل ہے', 'dog': 'کتا ہے', 'cat': 'بلی ہے',
-    'bed': 'بیڈ ہے', 'couch': 'صوفہ ہے', 'door': 'دروازہ ہے'
-  },
-  'en-US': {
-    'person': 'person', 'chair': 'chair', 'table': 'table', 'bottle': 'bottle',
-    'cup': 'cup', 'laptop': 'laptop', 'cell phone': 'phone', 'book': 'book',
-    'potted plant': 'plant', 'car': 'car', 'bus': 'bus', 'truck': 'truck',
-    'motorcycle': 'motorcycle', 'bicycle': 'bicycle', 'dog': 'dog', 'cat': 'cat',
-    'bed': 'bed', 'couch': 'couch', 'door': 'door'
-  },
-  'hi-IN': {
-    'person': 'व्यक्ति है', 'chair': 'कुर्सी है', 'table': 'मेज़ है', 'bottle': 'बोतल है',
-    'car': 'कार है', 'bus': 'बस है', 'motorcycle': 'मोटरसाइकिल है', 'bicycle': 'साइकिल है'
-  },
-  'ar-SA': {
-    'person': 'شخص', 'chair': 'كرسي', 'table': 'طاولة', 'bottle': 'زجاجة',
-    'car': 'سيارة', 'bus': 'حافلة', 'motorcycle': 'دراجة نارية', 'bicycle': 'دراجة'
-  },
-  'pa-IN': {
-    'person': 'ਬੰਦਾ ਹੈ', 'chair': 'ਕੁਰਸੀ ਹੈ', 'table': 'ਮੇਜ਼ ਹੈ', 'bottle': 'ਬੋਤਲ ਹੈ',
-    'car': 'ਕਾਰ ਹੈ', 'bus': 'ਬੱਸ ਹੈ', 'motorcycle': 'ਮੋਟਰਸਾਈਕਲ ਹੈ', 'bicycle': 'ਸਾਈਕਲ ਹੈ'
-  },
-  'ps-PK': {
-    'person': 'کس دی', 'chair': 'څوکۍ ده', 'table': 'میز دی', 'bottle': 'بوتل دی',
-    'car': 'موټر دی', 'bus': 'بس دی'
-  },
-  'fa-IR': {
-    'person': 'فرد است', 'chair': 'صندلی است', 'table': 'میز است', 'bottle': 'بطری است',
-    'car': 'ماشین است', 'bus': 'اتوبوس است'
-  }
-};
-
 function getLocalizedName(category) {
-  const lang = langSel.value;
-  if (allNames[lang] && allNames[lang][category]) {
-    return allNames[lang][category];
-  }
-  return category;
+  return "رکاوٹ ہے";
 }
 
 function getT(key) {
@@ -291,6 +240,7 @@ function getT(key) {
 }
 
 function triggerVibration() {
+  if (isSpeakingObstacle) return; 
   if ('vibrate' in navigator) {
     try { navigator.vibrate([200, 100, 200]); } catch (e) {}
   }
@@ -326,11 +276,14 @@ function playBeep(type) {
   } catch (e) {}
 }
 
-function speak(text) {
+function speak(text, isObstacle = false) {
   if (!text) return;
   if (!('speechSynthesis' in window)) return;
 
   const now = Date.now();
+  
+  if (!isObstacle && isSpeakingObstacle) return;
+
   if (text === lastSpoken && now - lastSpeakTime < 4000) return;
 
   window.speechSynthesis.cancel();
@@ -338,8 +291,25 @@ function speak(text) {
   lastSpoken = text;
   lastSpeakTime = now;
 
+  if (isObstacle) {
+    isSpeakingObstacle = true;
+  }
+
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = langSel.value;
+  
+  utterance.onend = () => {
+    if (isObstacle) {
+      setTimeout(() => { isSpeakingObstacle = false; }, 50);
+    }
+  };
+
+  utterance.onerror = () => {
+    if (isObstacle) {
+      setTimeout(() => { isSpeakingObstacle = false; }, 50);
+    }
+  };
+
   window.speechSynthesis.speak(utterance);
 }
 
@@ -369,27 +339,7 @@ async function initDetector() {
   } catch (err) {
     console.error(err);
     statusEl.innerText = getT('netError');
-    speak(getT('netError'));
-  }
-}
-
-async function initSegmenter() {
-  if (imageSegmenter) return;
-  try {
-    const vision = await window.FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm"
-    );
-    imageSegmenter = await window.ImageSegmenter.createFromOptions(vision, {
-      baseOptions: {
-        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/image_segmenter/deeplab_v3/float32/1/deeplab_v3.tflite",
-        delegate: "CPU"
-      },
-      runningMode: "VIDEO"
-    });
-    offscreenCanvas = document.createElement('canvas');
-    canvasCtx = offscreenCanvas.getContext('2d', { willReadFrequently: true });
-  } catch (e) {
-    console.error("Segmenter init error:", e);
+    speak(getT('netError'), false);
   }
 }
 
@@ -398,11 +348,10 @@ async function startCamera() {
     if (isLive || stream) return;
 
     await initDetector();
-    await initSegmenter();
 
     if (!objectDetector) {
       statusEl.innerText = getT('netError');
-      speak(getT('netError'));
+      speak(getT('netError'), false);
       return;
     }
 
@@ -415,7 +364,7 @@ async function startCamera() {
       video.play();
       isLive = true;
       statusEl.innerText = getT('started');
-      speak(getT('started'));
+      speak(getT('started'), false);
       startBtn.style.display = 'none';
       stopBtn.style.display = 'block';
       window.requestAnimationFrame(predictWebcam);
@@ -423,59 +372,11 @@ async function startCamera() {
   } catch (err) {
     console.error(err);
     statusEl.innerText = getT('camError');
-    speak(getT('camError'));
+    speak(getT('camError'), false);
   }
 }
 
 let lastVideoTime = -1;
-
-function checkWallAndStairs() {
-  if (!imageSegmenter || !video.videoWidth) return;
-  try {
-    const w = 256;
-    const h = 256;
-    if (offscreenCanvas.width !== w) {
-      offscreenCanvas.width = w;
-      offscreenCanvas.height = h;
-    }
-    canvasCtx.drawImage(video, 0, 0, w, h);
-    const startTimeMs = performance.now();
-    const result = imageSegmenter.segmentForVideo(offscreenCanvas, startTimeMs);
-    
-    if (result && result.categoryMask) {
-      const mask = result.categoryMask;
-      const data = mask.getAsUint8Array ? mask.getAsUint8Array() : mask.pixels;
-      if (data) {
-        let centerUniformCount = 0;
-        let totalCenter = 0;
-        const actualWidth = mask.width || w;
-        const actualHeight = mask.height || h;
-        const startX = Math.floor(actualWidth * 0.35);
-        const endX = Math.floor(actualWidth * 0.65);
-        const startY = Math.floor(actualHeight * 0.3);
-        const endY = Math.floor(actualHeight * 0.7);
-
-        const firstVal = data[startY * actualWidth + startX];
-        for (let y = startY; y < endY; y++) {
-          for (let x = startX; x < endX; x++) {
-            totalCenter++;
-            if (data[y * actualWidth + x] === firstVal) {
-              centerUniformCount++;
-            }
-          }
-        }
-        
-        if (totalCenter > 0 && (centerUniformCount / totalCenter) > 0.90) {
-          isWallOrStairAhead = true;
-          return;
-        }
-      }
-    }
-  } catch (e) {
-    console.error(e);
-  }
-  isWallOrStairAhead = false;
-}
 
 async function predictWebcam() {
   if (!isLive) return;
@@ -491,10 +392,6 @@ async function predictWebcam() {
     lastVideoTime = video.currentTime;
     frameCount++;
 
-    if (frameCount % 3 === 0) {
-      checkWallAndStairs();
-    }
-
     try {
       const startTimeMs = performance.now();
       const detections = objectDetector.detectForVideo(video, startTimeMs);
@@ -504,28 +401,7 @@ async function predictWebcam() {
         nothingCount++;
       } else {
         nothingCount = 0;
-      }
-
-      if (isWallOrStairAhead && !hasObjectDetected && nothingCount >= 3) {
-        const now = Date.now();
-        const wallText = getT('wallAhead');
-        if (currentMode !== "obstacle" || lastObstacleName !== wallText) {
-          currentMode = "obstacle";
-          lastObstacleName = wallText;
-          triggerVibration();
-          speak(wallText);
-        }
-        statusEl.innerText = wallText;
-        
-        if (now - lastBeepTime > 1000) {
-          lastBeepTime = now;
-          playBeep('obstacle');
-        }
-
-        if (isLive) {
-          window.requestAnimationFrame(predictWebcam);
-        }
-        return;
+        clearWaitCount = 0; 
       }
 
       if (hasObjectDetected) {
@@ -540,10 +416,7 @@ async function predictWebcam() {
           }
         }
 
-        const rawCategory = closest.categories[0].categoryName;
-        const localizedName = getLocalizedName(rawCategory);
         const confidence = Math.round(closest.categories[0].score * 100);
-        
         const requiredConfidence = 40;
 
         if (confidence >= requiredConfidence) {
@@ -552,15 +425,16 @@ async function predictWebcam() {
           const sizeRatio = maxArea / videoArea;
           
           if (sizeRatio >= 0.005) {
-            const fullObstacleText = `${getT('stopClose')} ${localizedName}`;
+            const fullObstacleText = getT('stopClose');
             statusEl.innerText = fullObstacleText;
             
             const now = Date.now();
-            if (currentMode !== "obstacle" || lastObstacleName !== fullObstacleText) {
+            if (currentMode !== "obstacle" || lastObstacleName !== fullObstacleText || (now - lastObstacleAlertTime > 4000)) {
               currentMode = "obstacle";
               lastObstacleName = fullObstacleText;
+              lastObstacleAlertTime = now; // وقت نوٹ کر لیا تاکہ ہر 4 سیکنڈ بعد دوبارہ الرٹ مل سکے
               triggerVibration();
-              speak(fullObstacleText);
+              speak(fullObstacleText, true); 
             }
 
             if (now - lastBeepTime > 1000) {
@@ -568,13 +442,13 @@ async function predictWebcam() {
               playBeep('obstacle');
             }
           } else {
-            handleUnknownOrClear();
+            handleClearPath();
           }
         } else {
-          handleUnknownOrClear();
+          handleClearPath();
         }
       } else {
-        handleUnknownOrClear();
+        handleClearPath();
       }
     } catch (e) {
       console.error(e);
@@ -586,33 +460,15 @@ async function predictWebcam() {
   }
 }
 
-function handleUnknownOrClear() {
-  const now = Date.now();
-  if (nothingCount === 0 && video.readyState >= 2) {
-    const unknownText = getT('unknownObstacle');
-    statusEl.innerText = unknownText;
-    if (currentMode !== "obstacle" || lastObstacleName !== unknownText) {
-      currentMode = "obstacle";
-      lastObstacleName = unknownText;
-      triggerVibration();
-      speak(unknownText);
-    }
-
-    if (now - lastBeepTime > 1000) {
-      lastBeepTime = now;
-      playBeep('obstacle');
-    }
-  } else {
-    handleClearPath();
-  }
-}
-
 function handleClearPath() {
+  clearWaitCount++;
+  if (clearWaitCount < 3) return; 
+
   const now = Date.now();
   if (currentMode !== "clear") {
     currentMode = "clear";
     lastObstacleName = "";
-    speak(getT('clearPath'));
+    speak(getT('clearPath'), false); 
     lastClearSpeakTime = now;
   }
   
@@ -625,7 +481,7 @@ function handleClearPath() {
 
   if (now - lastClearSpeakTime > 10000) {
     lastClearSpeakTime = now;
-    speak(getT('clearPath'));
+    speak(getT('clearPath'), false); 
   }
 }
 
@@ -645,6 +501,12 @@ function stopCamera() {
   statusEl.innerText = "STATUS: OFF";
   startBtn.style.display = 'block';
   stopBtn.style.display = 'none';
+
+  isSpeakingObstacle = false;
+  clearWaitCount = 0;
+  currentMode = "clear";
+  lastObstacleName = "";
+  lastObstacleAlertTime = 0;
 }
 
 startBtn.addEventListener('click', async () => {
