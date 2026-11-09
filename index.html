@@ -130,10 +130,10 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 <input type="text" id="destinationInput" placeholder="">
 <button id="openMapsBtn" class="btn-map">OPEN MAPS</button>
 <div id="status">STATUS: OFF</div>
-<button id="startBtn" class="btn-main">START - SENSOR ON</button>
+<button id="startBtn" class="btn-main">START</button>
 <button id="stopBtn" class="btn-stop" style="display:none;">STOP</button>
 <video id="webcam" autoplay playsinline muted></video>
-<a href="https://wa.me/923030133274" target="_blank" class="btn-wa">CONTACT WHATSAPP</a>
+<a id="waBtn" href="https://wa.me/923030133274" target="_blank" class="btn-wa">CONTACT WHATSAPP</a>
 </div>
 <script>
 const video = document.getElementById('webcam');
@@ -143,6 +143,7 @@ const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 const openMapsBtn = document.getElementById('openMapsBtn');
 const destinationInput = document.getElementById('destinationInput');
+const waBtn = document.getElementById('waBtn');
 let stream = null, isLive = false, objectDetector = null;
 let lastSpoken = "", lastSpeakTime = 0, lastClearSoundTime = 0, lastBeepTime = 0, lastClearSpeakTime = 0;
 let frameCount = 0, nothingCount = 0;
@@ -250,6 +251,7 @@ const translations = {
 function getLocalizedName(category) { return "رکاوٹ ہے"; }
 function getT(key) { const lang = langSel.value; if (translations[lang] && translations[lang][key]) { return translations[lang][key]; } return translations['en-US'][key] || key; }
 function triggerVibration() { if (isSpeakingObstacle) return; if ('vibrate' in navigator) { try { navigator.vibrate([200, 100, 200]); } catch (e) {} } }
+function lightVibration() { if ('vibrate' in navigator) { try { navigator.vibrate(15); } catch (e) {} } }
 function playBeep(type) {
   try {
     if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
@@ -315,7 +317,7 @@ async function initDetector() {
     const ok = await waitForMediapipe();
     if (!ok) { throw new Error('mediapipe timeout'); }
     const vision = await window.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm");
-    const detectorPromise = window.ObjectDetector.createFromOptions(vision, { baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite", delegate: "CPU" }, scoreThreshold: 0.30, runningMode: "VIDEO" });
+    const detectorPromise = window.ObjectDetector.createFromOptions(vision, { baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite", delegate: "CPU" }, scoreThreshold: 0.50, runningMode: "VIDEO" });
     const timeoutPromise = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('model timeout')); }, 15000); });
     objectDetector = await Promise.race([detectorPromise, timeoutPromise]);
     isDetectorLoading = false;
@@ -333,7 +335,7 @@ async function startCamera() {
     if (isLive || stream) return;
     statusEl.innerText = getT('loading');
     startBtn.innerText = 'PLEASE WAIT...';
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { statusEl.innerText = getT('camError'); speak(getT('camError'), false); startBtn.innerText = 'START - SENSOR ON'; return; }
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { statusEl.innerText = getT('camError'); speak(getT('camError'), false); startBtn.innerText = 'START'; return; }
     stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
     video.srcObject = stream;
     video.onloadedmetadata = async () => {
@@ -346,7 +348,7 @@ async function startCamera() {
     };
   } catch (err) {
     console.error(err);
-    startBtn.innerText = 'START - SENSOR ON';
+    startBtn.innerText = 'START';
     statusEl.innerText = getT('camError'); speak(getT('camError'), false);
     if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
   }
@@ -369,18 +371,18 @@ async function predictWebcam() {
         let closest = detections.detections[0]; let maxArea = 0;
         for (let det of detections.detections) { const area = det.boundingBox.width * det.boundingBox.height; if (area > maxArea) { maxArea = area; closest = det; } }
         const confidence = Math.round(closest.categories[0].score * 100);
-        const requiredConfidence = 30;
+        const requiredConfidence = 50;
         if (confidence >= requiredConfidence) {
           const videoWidth = video.videoWidth || 640;
           const videoArea = videoWidth * (video.videoHeight || 480);
           const sizeRatio = maxArea / videoArea;
-          if (sizeRatio >= 0.003) {
+          if (sizeRatio >= 0.02) {
             obstacleConfirmCount++;
-            if (obstacleConfirmCount >= 2) {
+            if (obstacleConfirmCount >= 5) {
               const fullObstacleText = getT('stopClose');
               statusEl.innerText = fullObstacleText;
               const now = Date.now();
-              if (currentMode !== "obstacle" || lastObstacleName !== fullObstacleText || (now - lastObstacleAlertTime > 2500)) {
+              if (currentMode !== "obstacle" || lastObstacleName !== fullObstacleText || (now - lastObstacleAlertTime > 4000)) {
                 currentMode = "obstacle"; lastObstacleName = fullObstacleText; lastObstacleAlertTime = now;
                 triggerVibration(); speak(fullObstacleText, true);
               }
@@ -413,12 +415,17 @@ function stopCamera() {
   if ('vibrate' in navigator) { try { navigator.vibrate(0); } catch(e){} }
   isLive = false;
   if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
-  video.srcObject = null; statusEl.innerText = "STATUS: OFF"; startBtn.style.display = 'block'; startBtn.innerText = 'START - SENSOR ON'; stopBtn.style.display = 'none';
+  video.srcObject = null; statusEl.innerText = "STATUS: OFF"; startBtn.style.display = 'block'; startBtn.innerText = 'START'; stopBtn.style.display = 'none';
   isSpeakingObstacle = false; clearWaitCount = 0; currentMode = "clear"; lastObstacleName = ""; lastObstacleAlertTime = 0; obstacleConfirmCount = 0; isDetectorLoading = false;
 }
-startBtn.addEventListener('click', async () => { await startCamera(); });
-stopBtn.addEventListener('click', () => { stopCamera(); });
-openMapsBtn.addEventListener('click', () => { const dest = destinationInput.value.trim(); if (dest) { window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dest)}`, '_blank'); } else { window.open(`https://www.google.com/maps`, '_blank'); } });
+langSel.addEventListener('change', () => { lightVibration(); });
+langSel.addEventListener('click', () => { lightVibration(); });
+destinationInput.addEventListener('focus', () => { lightVibration(); });
+destinationInput.addEventListener('click', () => { lightVibration(); });
+startBtn.addEventListener('click', async () => { lightVibration(); await startCamera(); });
+stopBtn.addEventListener('click', () => { lightVibration(); stopCamera(); });
+openMapsBtn.addEventListener('click', () => { lightVibration(); const dest = destinationInput.value.trim(); if (dest) { window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dest)}`, '_blank'); } else { window.open(`https://www.google.com/maps`, '_blank'); } });
+waBtn.addEventListener('click', () => { lightVibration(); });
 </script>
 </body>
 </html>
