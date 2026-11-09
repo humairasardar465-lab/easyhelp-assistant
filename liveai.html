@@ -55,7 +55,7 @@ const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 let stream = null, isLive = false, objectDetector = null;
 let lastSpoken = "", lastSpeakTime = 0, lastBeepTime = 0;
-let currentMode = "clear", lastObstacleName = "", audioCtx = null;
+let currentMode = "none", lastObstacleName = "", audioCtx = null;
 let obstacleConfirmCount = 0, isDetectorLoading = false, wallConfirmCount = 0, wallCanvas = null, lastWallCheck = 0;
 
 function getLang(){ return window.CUSTOM_SELECTED_LANG || "ur-PK"; }
@@ -110,19 +110,24 @@ function playBeep(type){
   }catch(e){}
 }
 
-// بولنے والی فائل - اب بار بار نہیں بولے گی
+// یہ سب سے اہم ٹھیک کی ہوئی جگہ ہے
 function speak(text, isObstacle = false){
   if(!text) return; if(!('speechSynthesis' in window)) return;
-  // اگر یہی بات ابھی بول رہا ہے تو دوبارہ مت بولو
-  if(window.speechSynthesis.speaking){
-    return;
-  }
-  // اگر یہی بات ابھی ابھی بولی ہے تو بھی دوبارہ مت بولو
   const now = Date.now();
-  if(text === lastSpoken && now - lastSpeakTime < 3000) return;
+  // اگر یہی بات ابھی ابھی بولی ہے اور رکاوٹ نہیں ہے تو دوبارہ مت بولو
+  if(!isObstacle && text === lastSpoken && now - lastSpeakTime < 3000) return;
+  // اگر رکاوٹ ہے تو پرانی آواز کو روک کر نئی بولو، واپس مت جاؤ
+  if(isObstacle){
+    window.speechSynthesis.cancel();
+  }
   lastSpoken = text; lastSpeakTime = now;
-  const u = new SpeechSynthesisUtterance(text); u.lang = getLang();
-  window.speechSynthesis.speak(u);
+  // موبائل پر cancel کے فورا بعد بولنے سے آواز کٹ جاتی تھی، اس لیے 120ms رک کر بولیں گے
+  setTimeout(function(){
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = getLang();
+    u.rate = 0.9;
+    window.speechSynthesis.speak(u);
+  }, 120);
 }
 
 function isWallBlocked(){
@@ -140,11 +145,9 @@ function isWallBlocked(){
   }catch(e){ return false; }
 }
 
-// دیوار والی رکاوٹ - صرف ایک بار بولے گی
 function alertWall(){
   const t = getAlertText("wall");
   statusEl.innerText = t;
-  // اگر یہی دیوار پہلے ہی بول چکے ہیں تو دوبارہ مت بولو
   if(currentMode === "obstacle" && lastObstacleName === t){
     return;
   }
@@ -178,7 +181,11 @@ async function startCamera(){
     video.srcObject = stream;
     video.onloadedmetadata = async () => {
       try{ await video.play(); }catch(e){}
-      isLive = true; statusEl.innerText = getStartedText(); speak(getStartedText(), false);
+      isLive = true;
+      currentMode = "none";
+      lastObstacleName = "";
+      lastSpoken = "";
+      statusEl.innerText = getStartedText(); speak(getStartedText(), false);
       startBtn.style.display='none'; stopBtn.style.display='block';
       window.requestAnimationFrame(predictWebcam);
       const ok = await initDetector(); if(!ok && isLive){ statusEl.innerText = "MODEL ERROR"; }
@@ -212,7 +219,6 @@ async function predictWebcam(){
               if(rawLabel === "tv") mapLabel = "computer";
               const t = getAlertText(mapLabel);
               statusEl.innerText = t;
-              // سب سے اہم تبدیلی: اگر یہی رکاوٹ پہلے ہی بول چکے ہیں تو دوبارہ مت بولو - 4 سیکنڈ والا ریپیٹ ختم کر دیا
               if(currentMode !== "obstacle" || lastObstacleName !== t){
                 currentMode = "obstacle";
                 lastObstacleName = t;
@@ -232,12 +238,11 @@ async function predictWebcam(){
   if(isLive) window.requestAnimationFrame(predictWebcam);
 }
 
-// رستہ صاف والا - صرف ایک بار بولے گا جب رستہ پہلی بار صاف ہو گا
 function handleClear(){
   obstacleConfirmCount = 0;
   const clearText = getClearText();
   statusEl.innerText = clearText;
-  // اگر پہلے سے ہی صاف والے موڈ میں ہیں تو دوبارہ مت بولو
+  // اب currentMode شروع میں "none" ہے، اس لیے پہلی بار صاف دیکھ کر ضرور بولے گا
   if(currentMode !== "clear"){
     currentMode = "clear";
     lastObstacleName = "";
@@ -251,7 +256,7 @@ function stopCamera(){
   if('vibrate' in navigator){ try{ navigator.vibrate(0); }catch(e){} }
   isLive = false; if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
   video.srcObject = null; statusEl.innerText = "STATUS: OFF"; startBtn.style.display='block'; startBtn.innerText='START LIVE GUIDE'; stopBtn.style.display='none';
-  currentMode="clear"; lastObstacleName=""; obstacleConfirmCount=0; wallConfirmCount=0; lastSpoken="";
+  currentMode="none"; lastObstacleName=""; obstacleConfirmCount=0; wallConfirmCount=0; lastSpoken="";
 }
 startBtn.addEventListener('click', async ()=>{ await startCamera(); });
 stopBtn.addEventListener('click', ()=>{ stopCamera(); });
