@@ -146,30 +146,41 @@ const destinationInput = document.getElementById('destinationInput');
 const waBtn = document.getElementById('waBtn');
 let stream = null, isLive = false, objectDetector = null;
 let lastSpoken = "", lastSpeakTime = 0, lastClearSoundTime = 0, lastBeepTime = 0, lastClearSpeakTime = 0;
-let frameCount = 0, nothingCount = 0;
 let currentMode = "clear";
 let lastObstacleName = "";
 let audioCtx = null;
 let isSpeakingObstacle = false;
-let clearWaitCount = 0;
 let lastObstacleAlertTime = 0;
 let obstacleConfirmCount = 0;
 let isDetectorLoading = false;
-let lastDirection = "";
-let centerClearCount = 0;
-const translations = {
-  'ur-PK': { loading: 'سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔', started: 'اسمارٹ کین آن ہے۔ کیمرہ اور سنسور ایکٹو ہیں۔', stopClose: 'الرٹ ہو جاؤ، آگے رکاوٹ ہے', clearPath: 'رستہ صاف ہے، آگے بڑھیں۔', camError: 'کیمرہ کی اجازت دیں', netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ', leftObs: 'بائیں طرف رکاوٹ ہے، دائیں سے گزریں', rightObs: 'دائیں طرف رکاوٹ ہے، بائیں سے گزریں', centerObs: 'بیچ میں رکاوٹ ہے، سائیڈ سے گزریں', multiObs: 'آگے کئی رکاوٹیں ہیں، آہستہ چلیں', wallObs: 'سامنے دیوار یا دروازہ ہے، رک جائیں', stairsObs: 'سامنے سیڑھیاں ہو سکتی ہیں، آہستہ چلیں', closeObs: 'بہت قریب رکاوٹ ہے، رک جائیں', farObs: 'تھوڑی دور رکاوٹ ہے، آہستہ چلیں', centerClear: 'بیچ میں رستہ صاف ہے، سیدھا چلیں، دائیں بائیں چیزیں ہیں' },
-  'en-US': { loading: 'Sensor turning on. Please wait.', started: 'Smart Cane is on. Camera active.', stopClose: 'Alert, obstacle ahead', clearPath: 'Path is clear, move forward.', camError: 'Allow camera access', netError: 'Internet or model loading issue', leftObs: 'Obstacle on left, pass from right', rightObs: 'Obstacle on right, pass from left', centerObs: 'Obstacle in center, pass from side', multiObs: 'Many obstacles ahead, walk slowly', wallObs: 'Wall or door ahead, stop', stairsObs: 'Stairs may be ahead, walk slowly', closeObs: 'Obstacle very close, stop', farObs: 'Obstacle a little far, walk slowly', centerClear: 'Center path is clear, go straight, things on sides' },
-  'hi-IN': { loading: 'सेंसर चालू हो रहा है।', started: 'स्मार्ट केन चालू है।', stopClose: 'अलर्ट, आगे बाधा है', clearPath: 'रास्ता साफ है, आगे बढ़ें।', camError: 'कैमरा अनुमति दें', netError: 'इंटरनेट या मॉडल समस्या', leftObs: 'बाईं तरफ बाधा है, दाईं से जाएं', rightObs: 'दाईं तरफ बाधा है, बाईं से जाएं', centerObs: 'बीच में बाधा है, साइड से जाएं', multiObs: 'आगे कई बाधाएं हैं, धीरे चलें', wallObs: 'सामने दीवार या दरवाजा है, रुक जाएं', stairsObs: 'सामने सीढ़ियां हो सकती हैं, धीरे चलें', closeObs: 'बाधा बहुत करीब है, रुक जाएं', farObs: 'बाधा थोड़ी दूर है, धीरे चलें', centerClear: 'बीच में रास्ता साफ है, सीधे चलें, साइड में चीजें हैं' },
-  'ar-SA': { loading: 'جاري تشغيل المستشعر.', started: 'العصا الذكية تعمل.', stopClose: 'تنبيه، أمامك عائق', clearPath: 'الطريق خالٍ، تقدم.', camError: 'السماح بالكاميرا', netError: 'مشكلة في الإنترنت أو النموذج', leftObs: 'عائق على اليسار، مر من اليمين', rightObs: 'عائق على اليمين، مر من اليسار', centerObs: 'عائق في المنتصف، مر من الجانب', multiObs: 'عوائق كثيرة أمامك، امش ببطء', wallObs: 'جدار أو باب أمامك، توقف', stairsObs: 'قد تكون هناك درجات أمامك، امش ببطء', closeObs: 'عائق قريب جدا، توقف', farObs: 'عائق بعيد قليلا، امش ببطء', centerClear: 'الطريق في الوسط خال، امش مباشرة، أشياء على الجانبين' },
-  'pa-IN': { loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ਹੈ।', started: 'ਸਮਾਰਟ ਕੇਨ ਚਾਲੂ ਹੈ।', stopClose: 'ਅਲਰਟ, ਅੱਗੇ ਰੁਕਾਵਟ ਹੈ', clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਅੱਗੇ ਵਧੋ।', camError: 'ਕੈਮਰਾ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ', netError: 'ਇੰਟਰਨੈੱਟ ਜਾਂ ਮਾਡਲ ਦੀ ਸਮੱਸਿਆ', leftObs: 'ਖੱਬੇ ਪਾਸੇ ਰੁਕਾਵਟ ਹੈ, ਸੱਜੇ ਤੋਂ ਲੰਘੋ', rightObs: 'ਸੱਜੇ ਪਾਸੇ ਰੁਕਾਵਟ ਹੈ, ਖੱਬੇ ਤੋਂ ਲੰਘੋ', centerObs: 'ਵਿਚਕਾਰ ਰੁਕਾਵਟ ਹੈ, ਪਾਸਿਓਂ ਲੰਘੋ', multiObs: 'ਅੱਗੇ ਕਈ ਰੁਕਾਵਟਾਂ ਹਨ, ਹੌਲੀ ਚੱਲੋ', wallObs: 'ਸਾਹਮਣੇ ਕੰਧ ਜਾਂ ਦਰਵਾਜ਼ਾ ਹੈ, ਰੁਕ ਜਾਓ', stairsObs: 'ਸਾਹਮਣੇ ਪੌੜੀਆਂ ਹੋ ਸਕਦੀਆਂ ਹਨ, ਹੌਲੀ ਚੱਲੋ', closeObs: 'ਰੁਕਾਵਟ ਬਹੁਤ ਨੇੜੇ ਹੈ, ਰੁਕ ਜਾਓ', farObs: 'ਰੁਕਾਵਟ ਥੋੜ੍ਹੀ ਦੂਰ ਹੈ, ਹੌਲੀ ਚੱਲੋ', centerClear: 'ਵਿਚਕਾਰ ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਸਿੱਧਾ ਚੱਲੋ, ਪਾਸੇ ਚੀਜ਼ਾਂ ਹਨ' },
-  'ps-PK': { loading: 'سنسور روان دی. مهرباني وکئ انتظار وکئ.', started: 'سمارټ کین روان دی.', stopClose: 'خبردار، مخکې خنډ دی', clearPath: 'لار سمه ده، مخکې لاړ شئ.', camError: 'د کامرې اجازه ورکړئ', netError: 'د انټرنیټ ستونزه', leftObs: 'کیڼ اړخ کې خنډ دی، ښي اړخ نه لاړ شئ', rightObs: 'ښي اړخ کې خنډ دی، کیڼ اړخ نه لاړ شئ', centerObs: 'په منځ کې خنډ دی، له غاړې لاړ شئ', multiObs: 'مخکې ډېر خنډونه دي، ورو لاړ شئ', wallObs: 'مخکې دېوال یا دروازه ده، ودرېږئ', stairsObs: 'مخکې زینې کېدای شي، ورو لاړ شئ', closeObs: 'خنډ ډېر نږدې دی، ودرېږئ', farObs: 'خنډ لږ لرې دی، ورو لاړ شئ', centerClear: 'په منځ کې لار سمه ده، نېغ لاړ شئ، په غاړو کې شیان دي' },
-  'fa-IR': { loading: 'سنسور در حال روشن شدن است.', started: 'اسمارت کین روشن است.', stopClose: 'هشدار، مانع در جلو قرار دارد', clearPath: 'مسیر باز است، جلو بروید.', camError: 'اجازه دسترسی به دوربین', netError: 'مشکل اینترنت یا مدل', leftObs: 'مانع در سمت چپ است، از راست بروید', rightObs: 'مانع در سمت راست است، از چپ بروید', centerObs: 'مانع در وسط است، از کنار بروید', multiObs: 'موانع زیادی در جلو است، آهسته بروید', wallObs: 'دیوار یا در در جلو است، بایستید', stairsObs: 'ممکن است پله در جلو باشد، آهسته بروید', closeObs: 'مانع خیلی نزدیک است، بایستید', farObs: 'مانع کمی دور است، آهسته بروید', centerClear: 'مسیر وسط باز است، مستقیم بروید، در طرفین چیزهایی هست' },
-  'sd-PK': { loading: 'سينسر آن ٿي رهيو آهي. مهرباني ڪري انتظار ڪريو.', started: 'سمارٽ ڪين آن آهي.', stopClose: 'خبردار، اڳيان رڪاوٽ آهي', clearPath: 'رستو صاف آهي، اڳيان وڌو.', camError: 'ڪيمرا جي اجازت ڏيو', netError: 'انٽرنيٽ يا ماڊل جو مسئلو', leftObs: 'کاٻي پاسي رڪاوٽ آهي، ساڄي کان لنگهو', rightObs: 'ساڄي پاسي رڪاوٽ آهي، کاٻي کان لنگهو', centerObs: 'وچ ۾ رڪاوٽ آهي، پاسي کان لنگهو', multiObs: 'اڳيان ڪيتريون ئي رڪاوٽون آهن، آهستي هلو', wallObs: 'سامهون ديوار يا دروازو آهي، بيهي رهو', stairsObs: 'سامهون ڏاڪڻيون ٿي سگهن ٿيون، آهستي هلو', closeObs: 'رڪاوٽ تمام ويجهي آهي، بيهي رهو', farObs: 'رڪاوٽ ٿوري پري آهي، آهستي هلو', centerClear: 'وچ ۾ رستو صاف آهي، سڌو هلو، پاسن ۾ شيون آهن' },
-  'bn-BD': { loading: 'সেন্সর চালু হচ্ছে। অনুগ্রহ করে অপেক্ষা করুন।', started: 'স্মার্ট কেন চালু আছে।', stopClose: 'সতর্কতা, সামনে বাধা আছে', clearPath: 'পথ পরিষ্কার, সামনে এগিয়ে যান।', camError: 'ক্যামেরার অনুমতি দিন', netError: 'ইন্টারনেট বা মডেলের সমস্যা', leftObs: 'বামে বাধা আছে, ডান দিয়ে যান', rightObs: 'ডানে বাধা আছে, বাম দিয়ে যান', centerObs: 'মাঝখানে বাধা আছে, পাশ দিয়ে যান', multiObs: 'সামনে অনেক বাধা আছে, আস্তে চলুন', wallObs: 'সামনে দেয়াল বা দরজা আছে, থামুন', stairsObs: 'সামনে সিঁড়ি হতে পারে, আস্তে চলুন', closeObs: 'বাধা খুব কাছে, থামুন', farObs: 'বাধা একটু দূরে, আস্তে চলুন', centerClear: 'মাঝখানে পথ পরিষ্কার, সোজা যান, পাশে জিনিস আছে' },
-  'tr-TR': { loading: 'Sensör açılıyor. Lütfen bekleyin.', started: 'Akıllı Baston açık.', stopClose: 'Uyarı, önünüzde engel var', clearPath: 'Yol temiz, ilerleyin.', camError: 'Kamera izni verin', netError: 'İnternet veya model sorunu', leftObs: 'Solda engel var, sağdan geçin', rightObs: 'Sağda engel var, soldan geçin', centerObs: 'Ortada engel var, kenardan geçin', multiObs: 'Önde çok engel var, yavaş yürüyün', wallObs: 'Önde duvar veya kapı var, durun', stairsObs: 'Önde merdiven olabilir, yavaş yürüyün', closeObs: 'Engel çok yakın, durun', farObs: 'Engel biraz uzakta, yavaş yürüyün', centerClear: 'Ortada yol temiz, düz gidin, kenarlarda eşyalar var' }
+let centerClearSpoken = false;
+let lastCenterClearTime = 0;
+const objectUrdu = {
+  'person': 'انسان', 'bicycle': 'سائیکل', 'car': 'گاڑی', 'motorcycle': 'موٹر سائیکل', 'motorbike': 'موٹر سائیکل', 'bus': 'بس', 'truck': 'ٹرک', 'dog': 'کتا', 'cat': 'بلی', 'bird': 'پرندہ', 'chair': 'کرسی', 'couch': 'صوفہ', 'bed': 'چارپائی', 'dining table': 'میز', 'table': 'میز', 'toilet': 'ٹوائلٹ', 'tv': 'ٹی وی', 'laptop': 'لیپ ٹاپ', 'cell phone': 'موبائل', 'book': 'کتاب', 'bottle': 'بوتل', 'cup': 'کپ', 'bowl': 'پیالہ', 'refrigerator': 'فریج', 'oven': 'اوون', 'microwave': 'مائیکرو ویو', 'sink': 'سنک', 'potted plant': 'گملا', 'bench': 'بینچ', 'backpack': 'بیگ', 'umbrella': 'چھتری', 'handbag': 'بیگ', 'suitcase': 'سوٹ کیس', 'frisbee': 'کھلونا', 'skis': 'اسکی', 'snowboard': 'سنو بورڈ', 'sports ball': 'گیند', 'kite': 'پتنگ', 'baseball bat': 'بیٹ', 'skateboard': 'اسکیٹ بورڈ', 'surfboard': 'سرف بورڈ', 'tennis racket': 'ریکٹ', 'banana': 'کیلا', 'apple': 'سیب', 'sandwich': 'سینڈوچ', 'orange': 'مالٹا', 'carrot': 'گاجر', 'pizza': 'پیزا', 'donut': 'ڈونٹ', 'cake': 'کیک', 'horse': 'گھوڑا', 'sheep': 'بھیڑ', 'cow': 'گائے', 'elephant': 'ہاتھی', 'bear': 'ریچھ', 'zebra': 'زیبرا', 'giraffe': 'زرافہ'
 };
-function getT(key) { const lang = langSel.value; if (translations[lang] && translations[lang][key]) { return translations[lang][key]; } if (translations['ur-PK'][key]) return translations['ur-PK'][key]; return translations['en-US'][key] || key; }
+const translations = {
+  'ur-PK': { loading: 'سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔', started: 'اسمارٹ کین آن ہے۔ کیمرہ اور سنسور ایکٹو ہیں۔', clearPath: 'رستہ صاف ہے، آگے بڑھیں۔', camError: 'کیمرہ کی اجازت دیں', netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ', centerClear: 'ارد گرد چیزیں ہیں، درمیان میں رستہ صاف ہے، سیدھا چلیں', wallObs: 'سامنے بڑی دیوار یا دروازہ ہو سکتا ہے، رک جائیں' },
+  'en-US': { loading: 'Sensor turning on. Please wait.', started: 'Smart Cane is on. Camera active.', clearPath: 'Path is clear, move forward.', camError: 'Allow camera access', netError: 'Internet or model loading issue', centerClear: 'Things around, center path is clear, go straight', wallObs: 'Big wall or door ahead, stop' }
+};
+function getT(key) { const lang = langSel.value; if (translations[lang] && translations[lang][key]) return translations[lang][key]; if (translations['ur-PK'][key]) return translations['ur-PK'][key]; return translations['en-US'][key] || key; }
+function getObjectName(enName) { if (langSel.value === 'ur-PK') { return objectUrdu[enName.toLowerCase()] || enName; } return enName; }
+function makeObstacleText(enName, cx, videoWidth, isSmall) {
+  const name = getObjectName(enName);
+  const lang = langSel.value;
+  if (lang === 'ur-PK') {
+    if (isSmall) {
+      if (cx < videoWidth * 0.35) return 'بائیں طرف چھوٹی سی ' + name + ' ہے';
+      if (cx > videoWidth * 0.65) return 'دائیں طرف چھوٹی سی ' + name + ' ہے';
+      return 'سامنے چھوٹی سی ' + name + ' ہے';
+    }
+    if (cx < videoWidth * 0.35) return 'بائیں طرف ' + name + ' ہے، دائیں سے گزریں';
+    if (cx > videoWidth * 0.65) return 'دائیں طرف ' + name + ' ہے، بائیں سے گزریں';
+    return 'سامنے ' + name + ' ہے، سائیڈ سے گزریں';
+  }
+  if (cx < videoWidth * 0.35) return name + ' on left, pass from right';
+  if (cx > videoWidth * 0.65) return name + ' on right, pass from left';
+  return name + ' ahead, pass from side';
+}
 function triggerVibration() { if (isSpeakingObstacle) return; if ('vibrate' in navigator) { try { navigator.vibrate([200, 100, 200]); } catch (e) {} } }
 function lightVibration() { if ('vibrate' in navigator) { try { navigator.vibrate(15); } catch (e) {} } }
 function playBeep(type) {
@@ -190,25 +201,15 @@ function playBeep(type) {
     }
     const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
     osc.connect(gain); gain.connect(audioCtx.destination);
-    if (type === 'clear') {
-      osc.frequency.setValueAtTime(659.25, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-      osc.start(); osc.stop(audioCtx.currentTime + 0.1);
-    } else if (type === 'obstacle') {
-      const now = audioCtx.currentTime;
-      osc.frequency.setValueAtTime(220, now);
-      osc.frequency.setValueAtTime(180, now + 0.1);
-      gain.gain.setValueAtTime(0.3, now);
-      gain.gain.setValueAtTime(0.3, now + 0.1);
-      osc.start(now); osc.stop(now + 0.22);
-    }
+    if (type === 'clear') { osc.frequency.setValueAtTime(659.25, audioCtx.currentTime); gain.gain.setValueAtTime(0.08, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.1); }
+    else if (type === 'obstacle') { const now = audioCtx.currentTime; osc.frequency.setValueAtTime(220, now); osc.frequency.setValueAtTime(180, now + 0.1); gain.gain.setValueAtTime(0.3, now); gain.gain.setValueAtTime(0.3, now + 0.1); osc.start(now); osc.stop(now + 0.22); }
   } catch (e) {}
 }
 function speak(text, isObstacle = false) {
   if (!text) return;
   if (!('speechSynthesis' in window)) return;
   const now = Date.now();
-  if (text === lastSpoken && now - lastSpeakTime < 2000 && !isObstacle) return;
+  if (text === lastSpoken && now - lastSpeakTime < 2500 && !isObstacle) return;
   if (isObstacle && currentMode !== "obstacle") { window.speechSynthesis.cancel(); }
   if (!isObstacle && isSpeakingObstacle) return;
   if (isObstacle) { window.speechSynthesis.cancel(); }
@@ -237,7 +238,7 @@ async function initDetector() {
     const ok = await waitForMediapipe();
     if (!ok) { throw new Error('mediapipe timeout'); }
     const vision = await window.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm");
-    const detectorPromise = window.ObjectDetector.createFromOptions(vision, { baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite2/float16/1/efficientdet_lite2.tflite", delegate: "CPU" }, scoreThreshold: 0.50, runningMode: "VIDEO" });
+    const detectorPromise = window.ObjectDetector.createFromOptions(vision, { baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite2/float16/1/efficientdet_lite2.tflite", delegate: "CPU" }, scoreThreshold: 0.30, runningMode: "VIDEO" });
     const timeoutPromise = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('model timeout')); }, 15000); });
     objectDetector = await Promise.race([detectorPromise, timeoutPromise]);
     isDetectorLoading = false;
@@ -276,92 +277,96 @@ async function startCamera() {
 let lastVideoTime = -1;
 async function predictWebcam() {
   if (!isLive) return;
-  if (!objectDetector) {
-    if (isLive) { window.requestAnimationFrame(predictWebcam); }
-    return;
-  }
+  if (!objectDetector) { if (isLive) { window.requestAnimationFrame(predictWebcam); } return; }
   if (video.currentTime !== lastVideoTime && video.readyState >= 2) {
-    lastVideoTime = video.currentTime; frameCount++;
+    lastVideoTime = video.currentTime;
     try {
       const startTimeMs = performance.now();
       const detections = objectDetector.detectForVideo(video, startTimeMs);
       const hasObjectDetected = detections && detections.detections && detections.detections.length > 0;
-      if (!hasObjectDetected) { nothingCount++; handleClearPath(); }
+      if (!hasObjectDetected) { centerClearSpoken = false; handleClearPath(); }
       else {
-        nothingCount = 0; clearWaitCount = 0;
         const videoWidth = video.videoWidth || 640;
         const videoHeight = video.videoHeight || 480;
         const videoArea = videoWidth * videoHeight;
-        // بیچ والا رستہ چیک کرنا - 30% سے 70% تک
         const centerLeft = videoWidth * 0.30;
         const centerRight = videoWidth * 0.70;
-        let centerBlocked = false;
-        let centerBlockArea = 0;
-        let leftCount = 0, rightCount = 0, centerCount = 0;
-        let biggest = null, biggestArea = 0;
-        let wallDetected = false;
+        let valid = [];
         for (let det of detections.detections) {
           const bb = det.boundingBox;
           const area = bb.width * bb.height;
           const conf = det.categories[0].score * 100;
-          if (conf < 50) continue;
-          const cx = bb.originX + bb.width / 2;
+          if (conf < 30) continue;
           const ratio = area / videoArea;
-          // دیوار والا چیک - بہت بڑی کھڑی چیز
-          const aspect = bb.height / Math.max(1, bb.width);
-          if (ratio > 0.35 && aspect > 1.2) { wallDetected = true; }
-          if (ratio > 0.02) {
-            if (cx < centerLeft) leftCount++;
-            else if (cx > centerRight) rightCount++;
-            else { centerCount++; centerBlocked = true; if (area > centerBlockArea) centerBlockArea = area; }
-            if (area > biggestArea) { biggestArea = area; biggest = det; }
-          }
+          if (ratio < 0.003) continue;
+          valid.push({ det: det, bb: bb, area: area, ratio: ratio, conf: conf, cx: bb.originX + bb.width / 2 });
         }
-        // اگر بیچ خالی ہے تو سیدھا چلنے دو، چاہے دائیں بائیں چیزیں ہوں
-        if (!centerBlocked && (leftCount > 0 || rightCount > 0)) {
-          centerClearCount++;
-          if (centerClearCount >= 3) {
-            const txt = getT('centerClear');
-            statusEl.innerText = txt;
-            const now = Date.now();
-            if (currentMode !== "centerClear" || now - lastObstacleAlertTime > 4000) {
-              currentMode = "centerClear"; lastObstacleAlertTime = now;
-              if (isSpeakingObstacle) { window.speechSynthesis.cancel(); isSpeakingObstacle = false; }
-              speak(txt, false);
-            }
-            if (now - lastClearSoundTime > 1000) { lastClearSoundTime = now; playBeep('clear'); }
+        if (valid.length === 0) { centerClearSpoken = false; handleClearPath(); }
+        else {
+          valid.sort((a,b) => b.area - a.area);
+          const biggest = valid[0];
+          const centerBlocked = valid.some(v => v.cx >= centerLeft && v.cx <= centerRight && v.ratio >= 0.02);
+          const leftOnly = valid.some(v => v.cx < centerLeft) && !centerBlocked && !valid.some(v => v.cx > centerRight);
+          const rightOnly = valid.some(v => v.cx > centerRight) && !centerBlocked && !valid.some(v => v.cx < centerLeft);
+          const bothSides = valid.some(v => v.cx < centerLeft) && valid.some(v => v.cx > centerRight) && !centerBlocked;
+          // 1. دونوں سائیڈ پر چیزیں ہیں، بیچ صاف ہے - وائبریشن نہیں، صرف ایک بار بولے گا
+          if (bothSides) {
             obstacleConfirmCount = 0;
-          }
-        } else if (wallDetected) {
-          const txt = getT('wallObs');
-          statusEl.innerText = txt;
-          const now = Date.now();
-          if (currentMode !== "obstacle" || now - lastObstacleAlertTime > 4000) { currentMode = "obstacle"; lastObstacleAlertTime = now; triggerVibration(); speak(txt, true); }
-        } else if (centerBlocked) {
-          obstacleConfirmCount++;
-          centerClearCount = 0;
-          if (obstacleConfirmCount >= 5) {
-            let txt = "";
-            const total = leftCount + rightCount + centerCount;
-            if (total >= 3) txt = getT('multiObs');
-            else if (centerCount > 0 && leftCount === 0 && rightCount === 0) txt = getT('centerObs');
-            else if (leftCount > 0 && rightCount === 0 && centerCount > 0) txt = getT('leftObs');
-            else if (rightCount > 0 && leftCount === 0 && centerCount > 0) txt = getT('rightObs');
-            else txt = getT('centerObs');
-            // سیڑھی والا اندازہ - اگر بیچ میں بڑی چوڑی چیز ہے تو سیڑھی ہو سکتی ہے
-            if (biggest && (biggest.boundingBox.width / videoWidth) > 0.6) {
-              // بہت چوڑی چیز - سیڑھی یا دیوار ہو سکتی ہے
-            }
-            statusEl.innerText = txt;
             const now = Date.now();
-            if (currentMode !== "obstacle" || lastObstacleName !== txt || now - lastObstacleAlertTime > 4000) {
-              currentMode = "obstacle"; lastObstacleName = txt; lastObstacleAlertTime = now;
-              triggerVibration(); speak(txt, true);
+            statusEl.innerText = getT('centerClear');
+            if (!centerClearSpoken || now - lastCenterClearTime > 8000) {
+              centerClearSpoken = true; lastCenterClearTime = now;
+              currentMode = "centerClear";
+              if (isSpeakingObstacle) { window.speechSynthesis.cancel(); isSpeakingObstacle = false; }
+              speak(getT('centerClear'), false);
             }
-            if (now - lastBeepTime > 800) { lastBeepTime = now; const sr = biggestArea / videoArea; if (sr >= 0.15) playBeep('obstacle'); else playBeep('small'); }
+            // وائبریشن بالکل نہیں
+            if (now - lastClearSoundTime > 1500) { lastClearSoundTime = now; playBeep('clear'); }
           }
-        } else {
-          handleClearPath();
+          // 2. صرف ایک سائیڈ پر ہے - اس کا نام بتائے گا
+          else if (leftOnly || rightOnly) {
+            const sideItem = valid.find(v => leftOnly ? v.cx < centerLeft : v.cx > centerRight);
+            const txt = makeObstacleText(sideItem.det.categories[0].categoryName, sideItem.cx, videoWidth, sideItem.ratio < 0.02);
+            obstacleConfirmCount++;
+            if (obstacleConfirmCount >= 2) {
+              statusEl.innerText = txt;
+              const now = Date.now();
+              if (currentMode !== "obstacle" || lastObstacleName !== txt || now - lastObstacleAlertTime > 4000) {
+                currentMode = "obstacle"; lastObstacleName = txt; lastObstacleAlertTime = now;
+                centerClearSpoken = false;
+                // چھوٹی چیز پر بھاری وائبریشن نہیں
+                if (sideItem.ratio >= 0.02) triggerVibration();
+                speak(txt, true);
+              }
+              if (now - lastBeepTime > 900) { lastBeepTime = now; if (sideItem.ratio >= 0.15) playBeep('obstacle'); else playBeep('small'); }
+            }
+          }
+          // 3. بیچ میں بلاک ہے یا بہت بڑی کھڑی چیز ہے
+          else {
+            // دیوار والا چیک - اب بہت سخت ہے: 65% سے زیادہ اور 2 گنا لمبی، اور پہچانی ہوئی چیز نہ ہو
+            const bb = biggest.bb;
+            const aspect = bb.height / Math.max(1, bb.width);
+            const isKnownObject = ['chair','table','bed','couch','refrigerator','person','bicycle','car','motorcycle'].includes(biggest.det.categories[0].categoryName.toLowerCase());
+            let isWall = false;
+            if (!isKnownObject && biggest.ratio > 0.65 && aspect > 2.0) { isWall = true; }
+            let txt = "";
+            let isSmall = biggest.ratio < 0.02;
+            if (isWall) { txt = getT('wallObs'); }
+            else { txt = makeObstacleText(biggest.det.categories[0].categoryName, biggest.cx, videoWidth, isSmall); }
+            obstacleConfirmCount++;
+            if (obstacleConfirmCount >= 2) {
+              statusEl.innerText = txt;
+              const now = Date.now();
+              if (currentMode !== "obstacle" || lastObstacleName !== txt || now - lastObstacleAlertTime > 3500) {
+                currentMode = "obstacle"; lastObstacleName = txt; lastObstacleAlertTime = now;
+                centerClearSpoken = false;
+                if (!isSmall && !isWall) { if (biggest.ratio >= 0.02) triggerVibration(); }
+                if (isWall) triggerVibration();
+                speak(txt, true);
+              }
+              if (now - lastBeepTime > 900) { lastBeepTime = now; if (biggest.ratio >= 0.15) playBeep('obstacle'); else playBeep('small'); }
+            }
+          }
         }
       }
     } catch (e) { console.error(e); }
@@ -369,7 +374,7 @@ async function predictWebcam() {
   if (isLive) { window.requestAnimationFrame(predictWebcam); }
 }
 function handleClearPath() {
-  obstacleConfirmCount = 0; centerClearCount = 0;
+  obstacleConfirmCount = 0;
   const now = Date.now();
   if (currentMode !== "clear") {
     currentMode = "clear"; lastObstacleName = "";
@@ -386,7 +391,7 @@ function stopCamera() {
   isLive = false;
   if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
   video.srcObject = null; statusEl.innerText = "STATUS: OFF"; startBtn.style.display = 'block'; startBtn.innerText = 'START'; stopBtn.style.display = 'none';
-  isSpeakingObstacle = false; clearWaitCount = 0; currentMode = "clear"; lastObstacleName = ""; lastObstacleAlertTime = 0; obstacleConfirmCount = 0; isDetectorLoading = false; centerClearCount = 0;
+  isSpeakingObstacle = false; currentMode = "clear"; lastObstacleName = ""; lastObstacleAlertTime = 0; obstacleConfirmCount = 0; isDetectorLoading = false; centerClearSpoken = false;
 }
 langSel.addEventListener('change', () => { lightVibration(); });
 langSel.addEventListener('click', () => { lightVibration(); });
