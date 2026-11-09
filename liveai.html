@@ -1,1 +1,205 @@
-<button id="liveAiBtn" class="btn-main" style="background:#a855f7;color:#fff;" onclick="window.location.href='live-ai.html'">LIVE AI CAMERA</button><button id="liveAiBtn" class="btn-main" style="background:#a855f7;color:#fff;" onclick="window.location.href='live-ai.html'">LIVE AI CAMERA</button>
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LIVE AI GUIDE - Your eyes smart cane</title>
+<script type="module">
+  import { FilesetResolver, ObjectDetector } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/+esm";
+  window.FilesetResolver = FilesetResolver;
+  window.ObjectDetector = ObjectDetector;
+  window.dispatchEvent(new Event('mediapipe-loaded'));
+</script>
+<style>
+*{box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#0a0f1e;color:#fff;margin:0;padding:16px}
+.top{max-width:620px;margin:auto;background:#111827;padding:22px;border-radius:16px}
+h2{text-align:center;color:#a855f7;margin:0;letter-spacing:1px}
+.sub{text-align:center;font-size:12px;color:#94a3b8;margin:6px 0 14px}
+label{display:block;color:#a855f7;font-size:13px;font-weight:700;margin:14px 0 6px}
+select{width:100%;padding:12px;border-radius:10px;border:1px solid #374151;background:#1f2937;color:#fff;font-size:15px}
+video{width:100%;height:320px;border-radius:12px;background:#000;object-fit:cover;margin-top:12px;border:3px solid #a855f7}
+button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer;margin-top:10px;font-weight:700;width:100%}
+.btn-main{background:#a855f7;color:#fff}
+.btn-stop{background:#ef4444;color:#fff}
+.btn-back{background:#0284c7;color:#fff}
+#status{text-align:center;margin:10px 0;font-weight:700;font-size:14px}
+</style>
+</head>
+<body>
+<div class="top">
+<h2>LIVE AI CAMERA</h2>
+<div class="sub">Live AI Guide - Your eyes smart cane created by Humaira Sardar</div>
+
+<label>SELECT MODE</label>
+<select id="modeSelect" onchange="if(this.value) window.location.href=this.value;">
+<option value="index.html">SMART CANE</option>
+<option value="liveai.html" selected>AI LIVE GUIDE</option>
+</select>
+
+<label>SELECT LANGUAGE</label>
+<select id="voiceLanguage">
+<option value="ur-PK" selected>اردو (Pakistan)</option>
+<option value="en-US">English (United States)</option>
+<option value="hi-IN">हिन्दी (India)</option>
+<option value="ar-SA">العربية (Saudi Arabia)</option>
+<option value="pa-IN">ਪੰਜਾਬੀ (India)</option>
+<option value="ps-PK">پښتو (Pakistan)</option>
+<option value="sd-PK">سنڌي (Pakistan)</option>
+<option value="fa-IR">فارسی (Iran)</option>
+</select>
+
+<div id="status">STATUS: OFF</div>
+<button id="startBtn" class="btn-main">START LIVE GUIDE</button>
+<button id="stopBtn" class="btn-stop" style="display:none;">STOP</button>
+<video id="webcam" autoplay playsinline muted></video>
+<button class="btn-back" onclick="window.location.href='index.html'">BACK TO SMART CANE</button>
+</div>
+
+<script>
+const video = document.getElementById('webcam');
+const statusEl = document.getElementById('status');
+const langSel = document.getElementById('voiceLanguage');
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
+let stream = null, isLive = false, objectDetector = null;
+let lastSpoken = "", lastSpeakTime = 0, lastBeepTime = 0, lastClearSpeakTime = 0, lastClearSoundTime = 0;
+let currentMode = "clear", lastObstacleName = "", audioCtx = null, isSpeakingObstacle = false;
+let obstacleConfirmCount = 0, isDetectorLoading = false, wallConfirmCount = 0, wallCanvas = null, lastWallCheck = 0, lastObstacleAlertTime = 0;
+
+const translations = {
+  'ur-PK': { loading: 'لائیو اے آئی گائیڈ آن ہو رہا ہے۔ براہ کرم انتظار کریں۔', started: 'لائیو اے آئی گائیڈ آن ہے۔ کیمرہ دیکھ رہا ہے۔', stopClose: 'الرٹ ہو جاؤ، آگے رکاوٹ ہے', clearPath: 'رستہ صاف ہے، آگے بڑھیں۔', camError: 'کیمرہ کی اجازت دیں', netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ' },
+  'en-US': { loading: 'Live AI Guide turning on. Please wait.', started: 'Live AI Guide is on. Camera is watching.', stopClose: 'Alert, obstacle ahead', clearPath: 'Path is clear, move forward.', camError: 'Allow camera access', netError: 'Internet or model loading issue' },
+  'hi-IN': { loading: 'लाइव एआई गाइड चालू हो रहा है।', started: 'लाइव एआई गाइड चालू है।', stopClose: 'अलर्ट, आगे बाधा है', clearPath: 'रास्ता साफ है, आगे बढ़ें।', camError: 'कैमरा अनुमति दें', netError: 'इंटरनेट या मॉडल समस्या' },
+  'ar-SA': { loading: 'جاري تشغيل دليل الذكاء الاصطناعي.', started: 'دليل الذكاء الاصطناعي يعمل.', stopClose: 'تنبيه، أمامك عائق', clearPath: 'الطريق خالٍ، تقدم.', camError: 'السماح بالكاميرا', netError: 'مشكلة في الإنترنت أو النموذج' },
+  'pa-IN': { loading: 'ਲਾਈਵ ਏਆਈ ਗਾਈਡ ਚਾਲੂ ਹੋ ਰਿਹਾ ਹੈ।', started: 'ਲਾਈਵ ਏਆਈ ਗਾਈਡ ਚਾਲੂ ਹੈ।', stopClose: 'ਅਲਰਟ, ਅੱਗੇ ਰੁਕਾਵਟ ਹੈ', clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਅੱਗੇ ਵਧੋ।', camError: 'ਕੈਮਰਾ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ', netError: 'ਇੰਟਰਨੈੱਟ ਜਾਂ ਮਾਡਲ ਦੀ ਸਮੱਸਿਆ' },
+  'ps-PK': { loading: 'ژوندی اے آئی لارښود روان دی. مهرباني وکئ انتظار وکئ.', started: 'ژوندی اے آئی لارښود روان دی.', stopClose: 'خبردار، مخکې خنډ دی', clearPath: 'لار سمه ده، مخکې لاړ شئ.', camError: 'د کامرې اجازه ورکړئ', netError: 'د انټرنیټ ستونزه' },
+  'sd-PK': { loading: 'لائيو اے آئی گائيڊ آن ٿي رهيو آهي.', started: 'لائيو اے آئی گائيڊ آن آهي.', stopClose: 'خبردار، اڳيان رڪاوٽ آهي', clearPath: 'رستو صاف آهي، اڳيان وڌو.', camError: 'ڪيمرا جي اجازت ڏيو', netError: 'انٽرنيٽ يا ماڊل جو مسئلو' },
+  'fa-IR': { loading: 'راهنمای زنده هوش مصنوعی در حال روشن شدن است.', started: 'راهنمای زنده هوش مصنوعی روشن است.', stopClose: 'هشدار، مانع در جلو قرار دارد', clearPath: 'مسیر باز است، جلو بروید.', camError: 'اجازه دسترسی به دوربین', netError: 'مشکل اینترنت یا مدل' }
+};
+
+function getT(key){ const lang = langSel.value; if(translations[lang] && translations[lang][key]) return translations[lang][key]; return translations['en-US'][key] || key; }
+function triggerVibration(){ if(isSpeakingObstacle) return; if('vibrate' in navigator){ try{ navigator.vibrate([200,100,200]); }catch(e){} } }
+function playBeep(type){
+  try{
+    if(!audioCtx){ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    if(audioCtx.state === 'suspended'){ audioCtx.resume(); }
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    if(type === 'clear'){ osc.frequency.setValueAtTime(659.25, audioCtx.currentTime); gain.gain.setValueAtTime(0.08, audioCtx.currentTime); osc.start(); osc.stop(audioCtx.currentTime + 0.1); }
+    else { const now = audioCtx.currentTime; osc.frequency.setValueAtTime(220, now); osc.frequency.setValueAtTime(180, now + 0.1); gain.gain.setValueAtTime(0.3, now); gain.gain.setValueAtTime(0.3, now + 0.1); osc.start(now); osc.stop(now + 0.22); }
+  }catch(e){}
+}
+function speak(text, isObstacle = false){
+  if(!text) return; if(!('speechSynthesis' in window)) return;
+  const now = Date.now();
+  if(text === lastSpoken && now - lastSpeakTime < 2000 && !isObstacle) return;
+  if(isObstacle){ window.speechSynthesis.cancel(); }
+  if(!isObstacle && isSpeakingObstacle) return;
+  lastSpoken = text; lastSpeakTime = now;
+  if(isObstacle){ isSpeakingObstacle = true; }
+  const u = new SpeechSynthesisUtterance(text); u.lang = langSel.value;
+  u.onend = ()=>{ if(isObstacle) setTimeout(()=>{ isSpeakingObstacle = false; },50); };
+  u.onerror = ()=>{ if(isObstacle) setTimeout(()=>{ isSpeakingObstacle = false; },50); };
+  window.speechSynthesis.speak(u);
+}
+function isWallBlocked(){
+  try{
+    if(!video || !video.videoWidth) return false;
+    const now = Date.now(); if(now - lastWallCheck < 200) return wallConfirmCount >= 5; lastWallCheck = now;
+    if(!wallCanvas){ wallCanvas = document.createElement('canvas'); wallCanvas.width = 32; wallCanvas.height = 24; }
+    const ctx = wallCanvas.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(video, 0, 0, 32, 24); const d = ctx.getImageData(0,0,32,24).data;
+    let sum=0,cnt=0,mn=255,mx=0;
+    for(let y=6;y<18;y++){ for(let x=8;x<24;x++){ const idx=(y*32+x)*4; const g=(d[idx]+d[idx+1]+d[idx+2])/3; sum+=g; cnt++; if(g<mn) mn=g; if(g>mx) mx=g; } }
+    const range = mx - mn; const avg = sum / cnt;
+    if(range < 65 && avg > 20){ wallConfirmCount++; } else { wallConfirmCount = 0; }
+    return wallConfirmCount >= 5;
+  }catch(e){ return false; }
+}
+function alertWall(){
+  const t = getT('stopClose'); statusEl.innerText = t; const now = Date.now();
+  if(currentMode !== "obstacle" || lastObstacleName !== t || (now - lastObstacleAlertTime > 4000)){ currentMode="obstacle"; lastObstacleName=t; lastObstacleAlertTime=now; triggerVibration(); speak(t,true); }
+  if(now - lastBeepTime > 800){ lastBeepTime = now; playBeep('obstacle'); }
+}
+async function waitForMediapipe(){
+  if(window.FilesetResolver && window.ObjectDetector) return true;
+  return new Promise(function(resolve){ let done=false; const t=setTimeout(function(){ if(!done){ done=true; resolve(false);} },15000); window.addEventListener('mediapipe-loaded', function(){ if(!done){ done=true; clearTimeout(t); resolve(true);} },{once:true}); });
+}
+async function initDetector(){
+  if(objectDetector) return true; if(isDetectorLoading) return false; isDetectorLoading = true;
+  try{
+    statusEl.innerText = getT('loading');
+    const ok = await waitForMediapipe(); if(!ok) throw new Error('mediapipe timeout');
+    const vision = await window.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm");
+    objectDetector = await window.ObjectDetector.createFromOptions(vision, { baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite", delegate: "CPU" }, scoreThreshold: 0.50, runningMode: "VIDEO" });
+    isDetectorLoading = false; return true;
+  }catch(err){ console.error(err); isDetectorLoading=false; objectDetector=null; if(isLive){ statusEl.innerText=getT('netError'); speak(getT('netError'),false);} return false; }
+}
+async function startCamera(){
+  try{
+    if(isLive || stream) return; statusEl.innerText = getT('loading'); startBtn.innerText = 'PLEASE WAIT...';
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ statusEl.innerText=getT('camError'); speak(getT('camError'),false); startBtn.innerText='START LIVE GUIDE'; return; }
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+    video.srcObject = stream;
+    video.onloadedmetadata = async () => {
+      try{ await video.play(); }catch(e){}
+      isLive = true; statusEl.innerText = getT('started'); speak(getT('started'), false);
+      startBtn.style.display='none'; stopBtn.style.display='block';
+      window.requestAnimationFrame(predictWebcam);
+      const ok = await initDetector(); if(!ok && isLive){ statusEl.innerText = getT('netError'); }
+    };
+  }catch(err){ console.error(err); startBtn.innerText='START LIVE GUIDE'; statusEl.innerText=getT('camError'); speak(getT('camError'),false); if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; } }
+}
+let lastVideoTime = -1;
+async function predictWebcam(){
+  if(!isLive) return;
+  if(!objectDetector){ if(isLive) window.requestAnimationFrame(predictWebcam); return; }
+  if(video.currentTime !== lastVideoTime && video.readyState >= 2){
+    lastVideoTime = video.currentTime;
+    try{
+      const detections = objectDetector.detectForVideo(video, performance.now());
+      const hasObj = detections && detections.detections && detections.detections.length > 0;
+      if(hasObj){
+        wallConfirmCount = 0;
+        let closest = detections.detections[0]; let maxArea = 0;
+        for(let det of detections.detections){ const area = det.boundingBox.width * det.boundingBox.height; if(area > maxArea){ maxArea = area; closest = det; } }
+        const conf = Math.round(closest.categories[0].score * 100);
+        if(conf >= 50){
+          const videoArea = (video.videoWidth || 640) * (video.videoHeight || 480);
+          const ratio = maxArea / videoArea;
+          if(ratio >= 0.02){
+            obstacleConfirmCount++;
+            if(obstacleConfirmCount >= 5){
+              const t = getT('stopClose'); statusEl.innerText = t; const now = Date.now();
+              if(currentMode !== "obstacle" || lastObstacleName !== t || (now - lastObstacleAlertTime > 4000)){ currentMode="obstacle"; lastObstacleName=t; lastObstacleAlertTime=now; triggerVibration(); speak(t,true); }
+              if(now - lastBeepTime > 800){ lastBeepTime = now; playBeep('obstacle'); }
+            }
+          } else { handleClear(); }
+        } else { handleClear(); }
+      } else {
+        if(isWallBlocked()){ obstacleConfirmCount = 0; alertWall(); } else { handleClear(); }
+      }
+    }catch(e){ console.error(e); }
+  }
+  if(isLive) window.requestAnimationFrame(predictWebcam);
+}
+function handleClear(){
+  obstacleConfirmCount = 0; const now = Date.now();
+  if(currentMode !== "clear"){ currentMode="clear"; lastObstacleName=""; if(isSpeakingObstacle){ window.speechSynthesis.cancel(); isSpeakingObstacle=false; } speak(getT('clearPath'), false); lastClearSpeakTime = now; }
+  statusEl.innerText = getT('clearPath');
+  if(now - lastClearSoundTime > 1000){ lastClearSoundTime = now; playBeep('clear'); }
+  if(now - lastClearSpeakTime > 8000){ lastClearSpeakTime = now; speak(getT('clearPath'), false); }
+}
+function stopCamera(){
+  if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  if('vibrate' in navigator){ try{ navigator.vibrate(0); }catch(e){} }
+  isLive = false; if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+  video.srcObject = null; statusEl.innerText = "STATUS: OFF"; startBtn.style.display='block'; startBtn.innerText='START LIVE GUIDE'; stopBtn.style.display='none';
+  isSpeakingObstacle=false; currentMode="clear"; lastObstacleName=""; obstacleConfirmCount=0; wallConfirmCount=0;
+}
+startBtn.addEventListener('click', async ()=>{ await startCamera(); });
+stopBtn.addEventListener('click', ()=>{ stopCamera(); });
+</script>
+</body>
+</html>
