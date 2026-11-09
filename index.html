@@ -153,6 +153,7 @@ let isSpeakingObstacle = false;
 let clearWaitCount = 0;
 let lastObstacleAlertTime = 0;
 let obstacleConfirmCount = 0;
+let isDetectorLoading = false;
 const translations = {
   'ur-PK': { loading: 'سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔', started: 'اسمارٹ کین آن ہے۔ کیمرہ اور سنسور ایکٹو ہیں۔', stopClose: 'الرٹ ہو جاؤ، آگے رکاوٹ ہے', clearPath: 'رستہ صاف ہے، آگے بڑھیں۔', camError: 'کیمرہ کی اجازت دیں', netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ' },
   'en-US': { loading: 'Sensor turning on. Please wait.', started: 'Smart Cane is on. Camera active.', stopClose: 'Alert, obstacle ahead', clearPath: 'Path is clear, move forward.', camError: 'Allow camera access', netError: 'Internet or model loading issue' },
@@ -253,7 +254,6 @@ function playBeep(type) {
   try {
     if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
     if (audioCtx.state === 'suspended') { audioCtx.resume(); }
-    // چھوٹی رکاوٹ کے لیے پیاری سی ڈبل والی ٹن ٹن
     if (type === 'small') {
       const now = audioCtx.currentTime;
       [0, 0.16].forEach(function(offset) {
@@ -273,7 +273,6 @@ function playBeep(type) {
       gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
       osc.start(); osc.stop(audioCtx.currentTime + 0.1);
     } else if (type === 'obstacle') {
-      // بھاری رکاوٹ کے لیے بھاری والی آواز، جیسی پہلے تھی
       const now = audioCtx.currentTime;
       osc.frequency.setValueAtTime(220, now);
       osc.frequency.setValueAtTime(180, now + 0.1);
@@ -299,38 +298,66 @@ function speak(text, isObstacle = false) {
   utterance.onerror = () => { if (isObstacle) { setTimeout(() => { isSpeakingObstacle = false; }, 50); } };
   window.speechSynthesis.speak(utterance);
 }
+async function waitForMediapipe() {
+  if (window.FilesetResolver && window.ObjectDetector) return true;
+  return new Promise(function(resolve) {
+    let done = false;
+    const t = setTimeout(function() { if (!done) { done = true; resolve(false); } }, 15000);
+    window.addEventListener('mediapipe-loaded', function() { if (!done) { done = true; clearTimeout(t); resolve(true); } }, { once: true });
+  });
+}
 async function initDetector() {
-  if (objectDetector) return;
-  if (!window.FilesetResolver || !window.ObjectDetector) { await new Promise(resolve => { window.addEventListener('mediapipe-loaded', resolve, { once: true }); setTimeout(resolve, 3000); }); }
+  if (objectDetector) return true;
+  if (isDetectorLoading) return false;
+  isDetectorLoading = true;
   try {
     statusEl.innerText = getT('loading');
+    const ok = await waitForMediapipe();
+    if (!ok) { throw new Error('mediapipe timeout'); }
     const vision = await window.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm");
-    objectDetector = await window.ObjectDetector.createFromOptions(vision, { baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite", delegate: "CPU" }, scoreThreshold: 0.30, runningMode: "VIDEO" });
-  } catch (err) { console.error(err); statusEl.innerText = getT('netError'); speak(getT('netError'), false); }
+    const detectorPromise = window.ObjectDetector.createFromOptions(vision, { baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite", delegate: "CPU" }, scoreThreshold: 0.30, runningMode: "VIDEO" });
+    const timeoutPromise = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('model timeout')); }, 15000); });
+    objectDetector = await Promise.race([detectorPromise, timeoutPromise]);
+    isDetectorLoading = false;
+    return true;
+  } catch (err) {
+    console.error(err);
+    isDetectorLoading = false;
+    objectDetector = null;
+    if (isLive) { statusEl.innerText = getT('netError'); speak(getT('netError'), false); }
+    return false;
+  }
 }
 async function startCamera() {
   try {
     if (isLive || stream) return;
-    await initDetector();
-    if (!objectDetector) { statusEl.innerText = getT('netError'); speak(getT('netError'), false); return; }
+    statusEl.innerText = getT('loading');
+    startBtn.innerText = 'PLEASE WAIT...';
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { statusEl.innerText = getT('camError'); speak(getT('camError'), false); startBtn.innerText = 'START - SENSOR ON'; return; }
     stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
     video.srcObject = stream;
-    try {
-      const track = stream.getVideoTracks()[0];
-      if (track && track.getCapabilities && track.getCapabilities().torch) {
-        await track.applyConstraints({ advanced: [{ torch: true }] });
-      }
-    } catch(e) {}
-    video.onloadedmetadata = () => {
-      video.play(); isLive = true; statusEl.innerText = getT('started'); speak(getT('started'), false);
-      startBtn.style.display = 'none'; stopBtn.style.display = 'block'; window.requestAnimationFrame(predictWebcam);
+    video.onloadedmetadata = async () => {
+      try { await video.play(); } catch(e) {}
+      isLive = true; statusEl.innerText = getT('started'); speak(getT('started'), false);
+      startBtn.style.display = 'none'; stopBtn.style.display = 'block';
+      window.requestAnimationFrame(predictWebcam);
+      const ok = await initDetector();
+      if (!ok && isLive) { statusEl.innerText = getT('netError'); }
     };
-  } catch (err) { console.error(err); statusEl.innerText = getT('camError'); speak(getT('camError'), false); }
+  } catch (err) {
+    console.error(err);
+    startBtn.innerText = 'START - SENSOR ON';
+    statusEl.innerText = getT('camError'); speak(getT('camError'), false);
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  }
 }
 let lastVideoTime = -1;
 async function predictWebcam() {
   if (!isLive) return;
-  if (!objectDetector) { if (isLive) { window.requestAnimationFrame(predictWebcam); } return; }
+  if (!objectDetector) {
+    if (isLive) { window.requestAnimationFrame(predictWebcam); }
+    return;
+  }
   if (video.currentTime !== lastVideoTime && video.readyState >= 2) {
     lastVideoTime = video.currentTime; frameCount++;
     try {
@@ -359,7 +386,6 @@ async function predictWebcam() {
               }
               if (now - lastBeepTime > 800) {
                 lastBeepTime = now;
-                // بڑی چیز ہے تو بھاری والی، چھوٹی چیز ہے تو پیاری سی ڈبل والی ٹن ٹن
                 if (sizeRatio >= 0.15) { playBeep('obstacle'); } else { playBeep('small'); }
               }
             }
@@ -387,8 +413,8 @@ function stopCamera() {
   if ('vibrate' in navigator) { try { navigator.vibrate(0); } catch(e){} }
   isLive = false;
   if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
-  video.srcObject = null; statusEl.innerText = "STATUS: OFF"; startBtn.style.display = 'block'; stopBtn.style.display = 'none';
-  isSpeakingObstacle = false; clearWaitCount = 0; currentMode = "clear"; lastObstacleName = ""; lastObstacleAlertTime = 0; obstacleConfirmCount = 0;
+  video.srcObject = null; statusEl.innerText = "STATUS: OFF"; startBtn.style.display = 'block'; startBtn.innerText = 'START - SENSOR ON'; stopBtn.style.display = 'none';
+  isSpeakingObstacle = false; clearWaitCount = 0; currentMode = "clear"; lastObstacleName = ""; lastObstacleAlertTime = 0; obstacleConfirmCount = 0; isDetectorLoading = false;
 }
 startBtn.addEventListener('click', async () => { await startCamera(); });
 stopBtn.addEventListener('click', () => { stopCamera(); });
