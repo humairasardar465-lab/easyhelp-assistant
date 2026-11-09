@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "total_objects": 30,
-  "total_languages": 96,
+  "total_languages": 91,
   "languages": ["ur-PK","en-US","hi-IN","ar-SA","pa-IN","ps-PK","sd-PK","fa-IR","bn-BD","tr-TR","zh-CN","es-ES","fr-FR","de-DE","ja-JP","ko-KR","ru-RU","it-IT","id-ID","vi-VN","th-TH","nl-NL","pl-PL","uk-UA","el-GR","he-IL","sv-SE","no-NO","fi-FI","da-DK","cs-CZ","hu-HU","ro-RO","ms-MY","fil-PH","sw-KE","af-ZA","sq-AL","am-ET","hy-AM","az-AZ","eu-ES","be-BY","bs-BA","bg-BG","ca-ES","hr-HR","et-EE","gl-ES","ka-GE","gu-IN","is-IS","ga-IE","jv-JA","kn-IN","kk-KZ","km-KH","ky-KG","lo-LA","lv-LV","lt-LT","mk-MK","mg-MG","ml-IN","mt-MT","mi-NZ","mr-IN","mn-MN","ne-NP","fa-AF","pt-BR","pt-PT","qu-PE","sm-SM","sr-RS","sn-ZW","si-LK","sk-SK","sl-SI","so-SO","su-SU","sw-TZ","tg-TJ","ta-IN","ta-LK","te-IN","uz-UZ","cy-GB","yi-YI","yo-NG","zu-ZA"],
   "note": "names ki tarteeb languages wali list jaisi hai. pehla naam ur-PK ka hai, doosra en-US ka, aakhri zu-ZA ka. ur-PK me sirf Pakistani Urdu script hai.",
   "objects": [
