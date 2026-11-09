@@ -54,9 +54,9 @@ const statusEl = document.getElementById('status');
 const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 let stream = null, isLive = false, objectDetector = null;
-let lastSpoken = "", lastSpeakTime = 0, lastBeepTime = 0, lastClearSpeakTime = 0, lastClearSoundTime = 0;
-let currentMode = "clear", lastObstacleName = "", audioCtx = null, isSpeakingObstacle = false;
-let obstacleConfirmCount = 0, isDetectorLoading = false, wallConfirmCount = 0, wallCanvas = null, lastWallCheck = 0, lastObstacleAlertTime = 0;
+let lastSpoken = "", lastSpeakTime = 0, lastBeepTime = 0;
+let currentMode = "clear", lastObstacleName = "", audioCtx = null;
+let obstacleConfirmCount = 0, isDetectorLoading = false, wallConfirmCount = 0, wallCanvas = null, lastWallCheck = 0;
 
 function getLang(){ return window.CUSTOM_SELECTED_LANG || "ur-PK"; }
 
@@ -64,11 +64,9 @@ function getAlertText(objectId){
   const lang = getLang();
   let name = objectId;
   if(window.getObjectName){ name = window.getObjectName(objectId, lang); }
-  // اردو پاکستانی کے لیے پوری اردو میں
   if(lang === "ur-PK"){
     return "الرٹ ہو جاؤ، سامنے " + name + " ہے";
   }
-  // باقی 90 زبانوں کے لیے - نام اسی زبان میں ہو گا، صرف الرٹ والا لفظ انگلش میں ہو گا تاکہ آواز نہ رکے
   if(lang === "en-US"){
     return "Alert, " + name + " is in front";
   }
@@ -100,7 +98,7 @@ function getCamErrorText(){
   return "Allow camera access";
 }
 
-function triggerVibration(){ if(isSpeakingObstacle) return; if('vibrate' in navigator){ try{ navigator.vibrate([200,100,200]); }catch(e){} } }
+function triggerVibration(){ if('vibrate' in navigator){ try{ navigator.vibrate([200,100,200]); }catch(e){} } }
 function playBeep(type){
   try{
     if(!audioCtx){ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
@@ -111,19 +109,22 @@ function playBeep(type){
     else { const now = audioCtx.currentTime; osc.frequency.setValueAtTime(220, now); osc.frequency.setValueAtTime(180, now + 0.1); gain.gain.setValueAtTime(0.3, now); gain.gain.setValueAtTime(0.3, now + 0.1); osc.start(now); osc.stop(now + 0.22); }
   }catch(e){}
 }
+
+// بولنے والی فائل - اب بار بار نہیں بولے گی
 function speak(text, isObstacle = false){
   if(!text) return; if(!('speechSynthesis' in window)) return;
+  // اگر یہی بات ابھی بول رہا ہے تو دوبارہ مت بولو
+  if(window.speechSynthesis.speaking){
+    return;
+  }
+  // اگر یہی بات ابھی ابھی بولی ہے تو بھی دوبارہ مت بولو
   const now = Date.now();
-  if(text === lastSpoken && now - lastSpeakTime < 2000 && !isObstacle) return;
-  if(isObstacle){ window.speechSynthesis.cancel(); }
-  if(!isObstacle && isSpeakingObstacle) return;
+  if(text === lastSpoken && now - lastSpeakTime < 3000) return;
   lastSpoken = text; lastSpeakTime = now;
-  if(isObstacle){ isSpeakingObstacle = true; }
   const u = new SpeechSynthesisUtterance(text); u.lang = getLang();
-  u.onend = ()=>{ if(isObstacle) setTimeout(()=>{ isSpeakingObstacle = false; },50); };
-  u.onerror = ()=>{ if(isObstacle) setTimeout(()=>{ isSpeakingObstacle = false; },50); };
   window.speechSynthesis.speak(u);
 }
+
 function isWallBlocked(){
   try{
     if(!video || !video.videoWidth) return false;
@@ -138,11 +139,23 @@ function isWallBlocked(){
     return wallConfirmCount >= 5;
   }catch(e){ return false; }
 }
+
+// دیوار والی رکاوٹ - صرف ایک بار بولے گی
 function alertWall(){
-  const t = getAlertText("wall"); statusEl.innerText = t; const now = Date.now();
-  if(currentMode !== "obstacle" || lastObstacleName !== t || (now - lastObstacleAlertTime > 4000)){ currentMode="obstacle"; lastObstacleName=t; lastObstacleAlertTime=now; triggerVibration(); speak(t,true); }
+  const t = getAlertText("wall");
+  statusEl.innerText = t;
+  // اگر یہی دیوار پہلے ہی بول چکے ہیں تو دوبارہ مت بولو
+  if(currentMode === "obstacle" && lastObstacleName === t){
+    return;
+  }
+  currentMode = "obstacle";
+  lastObstacleName = t;
+  triggerVibration();
+  speak(t, true);
+  const now = Date.now();
   if(now - lastBeepTime > 800){ lastBeepTime = now; playBeep('obstacle'); }
 }
+
 async function waitForMediapipe(){
   if(window.FilesetResolver && window.ObjectDetector) return true;
   return new Promise(function(resolve){ let done=false; const t=setTimeout(function(){ if(!done){ done=true; resolve(false);} },15000); window.addEventListener('mediapipe-loaded', function(){ if(!done){ done=true; clearTimeout(t); resolve(true);} },{once:true}); });
@@ -189,18 +202,25 @@ async function predictWebcam(){
         if(conf >= 50){
           const videoArea = (video.videoWidth || 640) * (video.videoHeight || 480);
           const ratio = maxArea / videoArea;
-          if(ratio >= 0.02){
+          if(ratio >= 0.01){
             obstacleConfirmCount++;
-            if(obstacleConfirmCount >= 5){
+            if(obstacleConfirmCount >= 2){
               let rawLabel = closest.categories[0].label.toLowerCase();
-              // MediaPipe والے ناموں کو ہماری objects.json والے ناموں سے ملانا
               let mapLabel = rawLabel;
               if(rawLabel === "dining table") mapLabel = "table";
               if(rawLabel === "couch") mapLabel = "sofa";
               if(rawLabel === "tv") mapLabel = "computer";
-              const t = getAlertText(mapLabel); statusEl.innerText = t; const now = Date.now();
-              if(currentMode !== "obstacle" || lastObstacleName !== t || (now - lastObstacleAlertTime > 4000)){ currentMode="obstacle"; lastObstacleName=t; lastObstacleAlertTime=now; triggerVibration(); speak(t,true); }
-              if(now - lastBeepTime > 800){ lastBeepTime = now; playBeep('obstacle'); }
+              const t = getAlertText(mapLabel);
+              statusEl.innerText = t;
+              // سب سے اہم تبدیلی: اگر یہی رکاوٹ پہلے ہی بول چکے ہیں تو دوبارہ مت بولو - 4 سیکنڈ والا ریپیٹ ختم کر دیا
+              if(currentMode !== "obstacle" || lastObstacleName !== t){
+                currentMode = "obstacle";
+                lastObstacleName = t;
+                triggerVibration();
+                speak(t, true);
+              }
+              const now = Date.now();
+              if(now - lastBeepTime > 1500){ lastBeepTime = now; playBeep('obstacle'); }
             }
           } else { handleClear(); }
         } else { handleClear(); }
@@ -211,20 +231,27 @@ async function predictWebcam(){
   }
   if(isLive) window.requestAnimationFrame(predictWebcam);
 }
+
+// رستہ صاف والا - صرف ایک بار بولے گا جب رستہ پہلی بار صاف ہو گا
 function handleClear(){
-  obstacleConfirmCount = 0; const now = Date.now();
+  obstacleConfirmCount = 0;
   const clearText = getClearText();
-  if(currentMode !== "clear"){ currentMode="clear"; lastObstacleName=""; if(isSpeakingObstacle){ window.speechSynthesis.cancel(); isSpeakingObstacle=false; } speak(clearText, false); lastClearSpeakTime = now; }
   statusEl.innerText = clearText;
-  if(now - lastClearSoundTime > 1000){ lastClearSoundTime = now; playBeep('clear'); }
-  if(now - lastClearSpeakTime > 8000){ lastClearSpeakTime = now; speak(clearText, false); }
+  // اگر پہلے سے ہی صاف والے موڈ میں ہیں تو دوبارہ مت بولو
+  if(currentMode !== "clear"){
+    currentMode = "clear";
+    lastObstacleName = "";
+    speak(clearText, false);
+  }
+  const now = Date.now();
+  if(now - lastBeepTime > 2000){ lastBeepTime = now; playBeep('clear'); }
 }
 function stopCamera(){
   if('speechSynthesis' in window) window.speechSynthesis.cancel();
   if('vibrate' in navigator){ try{ navigator.vibrate(0); }catch(e){} }
   isLive = false; if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
   video.srcObject = null; statusEl.innerText = "STATUS: OFF"; startBtn.style.display='block'; startBtn.innerText='START LIVE GUIDE'; stopBtn.style.display='none';
-  isSpeakingObstacle=false; currentMode="clear"; lastObstacleName=""; obstacleConfirmCount=0; wallConfirmCount=0;
+  currentMode="clear"; lastObstacleName=""; obstacleConfirmCount=0; wallConfirmCount=0; lastSpoken="";
 }
 startBtn.addEventListener('click', async ()=>{ await startCamera(); });
 stopBtn.addEventListener('click', ()=>{ stopCamera(); });
