@@ -156,6 +156,18 @@ let clearWaitCount = 0;
 let lastObstacleAlertTime = 0;
 let obstacleConfirmCount = 0;
 let isDetectorLoading = false;
+let clearConfirmCount = 0;
+let jsonObjects = null;
+let jsonLanguages = null;
+fetch('objects.json').then(r => r.json()).then(data => {
+  if (data && data.objects) {
+    jsonObjects = {};
+    jsonLanguages = data.languages || null;
+    data.objects.forEach(function(o){
+      jsonObjects[o.id] = o;
+    });
+  }
+}).catch(function(){});
 const translations = {
   'ur-PK': { loading: 'سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔', started: 'اسمارٹ کین آن ہے۔ کیمرہ اور سنسور ایکٹو ہیں۔', stopClose: 'الرٹ ہو جاؤ، آگے رکاوٹ ہے', clearPath: 'رستہ صاف ہے، آگے بڑھیں۔', camError: 'کیمرہ کی اجازت دیں', netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ' },
   'en-US': { loading: 'Sensor turning on. Please wait.', started: 'Smart Cane is on. Camera active.', stopClose: 'Alert, obstacle ahead', clearPath: 'Path is clear, move forward.', camError: 'Allow camera access', netError: 'Internet or model loading issue' },
@@ -251,6 +263,14 @@ const translations = {
 };
 function getLocalizedName(category) {
   try {
+    if (jsonObjects && jsonObjects[category]) {
+      const obj = jsonObjects[category];
+      if (obj.names && jsonLanguages) {
+        const idx = jsonLanguages.indexOf(langSel.value);
+        if (idx >= 0 && obj.names[idx]) return obj.names[idx];
+      }
+      if (obj.names && obj.names[0]) return obj.names[0];
+    }
     if (typeof window.getObjectName === 'function') {
       const n = window.getObjectName(category, langSel.value);
       if (n && n !== category) return n;
@@ -303,9 +323,8 @@ function speak(text, isObstacle = false) {
   if (!('speechSynthesis' in window)) return;
   const now = Date.now();
   if (text === lastSpoken && now - lastSpeakTime < 2000 && !isObstacle) return;
-  if (isObstacle && currentMode !== "obstacle") { window.speechSynthesis.cancel(); }
-  if (!isObstacle && isSpeakingObstacle) return;
   if (isObstacle) { window.speechSynthesis.cancel(); }
+  if (!isObstacle && isSpeakingObstacle) return;
   lastSpoken = text; lastSpeakTime = now;
   if (isObstacle) { isSpeakingObstacle = true; }
   const utterance = new SpeechSynthesisUtterance(text);
@@ -391,10 +410,10 @@ async function predictWebcam() {
           const videoArea = videoWidth * (video.videoHeight || 480);
           const sizeRatio = maxArea / videoArea;
           if (sizeRatio >= 0.02) {
+            clearConfirmCount = 0;
             obstacleConfirmCount++;
-            if (obstacleConfirmCount >= 5) {
+            if (obstacleConfirmCount >= 2) {
               let detectedCategory = closest.categories[0].categoryName || "";
-              if (sizeRatio >= 0.55) { detectedCategory = "wall"; }
               const localizedName = getLocalizedName(detectedCategory);
               const fullObstacleText = getT('stopClose') + " : " + localizedName;
               statusEl.innerText = fullObstacleText;
@@ -417,6 +436,8 @@ async function predictWebcam() {
 }
 function handleClearPath() {
   obstacleConfirmCount = 0;
+  clearConfirmCount++;
+  if (clearConfirmCount < 10) { return; }
   const now = Date.now();
   if (currentMode !== "clear") {
     currentMode = "clear"; lastObstacleName = "";
@@ -433,7 +454,7 @@ function stopCamera() {
   isLive = false;
   if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
   video.srcObject = null; statusEl.innerText = "STATUS: OFF"; startBtn.style.display = 'block'; startBtn.innerText = 'START'; stopBtn.style.display = 'none';
-  isSpeakingObstacle = false; clearWaitCount = 0; currentMode = "clear"; lastObstacleName = ""; lastObstacleAlertTime = 0; obstacleConfirmCount = 0; isDetectorLoading = false;
+  isSpeakingObstacle = false; clearWaitCount = 0; currentMode = "clear"; lastObstacleName = ""; lastObstacleAlertTime = 0; obstacleConfirmCount = 0; clearConfirmCount = 0; isDetectorLoading = false;
 }
 langSel.addEventListener('change', () => { lightVibration(); try { if (typeof window.setCustomLanguage === 'function') { window.setCustomLanguage(langSel.value); } if (typeof window.setLanguage === 'function') { window.setLanguage(langSel.value); } const ls = document.getElementById('languageSelect'); if (ls) { ls.value = langSel.value; ls.dispatchEvent(new Event('change')); } } catch(e) {} });
 langSel.addEventListener('click', () => { lightVibration(); });
