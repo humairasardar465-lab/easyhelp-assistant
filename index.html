@@ -152,6 +152,7 @@ let currentMode = "clear";
 let lastObstacleName = "";
 let audioCtx = null;
 let isSpeakingObstacle = false;
+let isSpeakingAny = false;
 let clearWaitCount = 0;
 let lastObstacleAlertTime = 0;
 let obstacleConfirmCount = 0;
@@ -165,7 +166,7 @@ let NEAR_RATIO = 0.02;
 let WALL_FAST_CONFIRM = 2;
 let tallConfirmCount = 0;
 let tallCanvas = null;
-let WALL_TALL_CONFIRM_NEEDED = 1;
+let WALL_TALL_CONFIRM_NEEDED = 3;
 let FAR_CONFIDENCE = 65;
 let NEAR_CONFIDENCE = 20;
 let lastFrameAvg = -1;
@@ -174,6 +175,7 @@ let lastDistanceTime = 0;
 let currentLat = 0;
 let currentLng = 0;
 let gpsWatchId = null;
+let pendingSpeech = null;
 try{ if('speechSynthesis' in window){ var _pre = new SpeechSynthesisUtterance(""); _pre.lang = langSel.value; _pre.volume = 0; window.speechSynthesis.speak(_pre); } }catch(e){}
 const translations = {
   'ur-PK': { loading: 'سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔', started: 'اسمارٹ کین آن ہے۔ کیمرہ اور سنسور ایکٹو ہیں۔', stopClose: 'الرٹ ہو جاؤ', clearPath: 'رستہ صاف ہے، آگے بڑھیں۔', camError: 'کیمرہ کی اجازت دیں', netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ', meterWord: 'میٹر دور ہے', frontWord: 'سامنے رکاوٹ ہے', leftWord: 'بائیں سائیڈ پر رکاوٹ ہے', rightWord: 'دائیں سائیڈ پر رکاوٹ ہے' },
@@ -312,18 +314,33 @@ function speak(text, isObstacle = false) {
   if (!text) return;
   if (!('speechSynthesis' in window)) return;
   const now = Date.now();
-  if (text === lastSpoken && now - lastSpeakTime < 2000 && !isObstacle) return;
-  if (isObstacle) { try{ window.speechSynthesis.cancel(); }catch(e){} isSpeakingObstacle = false; }
-  if (isObstacle && currentMode !== "obstacle") { window.speechSynthesis.cancel(); }
-  if (!isObstacle && isSpeakingObstacle) return;
-  if (isObstacle) { window.speechSynthesis.cancel(); }
+  if (isSpeakingAny) {
+    if (isObstacle && currentMode !== "obstacle") { pendingSpeech = { text: text, isObstacle: isObstacle }; return; }
+    if (!isObstacle && currentMode === "clear" && lastSpoken !== text) { pendingSpeech = { text: text, isObstacle: isObstacle }; return; }
+    if (text === lastSpoken) return;
+    pendingSpeech = { text: text, isObstacle: isObstacle };
+    return;
+  }
+  if (text === lastSpoken && now - lastSpeakTime < 2500 && !isObstacle) return;
   lastSpoken = text; lastSpeakTime = now;
-  if (isObstacle) { isSpeakingObstacle = true; }
+  isSpeakingAny = true;
+  if (isObstacle) isSpeakingObstacle = true;
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = langSel.value;
-  utterance.onend = () => { if (isObstacle) { setTimeout(() => { isSpeakingObstacle = false; }, 50); } };
-  utterance.onerror = () => { if (isObstacle) { setTimeout(() => { isSpeakingObstacle = false; }, 50); } };
+  utterance.rate = 0.95;
+  const finish = () => {
+    isSpeakingAny = false;
+    if (isObstacle) { setTimeout(() => { isSpeakingObstacle = false; }, 300); } else { isSpeakingObstacle = false; }
+    if (pendingSpeech) { const p = pendingSpeech; pendingSpeech = null; setTimeout(() => { speak(p.text, p.isObstacle); }, 300); }
+  };
+  utterance.onend = finish;
+  utterance.onerror = finish;
   window.speechSynthesis.speak(utterance);
+}
+function forceSpeakClear(text) {
+  try { window.speechSynthesis.cancel(); } catch(e){}
+  isSpeakingAny = false; isSpeakingObstacle = false; pendingSpeech = null;
+  speak(text, false);
 }
 function isWallDoorStairsBlocked() {
   try {
@@ -354,7 +371,7 @@ function isWallDoorStairsBlocked() {
     let right = getStats(24, 32, 6, 18);
     let allAvg = (top.avg + centre.avg + bottom.avg) / 3;
     let isMoving = false;
-    if (lastFrameAvg !== -1) { if (Math.abs(allAvg - lastFrameAvg) > 35) isMoving = true; }
+    if (lastFrameAvg !== -1) { if (Math.abs(allAvg - lastFrameAvg) > 15) isMoving = true; }
     lastFrameAvg = allAvg;
     if (isMoving) { wallConfirmCount = 0; return false; }
     let wallTallBlocked = false;
@@ -372,11 +389,11 @@ function alertWallDoorStairs() {
   const fullObstacleText = getT('stopClose') + ", " + getT('frontWord') + ", " + getDistanceText(dist);
   statusEl.innerText = fullObstacleText;
   const now = Date.now();
-  if (currentMode !== "obstacle" || lastObstacleName !== fullObstacleText || (now - lastObstacleAlertTime > 4000)) {
+  if (currentMode !== "obstacle" || lastObstacleName !== fullObstacleText || (now - lastObstacleAlertTime > 6000)) {
     currentMode = "obstacle"; lastObstacleName = fullObstacleText; lastObstacleAlertTime = now;
     triggerVibration(); speak(fullObstacleText, true);
   }
-  if (now - lastBeepTime > 800) { lastBeepTime = now; playBeep('obstacle'); }
+  if (now - lastBeepTime > 1200) { lastBeepTime = now; playBeep('obstacle'); }
 }
 async function waitForMediapipe() {
   if (window.FilesetResolver && window.ObjectDetector) return true;
@@ -470,11 +487,11 @@ async function predictWebcam() {
               const fullObstacleText = getT('stopClose') + ", " + sideWord + ", " + getDistanceText(distM);
               statusEl.innerText = fullObstacleText;
               const now = Date.now();
-              if (currentMode !== "obstacle" || lastObstacleName !== fullObstacleText || (now - lastObstacleAlertTime > 4000)) {
+              if (currentMode !== "obstacle" || lastObstacleName !== fullObstacleText || (now - lastObstacleAlertTime > 6000)) {
                 currentMode = "obstacle"; lastObstacleName = fullObstacleText; lastObstacleAlertTime = now;
                 triggerVibration(); speak(fullObstacleText, true);
               }
-              if (now - lastBeepTime > 800) {
+              if (now - lastBeepTime > 1200) {
                 lastBeepTime = now;
                 if (sizeRatio >= 0.15) { playBeep('obstacle'); } else { playBeep('small'); }
               }
@@ -498,12 +515,13 @@ function handleClearPath() {
   const now = Date.now();
   if (currentMode !== "clear") {
     currentMode = "clear"; lastObstacleName = "";
-    if (isSpeakingObstacle) { window.speechSynthesis.cancel(); isSpeakingObstacle = false; }
-    speak(getT('clearPath'), false); lastClearSpeakTime = now;
+    forceSpeakClear(getT('clearPath')); lastClearSpeakTime = now;
+  } else {
+    statusEl.innerText = getT('clearPath');
+    if (now - lastClearSpeakTime > 10000) { lastClearSpeakTime = now; speak(getT('clearPath'), false); }
   }
   statusEl.innerText = getT('clearPath');
-  if (now - lastClearSoundTime > 1000) { lastClearSoundTime = now; playBeep('clear'); }
-  if (now - lastClearSpeakTime > 8000) { lastClearSpeakTime = now; speak(getT('clearPath'), false); }
+  if (now - lastClearSoundTime > 1500) { lastClearSoundTime = now; playBeep('clear'); }
 }
 function stopCamera() {
   if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); }
@@ -512,7 +530,7 @@ function stopCamera() {
   isLive = false;
   if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
   video.srcObject = null; statusEl.innerText = "STATUS: OFF"; startBtn.style.display = 'block'; startBtn.innerText = 'START'; stopBtn.style.display = 'none';
-  isSpeakingObstacle = false; clearWaitCount = 0; currentMode = "clear"; lastObstacleName = ""; lastObstacleAlertTime = 0; obstacleConfirmCount = 0; wallConfirmCount = 0; isDetectorLoading = false; lastFrameAvg = -1;
+  isSpeakingObstacle = false; isSpeakingAny = false; pendingSpeech = null; clearWaitCount = 0; currentMode = "clear"; lastObstacleName = ""; lastObstacleAlertTime = 0; obstacleConfirmCount = 0; wallConfirmCount = 0; isDetectorLoading = false; lastFrameAvg = -1;
 }
 langSel.addEventListener('change', () => { lightVibration(); });
 langSel.addEventListener('click', () => { lightVibration(); });
