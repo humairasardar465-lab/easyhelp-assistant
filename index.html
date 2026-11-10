@@ -159,11 +159,12 @@ let isDetectorLoading = false;
 let wallConfirmCount = 0;
 let wallCanvas = null;
 let lastWallCheck = 0;
-// Detection tuning
+// Detection tuning - fixed values to avoid false obstacle on clear path
 let OBSTACLE_CONFIRM_NEEDED = 3;
-let REQUIRED_CONFIDENCE = 30;
+let REQUIRED_CONFIDENCE = 40;
 let OBSTACLE_SIZE_RATIO = 0.02;
-let WALL_CONFIRM_NEEDED = 1;
+let WALL_CONFIRM_NEEDED = 3;
+let lastFrameAvg = -1;
 // GPS walked distance
 let totalWalkedMeters = 0;
 let lastGpsLat = 0;
@@ -337,7 +338,7 @@ function speak(text, isObstacle = false) {
   utterance.onerror = () => { if (isObstacle) { setTimeout(() => { isSpeakingObstacle = false; }, 50); } };
   window.speechSynthesis.speak(utterance);
 }
-// Wall / door / gate / stairs detection - preserved logic
+// Wall / door / gate / stairs detection - fixed to check top, center and bottom together
 function isWallDoorStairsBlocked() {
   try {
     if (!video || !video.videoWidth) return false;
@@ -348,19 +349,30 @@ function isWallDoorStairsBlocked() {
     const ctx = wallCanvas.getContext('2d', { willReadFrequently: true });
     ctx.drawImage(video, 0, 0, 32, 24);
     const d = ctx.getImageData(0, 0, 32, 24).data;
-    // Center region check
-    let centreSum = 0, centreCount = 0, centreMin = 255, centreMax = 0;
-    for (let y = 6; y < 18; y++) {
-      for (let x = 8; x < 24; x++) {
-        const idx = (y * 32 + x) * 4;
-        const g = (d[idx] + d[idx+1] + d[idx+2]) / 3;
-        centreSum += g; centreCount++; if (g < centreMin) centreMin = g; if (g > centreMax) centreMax = g;
+    function getStats(x0, x1, y0, y1) {
+      let min = 255, max = 0, sum = 0, count = 0;
+      for (let y = y0; y < y1; y++) {
+        for (let x = x0; x < x1; x++) {
+          const idx = (y * 32 + x) * 4;
+          const g = (d[idx] + d[idx+1] + d[idx+2]) / 3;
+          sum += g; count++; if (g < min) min = g; if (g > max) max = g;
+        }
       }
+      return { range: max - min, avg: sum / count };
     }
-    const centreRange = centreMax - centreMin;
-    const centreAvg = centreSum / centreCount;
-    // Uniform center region indicates wall / door / gate / stairs
-    if (centreRange < 65 && centreAvg > 20) { wallConfirmCount++; } else { wallConfirmCount = 0; }
+    let top = getStats(8, 24, 0, 6);
+    let centre = getStats(8, 24, 6, 18);
+    let bottom = getStats(8, 24, 18, 24);
+    let allAvg = (top.avg + centre.avg + bottom.avg) / 3;
+    // Movement check - if scene is changing fast, it is not a wall
+    let isMoving = false;
+    if (lastFrameAvg !== -1) { if (Math.abs(allAvg - lastFrameAvg) > 15) isMoving = true; }
+    lastFrameAvg = allAvg;
+    if (isMoving) { wallConfirmCount = 0; return false; }
+    // Real wall / door / gate: top, center and bottom are all uniform together
+    let isWall = false;
+    if (centre.range < 55 && top.range < 55 && bottom.range < 75 && centre.avg > 20) isWall = true;
+    if (isWall) { wallConfirmCount++; } else { wallConfirmCount = 0; }
     return wallConfirmCount >= WALL_CONFIRM_NEEDED;
   } catch(e) { return false; }
 }
@@ -391,7 +403,7 @@ async function initDetector() {
     const ok = await waitForMediapipe();
     if (!ok) { throw new Error('mediapipe timeout'); }
     const vision = await window.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm");
-    const detectorPromise = window.ObjectDetector.createFromOptions(vision, { baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite", delegate: "CPU" }, scoreThreshold: 0.30, runningMode: "VIDEO" });
+    const detectorPromise = window.ObjectDetector.createFromOptions(vision, { baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite", delegate: "CPU" }, scoreThreshold: 0.40, runningMode: "VIDEO" });
     const timeoutPromise = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('model timeout')); }, 15000); });
     objectDetector = await Promise.race([detectorPromise, timeoutPromise]);
     isDetectorLoading = false;
