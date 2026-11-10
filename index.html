@@ -163,6 +163,8 @@ let FAST_CONFIRM = 2;
 let FAR_RATIO = 0.008;
 let NEAR_RATIO = 0.02;
 let WALL_FAST_CONFIRM = 2;
+let tallConfirmCount = 0;
+let tallCanvas = null;
 try{ if('speechSynthesis' in window){ var _pre = new SpeechSynthesisUtterance(""); _pre.lang = langSel.value; _pre.volume = 0; window.speechSynthesis.speak(_pre); } }catch(e){}
 const translations = {
   'ur-PK': { loading: 'سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔', started: 'اسمارٹ کین آن ہے۔ کیمرہ اور سنسور ایکٹو ہیں۔', stopClose: 'الرٹ ہو جاؤ، آگے رکاوٹ ہے', clearPath: 'رستہ صاف ہے، آگے بڑھیں۔', camError: 'کیمرہ کی اجازت دیں', netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ' },
@@ -330,7 +332,42 @@ function isWallDoorStairsBlocked() {
     }
     const centreRange = centreMax - centreMin;
     const centreAvg = centreSum / centreCount;
-    if (centreRange < 65 && centreAvg > 20) { wallConfirmCount++; } else { wallConfirmCount = 0; }
+    let topMin = 255, topMax = 0;
+    for (let y = 0; y < 6; y++) {
+      for (let x = 8; x < 24; x++) {
+        const idx = (y * 32 + x) * 4;
+        const g = (d[idx] + d[idx+1] + d[idx+2]) / 3;
+        if (g < topMin) topMin = g; if (g > topMax) topMax = g;
+      }
+    }
+    let topRange = topMax - topMin;
+    let midMin = 255, midMax = 0;
+    for (let y = 2; y < 22; y++) {
+      for (let x = 14; x < 18; x++) {
+        const idx = (y * 32 + x) * 4;
+        const g = (d[idx] + d[idx+1] + d[idx+2]) / 3;
+        if (g < midMin) midMin = g; if (g > midMax) midMax = g;
+      }
+    }
+    let midRange = midMax - midMin;
+    let tallBlocked = (midRange < 70);
+    let rowAvgs = [];
+    for (let y = 0; y < 24; y++) {
+      let s = 0, c = 0;
+      for (let x = 8; x < 24; x++) {
+        const idx = (y * 32 + x) * 4;
+        s += (d[idx] + d[idx+1] + d[idx+2]) / 3; c++;
+      }
+      rowAvgs.push(s / c);
+    }
+    let stepChanges = 0;
+    for (let i = 1; i < rowAvgs.length; i++) { if (Math.abs(rowAvgs[i] - rowAvgs[i-1]) > 18) stepChanges++; }
+    let stepBlocked = (stepChanges >= 4);
+    let isBlocked = false;
+    if (centreRange < 65 && centreAvg > 20 && topRange < 90) isBlocked = true;
+    if (tallBlocked && centreRange < 90) isBlocked = true;
+    if (stepBlocked && centreRange < 110) isBlocked = true;
+    if (isBlocked) { wallConfirmCount++; } else { wallConfirmCount = 0; }
     return wallConfirmCount >= WALL_FAST_CONFIRM;
   } catch(e) { return false; }
 }
