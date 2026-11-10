@@ -165,6 +165,11 @@ let NEAR_RATIO = 0.02;
 let WALL_FAST_CONFIRM = 2;
 let tallConfirmCount = 0;
 let tallCanvas = null;
+let groundConfirmCount = 0;
+let GROUND_CONFIRM_NEEDED = 4;
+let WALL_TALL_CONFIRM_NEEDED = 1;
+let FAR_CONFIDENCE = 65;
+let NEAR_CONFIDENCE = 20;
 try{ if('speechSynthesis' in window){ var _pre = new SpeechSynthesisUtterance(""); _pre.lang = langSel.value; _pre.volume = 0; window.speechSynthesis.speak(_pre); } }catch(e){}
 const translations = {
   'ur-PK': { loading: 'سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔', started: 'اسمارٹ کین آن ہے۔ کیمرہ اور سنسور ایکٹو ہیں۔', stopClose: 'الرٹ ہو جاؤ، آگے رکاوٹ ہے', clearPath: 'رستہ صاف ہے، آگے بڑھیں۔', camError: 'کیمرہ کی اجازت دیں', netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ' },
@@ -316,7 +321,7 @@ function isWallDoorStairsBlocked() {
   try {
     if (!video || !video.videoWidth) return false;
     const now = Date.now();
-    if (now - lastWallCheck < 100) return wallConfirmCount >= WALL_FAST_CONFIRM;
+    if (now - lastWallCheck < 100) return wallConfirmCount >= WALL_TALL_CONFIRM_NEEDED || groundConfirmCount >= GROUND_CONFIRM_NEEDED;
     lastWallCheck = now;
     if (!wallCanvas) { wallCanvas = document.createElement('canvas'); wallCanvas.width = 32; wallCanvas.height = 24; }
     const ctx = wallCanvas.getContext('2d', { willReadFrequently: true });
@@ -350,15 +355,19 @@ function isWallDoorStairsBlocked() {
     }
     let stepChanges = 0;
     for (let i = 1; i < rowAvgs.length; i++) { if (Math.abs(rowAvgs[i] - rowAvgs[i-1]) > 16) stepChanges++; }
-    let isBlocked = false;
-    if (centre.range < 55 && top.range < 55 && bottom.range < 75 && centre.avg > 20) isBlocked = true;
+    let wallTallBlocked = false;
+    let groundBlocked = false;
+    if (centre.range < 55 && top.range < 55 && bottom.range < 75 && centre.avg > 20) wallTallBlocked = true;
     let midDiffLeft = Math.abs(mid.avg - left.avg);
     let midDiffRight = Math.abs(mid.avg - right.avg);
-    if (mid.range < 65 && (midDiffLeft > 32 || midDiffRight > 32) && centre.range > 55) isBlocked = true;
-    if (stepChanges >= 5 && centre.range > 60 && top.range > 50) isBlocked = true;
-    if (bottom.range < 75 && top.range > 85 && centre.range > 60) isBlocked = false;
-    if (isBlocked) { wallConfirmCount++; } else { wallConfirmCount = 0; }
-    return wallConfirmCount >= WALL_FAST_CONFIRM;
+    if (mid.range < 65 && (midDiffLeft > 32 || midDiffRight > 32) && centre.range > 55) wallTallBlocked = true;
+    if (stepChanges >= 5 && centre.range > 60 && top.range > 50) wallTallBlocked = true;
+    if (bottom.range < 60 && top.range > 85 && centre.range > 60) groundBlocked = false;
+    if (bottom.range < 45 && centre.range < 45 && top.range > 85) groundBlocked = true;
+    if (wallTallBlocked) { wallConfirmCount++; groundConfirmCount = 0; }
+    else if (groundBlocked) { groundConfirmCount++; wallConfirmCount = 0; }
+    else { wallConfirmCount = 0; groundConfirmCount = 0; }
+    return wallConfirmCount >= WALL_TALL_CONFIRM_NEEDED || groundConfirmCount >= GROUND_CONFIRM_NEEDED;
   } catch(e) { return false; }
 }
 function alertWallDoorStairs() {
@@ -388,7 +397,7 @@ async function initDetector() {
     const ok = await waitForMediapipe();
     if (!ok) { throw new Error('mediapipe timeout'); }
     const vision = await window.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm");
-    const detectorPromise = window.ObjectDetector.createFromOptions(vision, { baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite", delegate: "CPU" }, scoreThreshold: 0.50, runningMode: "VIDEO" });
+    const detectorPromise = window.ObjectDetector.createFromOptions(vision, { baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite", delegate: "CPU" }, scoreThreshold: 0.20, runningMode: "VIDEO" });
     const timeoutPromise = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('model timeout')); }, 15000); });
     objectDetector = await Promise.race([detectorPromise, timeoutPromise]);
     isDetectorLoading = false;
@@ -440,14 +449,17 @@ async function predictWebcam() {
       if (!hasObjectDetected) { nothingCount++; } else { nothingCount = 0; clearWaitCount = 0; }
       if (hasObjectDetected) {
         wallConfirmCount = 0;
+        groundConfirmCount = 0;
         let closest = detections.detections[0]; let maxArea = 0;
         for (let det of detections.detections) { const area = det.boundingBox.width * det.boundingBox.height; if (area > maxArea) { maxArea = area; closest = det; } }
         const confidence = Math.round(closest.categories[0].score * 100);
-        const requiredConfidence = 50;
+        const videoWidth = video.videoWidth || 640;
+        const videoArea = videoWidth * (video.videoHeight || 480);
+        const sizeRatio = maxArea / videoArea;
+        let requiredConfidence = FAR_CONFIDENCE;
+        if (sizeRatio >= 0.05) { requiredConfidence = NEAR_CONFIDENCE; }
+        if (sizeRatio >= 0.15) { requiredConfidence = NEAR_CONFIDENCE; }
         if (confidence >= requiredConfidence) {
-          const videoWidth = video.videoWidth || 640;
-          const videoArea = videoWidth * (video.videoHeight || 480);
-          const sizeRatio = maxArea / videoArea;
           if (sizeRatio >= FAR_RATIO) {
             obstacleConfirmCount++;
             if (obstacleConfirmCount >= FAST_CONFIRM) {
@@ -495,7 +507,7 @@ function stopCamera() {
   isLive = false;
   if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
   video.srcObject = null; statusEl.innerText = "STATUS: OFF"; startBtn.style.display = 'block'; startBtn.innerText = 'START'; stopBtn.style.display = 'none';
-  isSpeakingObstacle = false; clearWaitCount = 0; currentMode = "clear"; lastObstacleName = ""; lastObstacleAlertTime = 0; obstacleConfirmCount = 0; wallConfirmCount = 0; isDetectorLoading = false;
+  isSpeakingObstacle = false; clearWaitCount = 0; currentMode = "clear"; lastObstacleName = ""; lastObstacleAlertTime = 0; obstacleConfirmCount = 0; wallConfirmCount = 0; groundConfirmCount = 0; isDetectorLoading = false;
 }
 langSel.addEventListener('change', () => { lightVibration(); });
 langSel.addEventListener('click', () => { lightVibration(); });
