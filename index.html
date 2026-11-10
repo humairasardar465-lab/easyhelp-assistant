@@ -166,7 +166,7 @@ let WALL_FAST_CONFIRM = 2;
 let tallConfirmCount = 0;
 let tallCanvas = null;
 let groundConfirmCount = 0;
-let GROUND_CONFIRM_NEEDED = 4;
+let GROUND_CONFIRM_NEEDED = 10;
 let WALL_TALL_CONFIRM_NEEDED = 1;
 let FAR_CONFIDENCE = 65;
 let NEAR_CONFIDENCE = 20;
@@ -344,26 +344,13 @@ function isWallDoorStairsBlocked() {
     let mid = getStats(14, 18, 2, 22);
     let left = getStats(0, 8, 6, 18);
     let right = getStats(24, 32, 6, 18);
-    let rowAvgs = [];
-    for (let y = 0; y < 24; y++) {
-      let s = 0, c = 0;
-      for (let x = 8; x < 24; x++) {
-        const idx = (y * 32 + x) * 4;
-        s += (d[idx] + d[idx+1] + d[idx+2]) / 3; c++;
-      }
-      rowAvgs.push(s / c);
-    }
-    let stepChanges = 0;
-    for (let i = 1; i < rowAvgs.length; i++) { if (Math.abs(rowAvgs[i] - rowAvgs[i-1]) > 16) stepChanges++; }
     let wallTallBlocked = false;
     let groundBlocked = false;
     if (centre.range < 55 && top.range < 55 && bottom.range < 75 && centre.avg > 20) wallTallBlocked = true;
     let midDiffLeft = Math.abs(mid.avg - left.avg);
     let midDiffRight = Math.abs(mid.avg - right.avg);
     if (mid.range < 65 && (midDiffLeft > 32 || midDiffRight > 32) && centre.range > 55) wallTallBlocked = true;
-    if (stepChanges >= 5 && centre.range > 60 && top.range > 50) wallTallBlocked = true;
-    if (bottom.range < 60 && top.range > 85 && centre.range > 60) groundBlocked = false;
-    if (bottom.range < 45 && centre.range < 45 && top.range > 85) groundBlocked = true;
+    if (bottom.range < 18 && centre.range < 18 && top.range < 18) groundBlocked = true;
     if (wallTallBlocked) { wallConfirmCount++; groundConfirmCount = 0; }
     else if (groundBlocked) { groundConfirmCount++; wallConfirmCount = 0; }
     else { wallConfirmCount = 0; groundConfirmCount = 0; }
