@@ -164,10 +164,7 @@ let OBSTACLE_SIZE_RATIO = 0.02;
 let WALL_CONFIRM_NEEDED = 2;
 let lastFrameAvg = -1;
 let clearToneTimer = null;
-// FIX 1 - Alert ek martaba poora bole, dobara na bole. Clear ko Alert ke doran rokne ke liye
-let lastObstacleTime = 0;
-let obstacleSpokenForThis = "";
-let clearBlockedUntil = 0;
+let lastObstacleSpokenText = "";
 let totalWalkedMeters = 0;
 let lastGpsLat = 0;
 let lastGpsLng = 0;
@@ -279,7 +276,6 @@ function getObstacleText(sideWord, dist) { return getT('stopClose') + ", " + sid
 function getDistanceMeters(sizeRatio) { if (sizeRatio <= 0) return 4; let d = 0.45 / Math.sqrt(sizeRatio); if (d > 4) d = 4; if (d < 0.5) d = 0.5; return Math.round(d * 10) / 10; }
 function getSideWord(cxRatio) { if (cxRatio < 0.40) return getT('leftWord'); if (cxRatio > 0.60) return getT('rightWord'); return getT('frontWord'); }
 function getDistanceBetween(lat1, lon1, lat2, lon2) { const R = 6371000; const dLat = (lat2 - lat1) * Math.PI / 180; const dLon = (lon2 - lon1) * Math.PI / 180; const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2) * Math.sin(dLon/2); const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); return R * c; }
-// GPS - abhi bhi mojood hai, sirf thora narm kiya hai taake chalte hue gane, khare ho to na gane
 function startGPS() { try { if ('geolocation' in navigator) {
   gpsStartTime = Date.now(); gpsConsecutiveMoves = 0; gpsPendingMeters = 0; gpsLastTime = 0;
   gpsWatchId = navigator.geolocation.watchPosition(function(p){
@@ -330,37 +326,38 @@ function playBeep(type) {
     }
   } catch (e) {}
 }
-function speak(text, isObstacle = false, force = false) {
+// FIXED SPEAK - cancel par flag bhi reset, taake clear kabhi khamosh na ho
+function speak(text, isObstacle = false) {
   if (!text) return;
   if (!('speechSynthesis' in window)) return;
-  const now = Date.now();
-  if (text === lastSpoken && !isObstacle && !force) return;
-  if (isObstacle) { window.speechSynthesis.cancel(); }
-  if (!isObstacle && isSpeakingObstacle && !force) return;
-  if (force) { try { window.speechSynthesis.cancel(); } catch(e){} isSpeakingObstacle = false; }
-  lastSpoken = text; lastSpeakTime = now;
-  if (isObstacle) { isSpeakingObstacle = true; }
+  if (isObstacle) {
+    if (text === lastObstacleSpokenText && isSpeakingObstacle) return;
+    try { window.speechSynthesis.cancel(); } catch(e){}
+    isSpeakingObstacle = true;
+    lastObstacleSpokenText = text;
+  } else {
+    if (isSpeakingObstacle) return;
+    if (text === lastSpoken && Date.now() - lastSpeakTime < 1000) return;
+  }
+  lastSpoken = text; lastSpeakTime = Date.now();
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = langSel.value;
-  utterance.onend = () => { if (isObstacle) { setTimeout(() => { isSpeakingObstacle = false; }, 50); } };
-  utterance.onerror = () => { if (isObstacle) { setTimeout(() => { isSpeakingObstacle = false; }, 50); } };
+  utterance.onend = () => { if (isObstacle) { isSpeakingObstacle = false; } };
+  utterance.onerror = () => { if (isObstacle) { isSpeakingObstacle = false; } };
   window.speechSynthesis.speak(utterance);
 }
-// FIX - Alert ko ek hi martaba bolna, dobara nahi
-function speakObstacleOnce(fullText) {
-  const now = Date.now();
-  lastObstacleTime = now;
-  clearBlockedUntil = now + 3000;
-  stopClearTone();
-  if (obstacleSpokenForThis === fullText) return;
-  obstacleSpokenForThis = fullText;
-  currentMode = "obstacle"; lastObstacleName = fullText;
-  triggerVibration();
-  speak(fullText, true, true);
+function speakClearForce() {
+  try { window.speechSynthesis.cancel(); } catch(e){}
+  isSpeakingObstacle = false;
+  lastObstacleSpokenText = "";
+  lastSpoken = ""; lastSpeakTime = 0;
+  speak(getT('clearPath'), false);
 }
 function startClearTone() {
   if (clearToneTimer) return;
-  clearToneTimer = setInterval(function(){ if (isLive && currentMode === "clear" && Date.now() > clearBlockedUntil) { playBeep('clear'); } }, 1000);
+  clearToneTimer = setInterval(function(){
+    if (isLive && currentMode === "clear") { playBeep('clear'); }
+  }, 1000);
 }
 function stopClearTone() { if (clearToneTimer) { clearInterval(clearToneTimer); clearToneTimer = null; } }
 function isWallDoorStairsBlocked() {
@@ -400,10 +397,15 @@ function isWallDoorStairsBlocked() {
     return wallConfirmCount >= WALL_CONFIRM_NEEDED;
   } catch(e) { return false; }
 }
-function alertWallDoorStairs() {
-  const fullObstacleText = getObstacleText(getT('frontWord'), 1);
+function alertWallDoorStairs() { handleObstacle(getObstacleText(getT('frontWord'), 1)); }
+function handleObstacle(fullObstacleText) {
   statusEl.innerText = fullObstacleText;
-  speakObstacleOnce(fullObstacleText);
+  currentMode = "obstacle";
+  stopClearTone();
+  if (lastObstacleName !== fullObstacleText) {
+    lastObstacleName = fullObstacleText;
+    triggerVibration(); speak(fullObstacleText, true);
+  }
   const now = Date.now();
   if (now - lastBeepTime > 800) { lastBeepTime = now; playBeep('obstacle'); }
 }
@@ -450,7 +452,6 @@ async function startCamera() {
       try { await video.play(); } catch(e) {}
       isLive = true; statusEl.innerText = getT('started'); speak(getT('started'), false);
       startBtn.style.display = 'none'; stopBtn.style.display = 'block';
-      startClearTone();
       window.requestAnimationFrame(predictWebcam);
       const ok = await initDetector();
       if (!ok && isLive) { statusEl.innerText = getT('netError'); }
@@ -492,14 +493,21 @@ async function predictWebcam() {
               const cxRatio = (box.originX + box.width / 2) / videoWidth;
               const sideWord = getSideWord(cxRatio);
               const dist = getDistanceMeters(sizeRatio);
-              const fullObstacleText = getObstacleText(sideWord, dist);
-              statusEl.innerText = fullObstacleText;
-              speakObstacleOnce(fullObstacleText);
+              handleObstacle(getObstacleText(sideWord, dist));
               const now = Date.now();
-              if (now - lastBeepTime > 800) { lastBeepTime = now; if (sizeRatio >= 0.15) { playBeep('obstacle'); } else { playBeep('small'); } }
+              if (now - lastBeepTime > 800) {
+                lastBeepTime = now;
+                if (sizeRatio >= 0.15) { playBeep('obstacle'); } else { playBeep('small'); }
+              }
             }
-          } else if (wallBlocked) { obstacleConfirmCount = 0; alertWallDoorStairs(); } else { handleClearPath(); }
-        } else if (wallBlocked) { obstacleConfirmCount = 0; alertWallDoorStairs(); } else { handleClearPath(); }
+          } else if (wallBlocked) {
+            obstacleConfirmCount = 0;
+            alertWallDoorStairs();
+          } else { handleClearPath(); }
+        } else if (wallBlocked) {
+          obstacleConfirmCount = 0;
+          alertWallDoorStairs();
+        } else { handleClearPath(); }
       } else {
         if (wallBlocked) { obstacleConfirmCount = 0; alertWallDoorStairs(); } else { handleClearPath(); }
       }
@@ -510,22 +518,19 @@ async function predictWebcam() {
 function handleClearPath() {
   obstacleConfirmCount = 0;
   const now = Date.now();
-  // FIX 2 - Agar abhi Alert chal raha hai to Clear bilkul na bole, na tone bajaye
-  if (currentMode === "obstacle" || isSpeakingObstacle || now < clearBlockedUntil) {
-    statusEl.innerText = lastObstacleName || getT('clearPath');
-    return;
-  }
   if (currentMode !== "clear") {
-    currentMode = "clear"; lastObstacleName = ""; obstacleSpokenForThis = "";
-    if (isSpeakingObstacle) { window.speechSynthesis.cancel(); isSpeakingObstacle = false; }
+    currentMode = "clear"; lastObstacleName = "";
     lastClearSpeakTime = now;
+    speakClearForce();
     startClearTone();
-    speak(getT('clearPath'), false, true);
+    playBeep('clear');
   } else {
-    if (now - lastClearSpeakTime > 4000) { lastClearSpeakTime = now; speak(getT('clearPath'), false, true); }
+    if (now - lastClearSpeakTime > 4000) {
+      lastClearSpeakTime = now;
+      speak(getT('clearPath'), false);
+    }
   }
   statusEl.innerText = getT('clearPath');
-  startClearTone();
   if (totalWalkedMeters >= 5 && (totalWalkedMeters - lastAnnouncedWalkedMeters) >= 10) {
     lastAnnouncedWalkedMeters = Math.round(totalWalkedMeters);
     lastWalkAnnounceTime = now;
@@ -541,7 +546,7 @@ function stopCamera() {
   if (gpsWatchId) { try{ navigator.geolocation.clearWatch(gpsWatchId); }catch(e){} gpsWatchId = null; }
   if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
   video.srcObject = null; statusEl.innerText = "STATUS: OFF"; startBtn.style.display = 'block'; startBtn.innerText = 'START'; stopBtn.style.display = 'none';
-  isSpeakingObstacle = false; clearWaitCount = 0; currentMode = "clear"; lastObstacleName = ""; obstacleSpokenForThis = ""; obstacleConfirmCount = 0; wallConfirmCount = 0; isDetectorLoading = false; totalWalkedMeters = 0; hasLastGps = false; lastAnnouncedWalkedMeters = 0; gpsConsecutiveMoves = 0; gpsPendingMeters = 0; clearBlockedUntil = 0;
+  isSpeakingObstacle = false; lastObstacleSpokenText = ""; clearWaitCount = 0; currentMode = "clear"; lastObstacleName = ""; obstacleConfirmCount = 0; wallConfirmCount = 0; isDetectorLoading = false; totalWalkedMeters = 0; hasLastGps = false; lastAnnouncedWalkedMeters = 0;
 }
 langSel.addEventListener('change', () => { lightVibration(); });
 langSel.addEventListener('click', () => { lightVibration(); });
