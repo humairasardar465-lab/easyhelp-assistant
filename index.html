@@ -322,35 +322,23 @@ function isWallDoorStairsBlocked() {
     const ctx = wallCanvas.getContext('2d', { willReadFrequently: true });
     ctx.drawImage(video, 0, 0, 32, 24);
     const d = ctx.getImageData(0, 0, 32, 24).data;
-    let centreSum = 0, centreCount = 0, centreMin = 255, centreMax = 0;
-    for (let y = 6; y < 18; y++) {
-      for (let x = 8; x < 24; x++) {
-        const idx = (y * 32 + x) * 4;
-        const g = (d[idx] + d[idx+1] + d[idx+2]) / 3;
-        centreSum += g; centreCount++; if (g < centreMin) centreMin = g; if (g > centreMax) centreMax = g;
+    function getStats(x0, x1, y0, y1) {
+      let min = 255, max = 0, sum = 0, count = 0;
+      for (let y = y0; y < y1; y++) {
+        for (let x = x0; x < x1; x++) {
+          const idx = (y * 32 + x) * 4;
+          const g = (d[idx] + d[idx+1] + d[idx+2]) / 3;
+          sum += g; count++; if (g < min) min = g; if (g > max) max = g;
+        }
       }
+      return { range: max - min, avg: sum / count, min: min, max: max };
     }
-    const centreRange = centreMax - centreMin;
-    const centreAvg = centreSum / centreCount;
-    let topMin = 255, topMax = 0;
-    for (let y = 0; y < 6; y++) {
-      for (let x = 8; x < 24; x++) {
-        const idx = (y * 32 + x) * 4;
-        const g = (d[idx] + d[idx+1] + d[idx+2]) / 3;
-        if (g < topMin) topMin = g; if (g > topMax) topMax = g;
-      }
-    }
-    let topRange = topMax - topMin;
-    let midMin = 255, midMax = 0;
-    for (let y = 2; y < 22; y++) {
-      for (let x = 14; x < 18; x++) {
-        const idx = (y * 32 + x) * 4;
-        const g = (d[idx] + d[idx+1] + d[idx+2]) / 3;
-        if (g < midMin) midMin = g; if (g > midMax) midMax = g;
-      }
-    }
-    let midRange = midMax - midMin;
-    let tallBlocked = (midRange < 70);
+    let top = getStats(8, 24, 0, 6);
+    let centre = getStats(8, 24, 6, 18);
+    let bottom = getStats(8, 24, 18, 24);
+    let mid = getStats(14, 18, 2, 22);
+    let left = getStats(0, 8, 6, 18);
+    let right = getStats(24, 32, 6, 18);
     let rowAvgs = [];
     for (let y = 0; y < 24; y++) {
       let s = 0, c = 0;
@@ -361,12 +349,14 @@ function isWallDoorStairsBlocked() {
       rowAvgs.push(s / c);
     }
     let stepChanges = 0;
-    for (let i = 1; i < rowAvgs.length; i++) { if (Math.abs(rowAvgs[i] - rowAvgs[i-1]) > 18) stepChanges++; }
-    let stepBlocked = (stepChanges >= 4);
+    for (let i = 1; i < rowAvgs.length; i++) { if (Math.abs(rowAvgs[i] - rowAvgs[i-1]) > 16) stepChanges++; }
     let isBlocked = false;
-    if (centreRange < 65 && centreAvg > 20 && topRange < 90) isBlocked = true;
-    if (tallBlocked && centreRange < 90) isBlocked = true;
-    if (stepBlocked && centreRange < 110) isBlocked = true;
+    if (centre.range < 55 && top.range < 55 && bottom.range < 75 && centre.avg > 20) isBlocked = true;
+    let midDiffLeft = Math.abs(mid.avg - left.avg);
+    let midDiffRight = Math.abs(mid.avg - right.avg);
+    if (mid.range < 65 && (midDiffLeft > 32 || midDiffRight > 32) && centre.range > 55) isBlocked = true;
+    if (stepChanges >= 5 && centre.range > 60 && top.range > 50) isBlocked = true;
+    if (bottom.range < 75 && top.range > 85 && centre.range > 60) isBlocked = false;
     if (isBlocked) { wallConfirmCount++; } else { wallConfirmCount = 0; }
     return wallConfirmCount >= WALL_FAST_CONFIRM;
   } catch(e) { return false; }
