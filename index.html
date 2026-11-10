@@ -158,13 +158,12 @@ let isDetectorLoading = false;
 let wallConfirmCount = 0;
 let wallCanvas = null;
 let lastWallCheck = 0;
-// FIXED: standing object far se pakarne ke liye size chota kiya
-let OBSTACLE_CONFIRM_NEEDED = 2;
-let REQUIRED_CONFIDENCE = 35;
-let OBSTACLE_SIZE_RATIO = 0.008;
-let WALL_CONFIRM_NEEDED = 2;
+let OBSTACLE_CONFIRM_NEEDED = 3;
+let REQUIRED_CONFIDENCE = 40;
+let OBSTACLE_SIZE_RATIO = 0.02;
+let WALL_CONFIRM_NEEDED = 3;
 let lastFrameAvg = -1;
-// GPS - FIXED: khare hone par meter nahi barhega
+// GPS - walked meters, stops when user stands still
 let totalWalkedMeters = 0;
 let lastGpsLat = 0;
 let lastGpsLng = 0;
@@ -174,11 +173,6 @@ let currentLng = 0;
 let gpsWatchId = null;
 let lastWalkAnnounceTime = 0;
 let lastAnnouncedWalkedMeters = 0;
-let gpsFixCount = 0;
-let gpsStartTime = 0;
-let gpsLastTime = 0;
-let gpsConsecutiveMoves = 0;
-let gpsPendingMeters = 0;
 const translations = {
   'ur-PK': { loading: 'سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔', started: 'اسمارٹ کین آن ہے۔ کیمرہ اور سنسور ایکٹو ہیں۔', stopClose: 'الرٹ ہو جاؤ', clearPath: 'رستہ صاف ہے، آگے بڑھیں۔', camError: 'کیمرہ کی اجازت دیں', netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ', meterWord: 'میٹر', frontWord: 'سامنے', leftWord: 'بائیں', rightWord: 'دائیں', obstacleWord: 'رکاوٹ', walkedWord: 'آپ', walkedWord2: 'میٹر چل چکے ہیں', clearLeft: 'بائیں سائیڈ رستہ صاف ہے', clearRight: 'دائیں سائیڈ رستہ صاف ہے', clearBoth: 'بائیں دائیں دیکھ کر چلیں' },
   'en-US': { loading: 'Sensor turning on. Please wait.', started: 'Smart Cane is on. Camera active.', stopClose: 'Alert', clearPath: 'Path is clear, move forward.', camError: 'Allow camera access', netError: 'Internet or model loading issue', meterWord: 'meter', frontWord: 'front', leftWord: 'left', rightWord: 'right', obstacleWord: 'obstacle', walkedWord: 'You have walked', walkedWord2: 'meters', clearLeft: 'Left side path is clear', clearRight: 'Right side path is clear', clearBoth: 'Check left and right and move' },
@@ -274,36 +268,17 @@ const translations = {
 };
 function getT(key) { const lang = langSel.value; if (translations[lang] && translations[lang][key]) { return translations[lang][key]; } return translations['en-US'][key] || key; }
 function getObstacleText(sideWord, dist) { return getT('stopClose') + ", " + sideWord + ", " + dist + " " + getT('meterWord') + " " + getT('obstacleWord'); }
-// FIXED distance: door se pehle se pakarne ke liye formula thora sensitive
-function getDistanceMeters(sizeRatio) { if (sizeRatio <= 0) return 4; let d = 0.55 / Math.sqrt(sizeRatio); if (d > 4) d = 4; if (d < 0.5) d = 0.5; return Math.round(d * 10) / 10; }
+function getDistanceMeters(sizeRatio) { if (sizeRatio <= 0) return 4; let d = 0.45 / Math.sqrt(sizeRatio); if (d > 4) d = 4; if (d < 0.5) d = 0.5; return Math.round(d * 10) / 10; }
 function getSideWord(cxRatio) { if (cxRatio < 0.40) return getT('leftWord'); if (cxRatio > 0.60) return getT('rightWord'); return getT('frontWord'); }
 function getDistanceBetween(lat1, lon1, lat2, lon2) { const R = 6371000; const dLat = (lat2 - lat1) * Math.PI / 180; const dLon = (lon2 - lon1) * Math.PI / 180; const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2) * Math.sin(dLon/2); const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); return R * c; }
-// GPS FIXED - khare hone par 112 meter wala bug khatam
-function startGPS() { try { if ('geolocation' in navigator) {
-  gpsStartTime = Date.now(); gpsFixCount = 0; gpsConsecutiveMoves = 0; gpsPendingMeters = 0;
-  gpsWatchId = navigator.geolocation.watchPosition(function(p){
-  gpsFixCount++;
-  // Pehle 10 second warmup - kuch nahi ganna
-  if (Date.now() - gpsStartTime < 10000) { lastGpsLat = p.coords.latitude; lastGpsLng = p.coords.longitude; hasLastGps = true; return; }
-  // Accuracy tight - 10 meter se kharab GPS ko ignore
-  if (!p.coords.accuracy || p.coords.accuracy > 10) return;
-  // Speed check - agar phone bata raha hai speed kam hai to khari ho
-  if (p.coords.speed !== null && p.coords.speed !== undefined && p.coords.speed < 0.4) { gpsConsecutiveMoves = 0; gpsPendingMeters = 0; lastGpsLat = p.coords.latitude; lastGpsLng = p.coords.longitude; return; }
-  // Time gap - 2 second se pehle dobara na gano
-  let nowT = Date.now();
-  if (gpsLastTime && (nowT - gpsLastTime) < 2000) return;
-  gpsLastTime = nowT;
+function startGPS() { try { if ('geolocation' in navigator) { gpsWatchId = navigator.geolocation.watchPosition(function(p){
+  if (p.coords.accuracy && p.coords.accuracy > 25) return;
   currentLat = p.coords.latitude; currentLng = p.coords.longitude;
   if (!hasLastGps) { lastGpsLat = currentLat; lastGpsLng = currentLng; hasLastGps = true; return; }
   const step = getDistanceBetween(lastGpsLat, lastGpsLng, currentLat, currentLng);
-  // 1.5 se kam = GPS hilna, 12 se zyada = GPS jump, dono ignore
-  if (step < 1.5 || step > 12) { gpsConsecutiveMoves = 0; gpsPendingMeters = 0; lastGpsLat = currentLat; lastGpsLng = currentLng; return; }
-  gpsConsecutiveMoves++;
-  gpsPendingMeters += step;
-  lastGpsLat = currentLat; lastGpsLng = currentLng;
-  // Sirf tab jodo jab lagatar 2 baar harkat hui ho - ek jump ko chalna nahi manenge
-  if (gpsConsecutiveMoves >= 2) { totalWalkedMeters += gpsPendingMeters; gpsPendingMeters = 0; gpsConsecutiveMoves = 0; }
-}, function(e){}, { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }); } } catch(e){} }
+  if (step < 5) return;
+  if (step >= 5 && step < 50) { totalWalkedMeters += step; lastGpsLat = currentLat; lastGpsLng = currentLng; }
+}, function(e){}, { enableHighAccuracy: true, maximumAge: 3000 }); } } catch(e){} }
 function triggerVibration() { if ('vibrate' in navigator) { try { navigator.vibrate([200, 100, 200]); } catch (e) {} } }
 function lightVibration() { if ('vibrate' in navigator) { try { navigator.vibrate(15); } catch (e) {} } }
 function playBeep(type) {
@@ -353,6 +328,7 @@ function speak(text, isObstacle = false) {
   utterance.onerror = () => { if (isObstacle) { setTimeout(() => { isSpeakingObstacle = false; }, 50); } };
   window.speechSynthesis.speak(utterance);
 }
+// FIXED WALL / DOOR / GATE / STANDING OBJECT - soft setting, now detects wall
 function isWallDoorStairsBlocked() {
   try {
     if (!video || !video.videoWidth) return false;
@@ -379,13 +355,15 @@ function isWallDoorStairsBlocked() {
     let bottom = getStats(8, 24, 18, 24);
     let allAvg = (top.avg + centre.avg + bottom.avg) / 3;
     let isMoving = false;
-    if (lastFrameAvg !== -1) { if (Math.abs(allAvg - lastFrameAvg) > 30) isMoving = true; }
+    if (lastFrameAvg !== -1) { if (Math.abs(allAvg - lastFrameAvg) > 25) isMoving = true; }
     lastFrameAvg = allAvg;
     if (isMoving) { wallConfirmCount = 0; return false; }
+    // SOFT FIX: centre uniform + bottom uniform is enough, top can be slightly different for door/gate
     let isWall = false;
-    if (centre.range < 75 && bottom.range < 95 && centre.avg > 12) isWall = true;
-    if (top.range < 85 && centre.range < 75 && bottom.range < 95) isWall = true;
-    if (centre.range < 50 && centre.avg > 12) isWall = true;
+    if (centre.range < 70 && bottom.range < 90 && centre.avg > 15) isWall = true;
+    if (top.range < 80 && centre.range < 70 && bottom.range < 90) isWall = true;
+    // Very uniform centre alone for big wall
+    if (centre.range < 45 && centre.avg > 15) isWall = true;
     if (isWall) { wallConfirmCount++; } else { wallConfirmCount = 0; }
     return wallConfirmCount >= WALL_CONFIRM_NEEDED;
   } catch(e) { return false; }
@@ -417,7 +395,7 @@ async function initDetector() {
     const ok = await waitForMediapipe();
     if (!ok) { throw new Error('mediapipe timeout'); }
     const vision = await window.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm");
-    const detectorPromise = window.ObjectDetector.createFromOptions(vision, { baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite", delegate: "CPU" }, scoreThreshold: 0.35, runningMode: "VIDEO" });
+    const detectorPromise = window.ObjectDetector.createFromOptions(vision, { baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite", delegate: "CPU" }, scoreThreshold: 0.40, runningMode: "VIDEO" });
     const timeoutPromise = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('model timeout')); }, 15000); });
     objectDetector = await Promise.race([detectorPromise, timeoutPromise]);
     isDetectorLoading = false;
@@ -468,6 +446,7 @@ async function predictWebcam() {
       const detections = objectDetector.detectForVideo(video, startTimeMs);
       const hasObjectDetected = detections && detections.detections && detections.detections.length > 0;
       if (!hasObjectDetected) { nothingCount++; } else { nothingCount = 0; clearWaitCount = 0; }
+      // ALWAYS check wall also, even if small object detected - for standing object / wall
       let wallBlocked = isWallDoorStairsBlocked();
       if (hasObjectDetected) {
         let closest = detections.detections[0]; let maxArea = 0;
@@ -491,37 +470,53 @@ async function predictWebcam() {
                 triggerVibration(); speak(fullObstacleText, true);
               }
               const now = Date.now();
-              if (now - lastBeepTime > 800) { lastBeepTime = now; if (sizeRatio >= 0.15) { playBeep('obstacle'); } else { playBeep('small'); } }
+              if (now - lastBeepTime > 800) {
+                lastBeepTime = now;
+                if (sizeRatio >= 0.15) { playBeep('obstacle'); } else { playBeep('small'); }
+              }
             }
-          } else if (wallBlocked) { alertWallDoorStairs(); } else { handleClearPath(); }
-        } else if (wallBlocked) { alertWallDoorStairs(); } else { handleClearPath(); }
+          } else if (wallBlocked) {
+            obstacleConfirmCount = 0;
+            alertWallDoorStairs();
+          } else { handleClearPath(); }
+        } else if (wallBlocked) {
+          obstacleConfirmCount = 0;
+          alertWallDoorStairs();
+        } else { handleClearPath(); }
       } else {
-        if (wallBlocked) { obstacleConfirmCount = 0; alertWallDoorStairs(); } else { handleClearPath(); }
+        if (wallBlocked) {
+          obstacleConfirmCount = 0;
+          alertWallDoorStairs();
+        } else {
+          handleClearPath();
+        }
       }
     } catch (e) { console.error(e); }
   }
   if (isLive) { window.requestAnimationFrame(predictWebcam); }
 }
-// FIXED: Clear tone continuous - jab tak rasta saaf hai bajti rahegi, rukawat par band
 function handleClearPath() {
   obstacleConfirmCount = 0;
   const now = Date.now();
+  // RESTORED: Rasta Saaf Hai voice in all languages, every 8 seconds
   if (currentMode !== "clear") {
     currentMode = "clear"; lastObstacleName = "";
     if (isSpeakingObstacle) { window.speechSynthesis.cancel(); isSpeakingObstacle = false; }
-    lastClearSpeakTime = now;
     speak(getT('clearPath'), false);
+    lastClearSpeakTime = now; lastWalkAnnounceTime = now;
   }
-  // Har 15 second baad rasta saaf wali awaz dobara
-  if (now - lastClearSpeakTime > 15000) { lastClearSpeakTime = now; speak(getT('clearPath'), false); }
   statusEl.innerText = getT('clearPath');
-  // Tone continuous - har 600ms baad
-  if (now - lastClearSoundTime > 600) { lastClearSoundTime = now; playBeep('clear'); }
-  if (totalWalkedMeters >= 5 && (totalWalkedMeters - lastAnnouncedWalkedMeters) >= 10) {
-    lastAnnouncedWalkedMeters = Math.round(totalWalkedMeters);
-    lastWalkAnnounceTime = now;
-    const walkedText = getT('walkedWord') + " " + Math.round(totalWalkedMeters) + " " + getT('walkedWord2');
-    speak(walkedText, false);
+  if (now - lastClearSoundTime > 8000) { lastClearSoundTime = now; playBeep('clear'); lightVibration(); }
+  if (now - lastClearSpeakTime > 8000) {
+    lastClearSpeakTime = now;
+    // GPS walked meters - announce on clear path
+    if (totalWalkedMeters >= 5 && (totalWalkedMeters - lastAnnouncedWalkedMeters) >= 10) {
+      lastAnnouncedWalkedMeters = Math.round(totalWalkedMeters);
+      const walkedText = getT('clearPath') + ", " + getT('walkedWord') + " " + Math.round(totalWalkedMeters) + " " + getT('walkedWord2');
+      speak(walkedText, false);
+    } else {
+      speak(getT('clearPath'), false);
+    }
   }
 }
 function stopCamera() {
@@ -531,7 +526,7 @@ function stopCamera() {
   if (gpsWatchId) { try{ navigator.geolocation.clearWatch(gpsWatchId); }catch(e){} gpsWatchId = null; }
   if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
   video.srcObject = null; statusEl.innerText = "STATUS: OFF"; startBtn.style.display = 'block'; startBtn.innerText = 'START'; stopBtn.style.display = 'none';
-  isSpeakingObstacle = false; clearWaitCount = 0; currentMode = "clear"; lastObstacleName = ""; obstacleConfirmCount = 0; wallConfirmCount = 0; isDetectorLoading = false; totalWalkedMeters = 0; hasLastGps = false; lastAnnouncedWalkedMeters = 0; gpsConsecutiveMoves = 0; gpsPendingMeters = 0;
+  isSpeakingObstacle = false; clearWaitCount = 0; currentMode = "clear"; lastObstacleName = ""; obstacleConfirmCount = 0; wallConfirmCount = 0; isDetectorLoading = false; totalWalkedMeters = 0; hasLastGps = false; lastAnnouncedWalkedMeters = 0;
 }
 langSel.addEventListener('change', () => { lightVibration(); });
 langSel.addEventListener('click', () => { lightVibration(); });
