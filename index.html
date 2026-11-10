@@ -160,15 +160,16 @@ let isDetectorLoading = false;
 let wallConfirmCount = 0;
 let wallCanvas = null;
 let lastWallCheck = 0;
+// Detection tuning
 let FAST_CONFIRM = 1;
-let FAR_RATIO = 0.013;
+let FAR_RATIO = 0.02;
 let NEAR_RATIO = 0.02;
 let WALL_FAST_CONFIRM = 2;
 let tallConfirmCount = 0;
 let tallCanvas = null;
 let WALL_TALL_CONFIRM_NEEDED = 3;
-let FAR_CONFIDENCE = 65;
-let NEAR_CONFIDENCE = 20;
+let FAR_CONFIDENCE = 35;
+let NEAR_CONFIDENCE = 35;
 let lastFrameAvg = -1;
 let lastDistanceSpoken = -1;
 let lastDistanceTime = 0;
@@ -326,8 +327,8 @@ function playBeep(type) {
     if (type === 'clear') {
       // Clear path beep
       osc.frequency.setValueAtTime(659.25, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-      osc.start(); osc.stop(audioCtx.currentTime + 0.08);
+      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.1);
     } else if (type === 'obstacle') {
       // Obstacle beep
       const now = audioCtx.currentTime;
@@ -343,16 +344,13 @@ function speak(text, isObstacle = false) {
   if (!text) return;
   if (!('speechSynthesis' in window)) return;
   // Mutual exclusion
-  if (isObstacle && currentMode === "clear" && isSpeakingAny) { pendingSpeech = { text: text, isObstacle: isObstacle }; return; }
-  if (!isObstacle && currentMode === "obstacle" && isSpeakingAny) return;
+  if (!isObstacle && isSpeakingObstacle) return;
   const now = Date.now();
   if (isSpeakingAny) {
-    if (isObstacle) { pendingSpeech = { text: text, isObstacle: isObstacle }; return; }
-    if (text === lastSpoken) return;
-    pendingSpeech = { text: text, isObstacle: isObstacle };
-    return;
+    if (isObstacle) { try{ window.speechSynthesis.cancel(); }catch(e){} isSpeakingAny = false; isSpeakingObstacle = false; }
+    else { pendingSpeech = { text: text, isObstacle: isObstacle }; return; }
   }
-  if (text === lastSpoken && now - lastSpeakTime < 2500 && !isObstacle) return;
+  if (text === lastSpoken && now - lastSpeakTime < 2000 && !isObstacle) return;
   lastSpoken = text; lastSpeakTime = now;
   isSpeakingAny = true;
   if (isObstacle) isSpeakingObstacle = true;
@@ -361,10 +359,8 @@ function speak(text, isObstacle = false) {
   utterance.rate = 0.95;
   const finish = () => {
     isSpeakingAny = false;
-    if (isObstacle) { setTimeout(() => { isSpeakingObstacle = false; }, 300); } else { isSpeakingObstacle = false; }
-    if (pendingSpeech && currentMode === "obstacle") { const p = pendingSpeech; pendingSpeech = null; setTimeout(() => { speak(p.text, p.isObstacle); }, 300); }
-    else if (pendingSpeech && currentMode === "clear") { const p = pendingSpeech; pendingSpeech = null; setTimeout(() => { speak(p.text, p.isObstacle); }, 300); }
-    else { pendingSpeech = null; }
+    if (isObstacle) { setTimeout(() => { isSpeakingObstacle = false; }, 50); } else { isSpeakingObstacle = false; }
+    if (pendingSpeech) { const p = pendingSpeech; pendingSpeech = null; setTimeout(() => { speak(p.text, p.isObstacle); }, 300); }
   };
   utterance.onend = finish;
   utterance.onerror = finish;
@@ -428,15 +424,11 @@ function alertWallDoorStairs() {
   statusEl.innerText = fullObstacleText;
   const now = Date.now();
   // Wall repeat control
-  if (currentMode !== "obstacle" || lastObstacleName !== fullObstacleText) {
-    currentMode = "obstacle"; lastObstacleName = fullObstacleText; lastObstacleAlertTime = now; obstacleSpeakCount = 1; obstacleSilentUntil = now + 5000;
+  if (currentMode !== "obstacle" || lastObstacleName !== fullObstacleText || (now - lastObstacleAlertTime > 4000)) {
+    currentMode = "obstacle"; lastObstacleName = fullObstacleText; lastObstacleAlertTime = now;
     triggerVibration(); forceSpeakObstacle(fullObstacleText);
-  } else if (now >= obstacleSilentUntil) {
-    lastObstacleAlertTime = now; obstacleSilentUntil = now + 6000; obstacleSpeakCount++;
-    const stillText = getT('stopClose') + ", " + getT('stillWord') + " " + getT('frontWord') + ", " + getDistanceText(dist);
-    triggerVibration(); forceSpeakObstacle(stillText);
   }
-  if (now - lastBeepTime > 2000) { lastBeepTime = now; playBeep('obstacle'); }
+  if (now - lastBeepTime > 800) { lastBeepTime = now; playBeep('obstacle'); }
 }
 async function waitForMediapipe() {
   if (window.FilesetResolver && window.ObjectDetector) return true;
@@ -455,7 +447,7 @@ async function initDetector() {
     const ok = await waitForMediapipe();
     if (!ok) { throw new Error('mediapipe timeout'); }
     const vision = await window.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm");
-    const detectorPromise = window.ObjectDetector.createFromOptions(vision, { baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite", delegate: "CPU" }, scoreThreshold: 0.20, runningMode: "VIDEO" });
+    const detectorPromise = window.ObjectDetector.createFromOptions(vision, { baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite", delegate: "CPU" }, scoreThreshold: 0.35, runningMode: "VIDEO" });
     const timeoutPromise = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('model timeout')); }, 15000); });
     objectDetector = await Promise.race([detectorPromise, timeoutPromise]);
     isDetectorLoading = false;
@@ -516,10 +508,8 @@ async function predictWebcam() {
         const videoWidth = video.videoWidth || 640;
         const videoArea = videoWidth * (video.videoHeight || 480);
         const sizeRatio = maxArea / videoArea;
-        let requiredConfidence = FAR_CONFIDENCE;
-        if (sizeRatio >= 0.05) { requiredConfidence = NEAR_CONFIDENCE; }
-        if (sizeRatio >= 0.15) { requiredConfidence = NEAR_CONFIDENCE; }
-        if (confidence >= requiredConfidence) {
+        // Single frame confirmation
+        if (confidence >= FAR_CONFIDENCE) {
           if (sizeRatio >= FAR_RATIO) {
             obstacleConfirmCount++;
             if (obstacleConfirmCount >= FAST_CONFIRM) {
@@ -532,19 +522,12 @@ async function predictWebcam() {
                 const fullObstacleText = getT('stopClose') + ", " + sideWord + ", " + getDistanceText(distM);
                 statusEl.innerText = fullObstacleText;
                 const now = Date.now();
-                // Obstacle repeat control
-                if (currentMode !== "obstacle" || lastObstacleName !== fullObstacleText) {
-                  currentMode = "obstacle"; lastObstacleName = fullObstacleText; lastObstacleAlertTime = now; obstacleSpeakCount = 1; obstacleSilentUntil = now + 5000; lastObstacleCheckCount = 0;
+                // Obstacle repeat: 4 sec gap
+                if (currentMode !== "obstacle" || lastObstacleName !== fullObstacleText || (now - lastObstacleAlertTime > 4000)) {
+                  currentMode = "obstacle"; lastObstacleName = fullObstacleText; lastObstacleAlertTime = now;
                   triggerVibration(); forceSpeakObstacle(fullObstacleText);
-                } else {
-                  lastObstacleCheckCount++;
-                  if (now >= obstacleSilentUntil && lastObstacleCheckCount >= 4) {
-                    lastObstacleAlertTime = now; obstacleSilentUntil = now + 6000; lastObstacleCheckCount = 0; obstacleSpeakCount++;
-                    const stillText = getT('stopClose') + ", " + getT('stillWord') + " " + sideWord + ", " + getDistanceText(distM);
-                    triggerVibration(); forceSpeakObstacle(stillText);
-                  }
                 }
-                if (now - lastBeepTime > 2000) {
+                if (now - lastBeepTime > 800) {
                   lastBeepTime = now;
                   if (sizeRatio >= 0.15) { playBeep('obstacle'); } else { playBeep('small'); }
                 }
@@ -570,16 +553,16 @@ function handleClearPath() {
   const walked = Math.round(totalWalkedMeters);
   let clearText = getT('clearPath');
   let clearTextWithWalk = clearText;
-  // Walked distance display
   if (walked >= 5) { clearTextWithWalk = clearText + " " + getT('walkedWord') + " " + walked + " " + getT('walkedWord2'); }
-  // Mode change handling
+  // Mode change
   if (currentMode !== "clear") {
     currentMode = "clear"; lastObstacleName = ""; obstacleSpeakCount = 0; lastObstacleCheckCount = 0; obstacleSilentUntil = 0;
     pendingSpeech = null;
-    forceSpeakClear(clearTextWithWalk); lastClearSpeakTime = now; lastWalkAnnounceTime = now;
+    if (isSpeakingObstacle) { try{ window.speechSynthesis.cancel(); }catch(e){} isSpeakingObstacle = false; }
+    speak(clearTextWithWalk, false); lastClearSpeakTime = now; lastWalkAnnounceTime = now;
   } else {
     statusEl.innerText = clearTextWithWalk;
-    if (now - lastClearSpeakTime > 10000) {
+    if (now - lastClearSpeakTime > 8000) {
       const lastWalk = Math.round(totalWalkedMeters);
       let txt = getT('clearPath');
       if (lastWalk >= 5) { txt = txt + " " + getT('walkedWord') + " " + lastWalk + " " + getT('walkedWord2'); }
@@ -587,8 +570,8 @@ function handleClearPath() {
     }
   }
   statusEl.innerText = clearTextWithWalk;
-  // Clear path beep only, no obstacle sound
-  if (now - lastClearSoundTime > 1500) { lastClearSoundTime = now; playBeep('clear'); }
+  // Clear path beep only
+  if (now - lastClearSoundTime > 1000) { lastClearSoundTime = now; playBeep('clear'); }
 }
 function stopCamera() {
   if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); }
