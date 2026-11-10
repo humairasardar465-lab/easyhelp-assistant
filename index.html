@@ -159,6 +159,11 @@ let isDetectorLoading = false;
 let wallConfirmCount = 0;
 let wallCanvas = null;
 let lastWallCheck = 0;
+let FAST_CONFIRM = 2;
+let FAR_RATIO = 0.008;
+let NEAR_RATIO = 0.02;
+let WALL_FAST_CONFIRM = 2;
+try{ if('speechSynthesis' in window){ var _pre = new SpeechSynthesisUtterance(""); _pre.lang = langSel.value; _pre.volume = 0; window.speechSynthesis.speak(_pre); } }catch(e){}
 const translations = {
   'ur-PK': { loading: 'سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔', started: 'اسمارٹ کین آن ہے۔ کیمرہ اور سنسور ایکٹو ہیں۔', stopClose: 'الرٹ ہو جاؤ، آگے رکاوٹ ہے', clearPath: 'رستہ صاف ہے، آگے بڑھیں۔', camError: 'کیمرہ کی اجازت دیں', netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ' },
   'en-US': { loading: 'Sensor turning on. Please wait.', started: 'Smart Cane is on. Camera active.', stopClose: 'Alert, obstacle ahead', clearPath: 'Path is clear, move forward.', camError: 'Allow camera access', netError: 'Internet or model loading issue' },
@@ -293,6 +298,7 @@ function speak(text, isObstacle = false) {
   if (!('speechSynthesis' in window)) return;
   const now = Date.now();
   if (text === lastSpoken && now - lastSpeakTime < 2000 && !isObstacle) return;
+  if (isObstacle) { try{ window.speechSynthesis.cancel(); }catch(e){} isSpeakingObstacle = false; }
   if (isObstacle && currentMode !== "obstacle") { window.speechSynthesis.cancel(); }
   if (!isObstacle && isSpeakingObstacle) return;
   if (isObstacle) { window.speechSynthesis.cancel(); }
@@ -304,22 +310,16 @@ function speak(text, isObstacle = false) {
   utterance.onerror = () => { if (isObstacle) { setTimeout(() => { isSpeakingObstacle = false; }, 50); } };
   window.speechSynthesis.speak(utterance);
 }
-// --- SIRF YE NAYA HISSA HAI: AGAR SCREEN AADHI BHI BHARI HAI TO RUKAWAT ---
-// Tumne kaha tha: chahe diwar ho, darwaza ho, sofa ho, table ho, screen aadhi bhari ho ya poori bhari ho, foran rukawat bole.
-// Isliye hum check karte hain ke screen ka beech wala hissa ek hi rang ka hai ya nahi.
-// Agar beech wala hissa ek hi rang ka hai, matlab samne koi cheez aa gayi hai.
 function isWallDoorStairsBlocked() {
   try {
     if (!video || !video.videoWidth) return false;
     const now = Date.now();
-    if (now - lastWallCheck < 200) return wallConfirmCount >= 5;
+    if (now - lastWallCheck < 100) return wallConfirmCount >= WALL_FAST_CONFIRM;
     lastWallCheck = now;
     if (!wallCanvas) { wallCanvas = document.createElement('canvas'); wallCanvas.width = 32; wallCanvas.height = 24; }
     const ctx = wallCanvas.getContext('2d', { willReadFrequently: true });
     ctx.drawImage(video, 0, 0, 32, 24);
     const d = ctx.getImageData(0, 0, 32, 24).data;
-    // Beech wala hissa check karo - yahi aadhi screen hai
-    // Beech ke 16x12 pixels = aadhi screen
     let centreSum = 0, centreCount = 0, centreMin = 255, centreMax = 0;
     for (let y = 6; y < 18; y++) {
       for (let x = 8; x < 24; x++) {
@@ -330,11 +330,8 @@ function isWallDoorStairsBlocked() {
     }
     const centreRange = centreMax - centreMin;
     const centreAvg = centreSum / centreCount;
-    // Agar beech wala aadha hissa ek hi rang ka hai, to samne diwar/darwaza/sofa/table hai
-    // Thoda sa bhi bhara ho to bhi iska range kam ho jayega
-    // Poori screen bhari ho to bhi range kam hi hoga
     if (centreRange < 65 && centreAvg > 20) { wallConfirmCount++; } else { wallConfirmCount = 0; }
-    return wallConfirmCount >= 5;
+    return wallConfirmCount >= WALL_FAST_CONFIRM;
   } catch(e) { return false; }
 }
 function alertWallDoorStairs() {
@@ -383,7 +380,7 @@ async function startCamera() {
     statusEl.innerText = getT('loading');
     startBtn.innerText = 'PLEASE WAIT...';
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { statusEl.innerText = getT('camError'); speak(getT('camError'), false); startBtn.innerText = 'START'; return; }
-    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } }, audio: false });
     video.srcObject = stream;
     video.onloadedmetadata = async () => {
       try { await video.play(); } catch(e) {}
@@ -424,9 +421,9 @@ async function predictWebcam() {
           const videoWidth = video.videoWidth || 640;
           const videoArea = videoWidth * (video.videoHeight || 480);
           const sizeRatio = maxArea / videoArea;
-          if (sizeRatio >= 0.02) {
+          if (sizeRatio >= FAR_RATIO) {
             obstacleConfirmCount++;
-            if (obstacleConfirmCount >= 5) {
+            if (obstacleConfirmCount >= FAST_CONFIRM) {
               const fullObstacleText = getT('stopClose');
               statusEl.innerText = fullObstacleText;
               const now = Date.now();
@@ -442,8 +439,6 @@ async function predictWebcam() {
           } else { handleClearPath(); }
         } else { handleClearPath(); }
       } else {
-        // Koi object nahi mila - ab check karo screen aadhi bhari hai ya poori bhari hai
-        // Agar aadhi bhi bhari hai to rukawat bolo, rasta saaf mat bolo
         if (isWallDoorStairsBlocked()) {
           obstacleConfirmCount = 0;
           alertWallDoorStairs();
