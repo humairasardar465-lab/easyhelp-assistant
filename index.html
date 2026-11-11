@@ -158,10 +158,13 @@ let isDetectorLoading = false;
 let wallConfirmCount = 0;
 let wallCanvas = null;
 let lastWallCheck = 0;
-let OBSTACLE_CONFIRM_NEEDED = 2;
-let REQUIRED_CONFIDENCE = 40;
+// Confidence is now 50 percent. Object must be seen 3 times continuously to confirm.
+let OBSTACLE_CONFIRM_NEEDED = 3;
+let REQUIRED_CONFIDENCE = 50;
 let OBSTACLE_SIZE_RATIO = 0.02;
-let WALL_CONFIRM_NEEDED = 2;
+let WALL_CONFIRM_NEEDED = 3;
+// Side objects are ignored until they are close. Close means size ratio 0.06 or more.
+let SIDE_CLOSE_SIZE_RATIO = 0.06;
 let lastFrameAvg = -1;
 let clearToneTimer = null;
 let lastObstacleSpokenText = "";
@@ -326,7 +329,7 @@ function playBeep(type) {
     }
   } catch (e) {}
 }
-// FIXED SPEAK - cancel par flag bhi reset, taake clear kabhi khamosh na ho
+// Voice function. Obstacle voice has priority. Clear voice never speaks at the same time as obstacle voice.
 function speak(text, isObstacle = false) {
   if (!text) return;
   if (!('speechSynthesis' in window)) return;
@@ -426,7 +429,7 @@ async function initDetector() {
     const ok = await waitForMediapipe();
     if (!ok) { throw new Error('mediapipe timeout'); }
     const vision = await window.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm");
-    const detectorPromise = window.ObjectDetector.createFromOptions(vision, { baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite", delegate: "CPU" }, scoreThreshold: 0.40, runningMode: "VIDEO" });
+    const detectorPromise = window.ObjectDetector.createFromOptions(vision, { baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite", delegate: "CPU" }, scoreThreshold: 0.50, runningMode: "VIDEO" });
     const timeoutPromise = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('model timeout')); }, 15000); });
     objectDetector = await Promise.race([detectorPromise, timeoutPromise]);
     isDetectorLoading = false;
@@ -486,49 +489,53 @@ async function predictWebcam() {
           const videoWidth = video.videoWidth || 640;
           const videoArea = videoWidth * (video.videoHeight || 480);
           const sizeRatio = maxArea / videoArea;
-          if (sizeRatio >= OBSTACLE_SIZE_RATIO) {
+          const box = closest.boundingBox;
+          const cxRatio = (box.originX + box.width / 2) / videoWidth;
+          const isSide = (cxRatio < 0.40 || cxRatio > 0.60);
+          // Side rule: If object is on left or right and still far, ignore it and keep clear path. This stops mixed voice.
+          // If side object becomes close, it will pass this check and speak as left or right obstacle.
+          if (isSide && sizeRatio < SIDE_CLOSE_SIZE_RATIO) {
+            obstacleConfirmCount = 0;
+            if (wallBlocked) { handleObstacle(getObstacleText(getT('frontWord'), 1)); }
+            else { handleClearPath(); }
+          } else if (sizeRatio >= OBSTACLE_SIZE_RATIO) {
             obstacleConfirmCount++;
             if (obstacleConfirmCount >= OBSTACLE_CONFIRM_NEEDED) {
-              const box = closest.boundingBox;
-              const cxRatio = (box.originX + box.width / 2) / videoWidth;
               const sideWord = getSideWord(cxRatio);
               const dist = getDistanceMeters(sizeRatio);
-              handleObstacle(getObstacleText(sideWord, dist));
-              const now = Date.now();
-              if (now - lastBeepTime > 800) {
-                lastBeepTime = now;
-                if (sizeRatio >= 0.15) { playBeep('obstacle'); } else { playBeep('small'); }
-              }
+              const fullObstacleText = getObstacleText(sideWord, dist);
+              handleObstacle(fullObstacleText);
             }
           } else if (wallBlocked) {
             obstacleConfirmCount = 0;
-            alertWallDoorStairs();
+            handleObstacle(getObstacleText(getT('frontWord'), 1));
           } else { handleClearPath(); }
         } else if (wallBlocked) {
           obstacleConfirmCount = 0;
-          alertWallDoorStairs();
+          handleObstacle(getObstacleText(getT('frontWord'), 1));
         } else { handleClearPath(); }
       } else {
-        if (wallBlocked) { obstacleConfirmCount = 0; alertWallDoorStairs(); } else { handleClearPath(); }
+        if (wallBlocked) { obstacleConfirmCount = 0; handleObstacle(getObstacleText(getT('frontWord'), 1)); } else { handleClearPath(); }
       }
     } catch (e) { console.error(e); }
   }
   if (isLive) { window.requestAnimationFrame(predictWebcam); }
 }
+// Clear path function. It speaks only clear path. It never speaks left or right check message while walking.
 function handleClearPath() {
   obstacleConfirmCount = 0;
   const now = Date.now();
   if (currentMode !== "clear") {
-    currentMode = "clear"; lastObstacleName = "";
-    lastClearSpeakTime = now;
+    currentMode = "clear"; lastObstacleName = ""; lastObstacleSpokenText = "";
     speakClearForce();
+    lastClearSpeakTime = now;
     startClearTone();
-    playBeep('clear');
   } else {
     if (now - lastClearSpeakTime > 4000) {
       lastClearSpeakTime = now;
       speak(getT('clearPath'), false);
     }
+    startClearTone();
   }
   statusEl.innerText = getT('clearPath');
   if (totalWalkedMeters >= 5 && (totalWalkedMeters - lastAnnouncedWalkedMeters) >= 10) {
@@ -546,7 +553,7 @@ function stopCamera() {
   if (gpsWatchId) { try{ navigator.geolocation.clearWatch(gpsWatchId); }catch(e){} gpsWatchId = null; }
   if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
   video.srcObject = null; statusEl.innerText = "STATUS: OFF"; startBtn.style.display = 'block'; startBtn.innerText = 'START'; stopBtn.style.display = 'none';
-  isSpeakingObstacle = false; lastObstacleSpokenText = ""; clearWaitCount = 0; currentMode = "clear"; lastObstacleName = ""; obstacleConfirmCount = 0; wallConfirmCount = 0; isDetectorLoading = false; totalWalkedMeters = 0; hasLastGps = false; lastAnnouncedWalkedMeters = 0;
+  isSpeakingObstacle = false; clearWaitCount = 0; currentMode = "clear"; lastObstacleName = ""; lastObstacleSpokenText = ""; obstacleConfirmCount = 0; wallConfirmCount = 0; isDetectorLoading = false; totalWalkedMeters = 0; hasLastGps = false; lastAnnouncedWalkedMeters = 0;
 }
 langSel.addEventListener('change', () => { lightVibration(); });
 langSel.addEventListener('click', () => { lightVibration(); });
