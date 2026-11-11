@@ -158,11 +158,11 @@ let isDetectorLoading = false;
 let wallConfirmCount = 0;
 let wallCanvas = null;
 let lastWallCheck = 0;
-// Confidence is 50 percent. Object must be seen 5 times continuously to confirm.
-let OBSTACLE_CONFIRM_NEEDED = 5;
+// Confidence is now 50 percent. Object must be seen 3 times continuously to confirm.
+let OBSTACLE_CONFIRM_NEEDED = 3;
 let REQUIRED_CONFIDENCE = 50;
 let OBSTACLE_SIZE_RATIO = 0.02;
-let WALL_CONFIRM_NEEDED = 5;
+let WALL_CONFIRM_NEEDED = 3;
 // Side objects are ignored until they are close. Close means size ratio 0.06 or more.
 let SIDE_CLOSE_SIZE_RATIO = 0.06;
 let lastFrameAvg = -1;
@@ -412,23 +412,6 @@ function handleObstacle(fullObstacleText) {
   const now = Date.now();
   if (now - lastBeepTime > 800) { lastBeepTime = now; playBeep('obstacle'); }
 }
-function handleClearPath() {
-  currentMode = "clear";
-  lastObstacleName = "";
-  lastObstacleSpokenText = "";
-  statusEl.innerText = getT('clearPath');
-  startClearTone();
-  const now = Date.now();
-  if (now - lastClearSpeakTime > 4000) {
-    lastClearSpeakTime = now;
-    speakClearForce();
-  }
-  if (totalWalkedMeters - lastAnnouncedWalkedMeters >= 50 && now - lastWalkAnnounceTime > 10000) {
-    lastAnnouncedWalkedMeters = totalWalkedMeters;
-    lastWalkAnnounceTime = now;
-    speak(getT('walkedWord') + " " + Math.round(totalWalkedMeters) + " " + getT('walkedWord2'), false);
-  }
-}
 async function waitForMediapipe() {
   if (window.FilesetResolver && window.ObjectDetector) return true;
   return new Promise(function(resolve) {
@@ -496,65 +479,90 @@ async function predictWebcam() {
       const startTimeMs = performance.now();
       const detections = objectDetector.detectForVideo(video, startTimeMs);
       const hasObjectDetected = detections && detections.detections && detections.detections.length > 0;
+      if (!hasObjectDetected) { nothingCount++; } else { nothingCount = 0; clearWaitCount = 0; }
       let wallBlocked = isWallDoorStairsBlocked();
-      if (wallBlocked) {
-        obstacleConfirmCount = 0;
-        alertWallDoorStairs();
-        if (isLive) { window.requestAnimationFrame(predictWebcam); }
-        return;
+      if (hasObjectDetected) {
+        let closest = detections.detections[0]; let maxArea = 0;
+        for (let det of detections.detections) { const area = det.boundingBox.width * det.boundingBox.height; if (area > maxArea) { maxArea = area; closest = det; } }
+        const confidence = Math.round(closest.categories[0].score * 100);
+        if (confidence >= REQUIRED_CONFIDENCE) {
+          const videoWidth = video.videoWidth || 640;
+          const videoArea = videoWidth * (video.videoHeight || 480);
+          const sizeRatio = maxArea / videoArea;
+          const box = closest.boundingBox;
+          const cxRatio = (box.originX + box.width / 2) / videoWidth;
+          const isSide = (cxRatio < 0.40 || cxRatio > 0.60);
+          // Side rule: If object is on left or right and still far, ignore it and keep clear path. This stops mixed voice.
+          // If side object becomes close, it will pass this check and speak as left or right obstacle.
+          if (isSide && sizeRatio < SIDE_CLOSE_SIZE_RATIO) {
+            obstacleConfirmCount = 0;
+            if (wallBlocked) { handleObstacle(getObstacleText(getT('frontWord'), 1)); }
+            else { handleClearPath(); }
+          } else if (sizeRatio >= OBSTACLE_SIZE_RATIO) {
+            obstacleConfirmCount++;
+            if (obstacleConfirmCount >= OBSTACLE_CONFIRM_NEEDED) {
+              const sideWord = getSideWord(cxRatio);
+              const dist = getDistanceMeters(sizeRatio);
+              const fullObstacleText = getObstacleText(sideWord, dist);
+              handleObstacle(fullObstacleText);
+            }
+          } else if (wallBlocked) {
+            obstacleConfirmCount = 0;
+            handleObstacle(getObstacleText(getT('frontWord'), 1));
+          } else { handleClearPath(); }
+        } else if (wallBlocked) {
+          obstacleConfirmCount = 0;
+          handleObstacle(getObstacleText(getT('frontWord'), 1));
+        } else { handleClearPath(); }
+      } else {
+        if (wallBlocked) { obstacleConfirmCount = 0; handleObstacle(getObstacleText(getT('frontWord'), 1)); } else { handleClearPath(); }
       }
-      if (!hasObjectDetected) {
-        obstacleConfirmCount = 0; nothingCount++; clearWaitCount++;
-        if (nothingCount >= 2) { handleClearPath(); }
-        if (isLive) { window.requestAnimationFrame(predictWebcam); }
-        return;
-      }
-      let closest = detections.detections[0]; let maxArea = 0;
-      for (let det of detections.detections) { const area = det.boundingBox.width * det.boundingBox.height; if (area > maxArea) { maxArea = area; closest = det; } }
-      const confidence = Math.round(closest.categories[0].score * 100);
-      const bb = closest.boundingBox;
-      const sizeRatio = (bb.width * bb.height) / (video.videoWidth * video.videoHeight);
-      const cxRatio = (bb.originX + bb.width / 2) / video.videoWidth;
-      const sideWord = getSideWord(cxRatio);
-      const isSide = (cxRatio < 0.40 || cxRatio > 0.60);
-      // Side far small objects are ignored, they do not block the path.
-      if (isSide && sizeRatio < SIDE_CLOSE_SIZE_RATIO) {
-        obstacleConfirmCount = 0; nothingCount++; 
-        if (nothingCount >= 2) { handleClearPath(); }
-        if (isLive) { window.requestAnimationFrame(predictWebcam); }
-        return;
-      }
-      if (confidence < REQUIRED_CONFIDENCE || sizeRatio < OBSTACLE_SIZE_RATIO) {
-        obstacleConfirmCount = 0; nothingCount++;
-        if (nothingCount >= 2) { handleClearPath(); }
-        if (isLive) { window.requestAnimationFrame(predictWebcam); }
-        return;
-      }
-      const dist = getDistanceMeters(sizeRatio);
-      obstacleConfirmCount++;
-      nothingCount = 0;
-      if (obstacleConfirmCount >= OBSTACLE_CONFIRM_NEEDED) {
-        handleObstacle(getObstacleText(sideWord, dist));
-      }
-    } catch(e) {}
+    } catch (e) { console.error(e); }
   }
   if (isLive) { window.requestAnimationFrame(predictWebcam); }
 }
-startBtn.addEventListener('click', startCamera);
-stopBtn.addEventListener('click', function(){
-  isLive = false; stopClearTone();
-  try { if (gpsWatchId) navigator.geolocation.clearWatch(gpsWatchId); } catch(e){}
-  try { window.speechSynthesis.cancel(); } catch(e){}
-  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-  video.srcObject = null; statusEl.innerText = "STATUS: OFF";
-  startBtn.style.display = 'block'; stopBtn.style.display = 'none'; startBtn.innerText = 'START';
-});
-openMapsBtn.addEventListener('click', function(){
-  const dest = destinationInput.value.trim();
-  const url = dest ? "https://www.google.com/maps/search/" + encodeURIComponent(dest) : "https://www.google.com/maps";
-  window.open(url, "_blank");
-});
-langSel.addEventListener('change', function(){ lastSpoken = ""; });
+// Clear path function. It speaks only clear path. It never speaks left or right check message while walking.
+function handleClearPath() {
+  obstacleConfirmCount = 0;
+  const now = Date.now();
+  if (currentMode !== "clear") {
+    currentMode = "clear"; lastObstacleName = ""; lastObstacleSpokenText = "";
+    speakClearForce();
+    lastClearSpeakTime = now;
+    startClearTone();
+  } else {
+    if (now - lastClearSpeakTime > 4000) {
+      lastClearSpeakTime = now;
+      speak(getT('clearPath'), false);
+    }
+    startClearTone();
+  }
+  statusEl.innerText = getT('clearPath');
+  if (totalWalkedMeters >= 5 && (totalWalkedMeters - lastAnnouncedWalkedMeters) >= 10) {
+    lastAnnouncedWalkedMeters = Math.round(totalWalkedMeters);
+    lastWalkAnnounceTime = now;
+    const walkedText = getT('walkedWord') + " " + Math.round(totalWalkedMeters) + " " + getT('walkedWord2');
+    speak(walkedText, false);
+  }
+}
+function stopCamera() {
+  if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); }
+  if ('vibrate' in navigator) { try { navigator.vibrate(0); } catch(e){} }
+  stopClearTone();
+  isLive = false;
+  if (gpsWatchId) { try{ navigator.geolocation.clearWatch(gpsWatchId); }catch(e){} gpsWatchId = null; }
+  if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
+  video.srcObject = null; statusEl.innerText = "STATUS: OFF"; startBtn.style.display = 'block'; startBtn.innerText = 'START'; stopBtn.style.display = 'none';
+  isSpeakingObstacle = false; clearWaitCount = 0; currentMode = "clear"; lastObstacleName = ""; lastObstacleSpokenText = ""; obstacleConfirmCount = 0; wallConfirmCount = 0; isDetectorLoading = false; totalWalkedMeters = 0; hasLastGps = false; lastAnnouncedWalkedMeters = 0;
+}
+langSel.addEventListener('change', () => { lightVibration(); });
+langSel.addEventListener('click', () => { lightVibration(); });
+destinationInput.addEventListener('focus', () => { lightVibration(); });
+destinationInput.addEventListener('click', () => { lightVibration(); });
+startBtn.addEventListener('click', async () => { lightVibration(); await startCamera(); });
+stopBtn.addEventListener('click', () => { lightVibration(); stopCamera(); });
+openMapsBtn.addEventListener('click', () => { lightVibration(); const dest = destinationInput.value.trim(); if (dest) { window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dest)}`, '_blank'); } else { window.open(`https://www.google.com/maps`, '_blank'); } });
+waBtn.addEventListener('click', () => { lightVibration(); });
 </script>
 </body>
 </html>
