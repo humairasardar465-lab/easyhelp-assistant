@@ -158,16 +158,16 @@ let isDetectorLoading = false;
 let wallConfirmCount = 0;
 let wallCanvas = null;
 let lastWallCheck = 0;
-// Confidence is now 50 percent. Object must be seen 3 times continuously to confirm.
-let OBSTACLE_CONFIRM_NEEDED = 3;
-let REQUIRED_CONFIDENCE = 50;
+let OBSTACLE_CONFIRM_NEEDED = 2;
+let REQUIRED_CONFIDENCE = 40;
 let OBSTACLE_SIZE_RATIO = 0.02;
-let WALL_CONFIRM_NEEDED = 3;
-// Side objects are ignored until they are close. Close means size ratio 0.06 or more.
-let SIDE_CLOSE_SIZE_RATIO = 0.06;
+let WALL_CONFIRM_NEEDED = 2;
 let lastFrameAvg = -1;
 let clearToneTimer = null;
-let lastObstacleSpokenText = "";
+// FIX 1 - Alert ek martaba poora bole, dobara na bole. Clear ko Alert ke doran rokne ke liye
+let lastObstacleTime = 0;
+let obstacleSpokenForThis = "";
+let clearBlockedUntil = 0;
 let totalWalkedMeters = 0;
 let lastGpsLat = 0;
 let lastGpsLng = 0;
@@ -279,6 +279,7 @@ function getObstacleText(sideWord, dist) { return getT('stopClose') + ", " + sid
 function getDistanceMeters(sizeRatio) { if (sizeRatio <= 0) return 4; let d = 0.45 / Math.sqrt(sizeRatio); if (d > 4) d = 4; if (d < 0.5) d = 0.5; return Math.round(d * 10) / 10; }
 function getSideWord(cxRatio) { if (cxRatio < 0.40) return getT('leftWord'); if (cxRatio > 0.60) return getT('rightWord'); return getT('frontWord'); }
 function getDistanceBetween(lat1, lon1, lat2, lon2) { const R = 6371000; const dLat = (lat2 - lat1) * Math.PI / 180; const dLon = (lon2 - lon1) * Math.PI / 180; const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2) * Math.sin(dLon/2); const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); return R * c; }
+// GPS - abhi bhi mojood hai, sirf thora narm kiya hai taake chalte hue gane, khare ho to na gane
 function startGPS() { try { if ('geolocation' in navigator) {
   gpsStartTime = Date.now(); gpsConsecutiveMoves = 0; gpsPendingMeters = 0; gpsLastTime = 0;
   gpsWatchId = navigator.geolocation.watchPosition(function(p){
@@ -329,38 +330,37 @@ function playBeep(type) {
     }
   } catch (e) {}
 }
-// Voice function. Obstacle voice has priority. Clear voice never speaks at the same time as obstacle voice.
-function speak(text, isObstacle = false) {
+function speak(text, isObstacle = false, force = false) {
   if (!text) return;
   if (!('speechSynthesis' in window)) return;
-  if (isObstacle) {
-    if (text === lastObstacleSpokenText && isSpeakingObstacle) return;
-    try { window.speechSynthesis.cancel(); } catch(e){}
-    isSpeakingObstacle = true;
-    lastObstacleSpokenText = text;
-  } else {
-    if (isSpeakingObstacle) return;
-    if (text === lastSpoken && Date.now() - lastSpeakTime < 1000) return;
-  }
-  lastSpoken = text; lastSpeakTime = Date.now();
+  const now = Date.now();
+  if (text === lastSpoken && !isObstacle && !force) return;
+  if (isObstacle) { window.speechSynthesis.cancel(); }
+  if (!isObstacle && isSpeakingObstacle && !force) return;
+  if (force) { try { window.speechSynthesis.cancel(); } catch(e){} isSpeakingObstacle = false; }
+  lastSpoken = text; lastSpeakTime = now;
+  if (isObstacle) { isSpeakingObstacle = true; }
   const utterance = new SpeechSynthesisUtterance(text);
   utterance.lang = langSel.value;
-  utterance.onend = () => { if (isObstacle) { isSpeakingObstacle = false; } };
-  utterance.onerror = () => { if (isObstacle) { isSpeakingObstacle = false; } };
+  utterance.onend = () => { if (isObstacle) { setTimeout(() => { isSpeakingObstacle = false; }, 50); } };
+  utterance.onerror = () => { if (isObstacle) { setTimeout(() => { isSpeakingObstacle = false; }, 50); } };
   window.speechSynthesis.speak(utterance);
 }
-function speakClearForce() {
-  try { window.speechSynthesis.cancel(); } catch(e){}
-  isSpeakingObstacle = false;
-  lastObstacleSpokenText = "";
-  lastSpoken = ""; lastSpeakTime = 0;
-  speak(getT('clearPath'), false);
+// FIX - Alert ko ek hi martaba bolna, dobara nahi
+function speakObstacleOnce(fullText) {
+  const now = Date.now();
+  lastObstacleTime = now;
+  clearBlockedUntil = now + 3000;
+  stopClearTone();
+  if (obstacleSpokenForThis === fullText) return;
+  obstacleSpokenForThis = fullText;
+  currentMode = "obstacle"; lastObstacleName = fullText;
+  triggerVibration();
+  speak(fullText, true, true);
 }
 function startClearTone() {
   if (clearToneTimer) return;
-  clearToneTimer = setInterval(function(){
-    if (isLive && currentMode === "clear") { playBeep('clear'); }
-  }, 1000);
+  clearToneTimer = setInterval(function(){ if (isLive && currentMode === "clear" && Date.now() > clearBlockedUntil) { playBeep('clear'); } }, 1000);
 }
 function stopClearTone() { if (clearToneTimer) { clearInterval(clearToneTimer); clearToneTimer = null; } }
 function isWallDoorStairsBlocked() {
@@ -400,15 +400,10 @@ function isWallDoorStairsBlocked() {
     return wallConfirmCount >= WALL_CONFIRM_NEEDED;
   } catch(e) { return false; }
 }
-function alertWallDoorStairs() { handleObstacle(getObstacleText(getT('frontWord'), 1)); }
-function handleObstacle(fullObstacleText) {
+function alertWallDoorStairs() {
+  const fullObstacleText = getObstacleText(getT('frontWord'), 1);
   statusEl.innerText = fullObstacleText;
-  currentMode = "obstacle";
-  stopClearTone();
-  if (lastObstacleName !== fullObstacleText) {
-    lastObstacleName = fullObstacleText;
-    triggerVibration(); speak(fullObstacleText, true);
-  }
+  speakObstacleOnce(fullObstacleText);
   const now = Date.now();
   if (now - lastBeepTime > 800) { lastBeepTime = now; playBeep('obstacle'); }
 }
@@ -429,7 +424,7 @@ async function initDetector() {
     const ok = await waitForMediapipe();
     if (!ok) { throw new Error('mediapipe timeout'); }
     const vision = await window.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm");
-    const detectorPromise = window.ObjectDetector.createFromOptions(vision, { baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite", delegate: "CPU" }, scoreThreshold: 0.50, runningMode: "VIDEO" });
+    const detectorPromise = window.ObjectDetector.createFromOptions(vision, { baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite", delegate: "CPU" }, scoreThreshold: 0.40, runningMode: "VIDEO" });
     const timeoutPromise = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('model timeout')); }, 15000); });
     objectDetector = await Promise.race([detectorPromise, timeoutPromise]);
     isDetectorLoading = false;
@@ -455,6 +450,7 @@ async function startCamera() {
       try { await video.play(); } catch(e) {}
       isLive = true; statusEl.innerText = getT('started'); speak(getT('started'), false);
       startBtn.style.display = 'none'; stopBtn.style.display = 'block';
+      startClearTone();
       window.requestAnimationFrame(predictWebcam);
       const ok = await initDetector();
       if (!ok && isLive) { statusEl.innerText = getT('netError'); }
@@ -489,55 +485,47 @@ async function predictWebcam() {
           const videoWidth = video.videoWidth || 640;
           const videoArea = videoWidth * (video.videoHeight || 480);
           const sizeRatio = maxArea / videoArea;
-          const box = closest.boundingBox;
-          const cxRatio = (box.originX + box.width / 2) / videoWidth;
-          const isSide = (cxRatio < 0.40 || cxRatio > 0.60);
-          // Side rule: If object is on left or right and still far, ignore it and keep clear path. This stops mixed voice.
-          // If side object becomes close, it will pass this check and speak as left or right obstacle.
-          if (isSide && sizeRatio < SIDE_CLOSE_SIZE_RATIO) {
-            obstacleConfirmCount = 0;
-            if (wallBlocked) { handleObstacle(getObstacleText(getT('frontWord'), 1)); }
-            else { handleClearPath(); }
-          } else if (sizeRatio >= OBSTACLE_SIZE_RATIO) {
+          if (sizeRatio >= OBSTACLE_SIZE_RATIO) {
             obstacleConfirmCount++;
             if (obstacleConfirmCount >= OBSTACLE_CONFIRM_NEEDED) {
+              const box = closest.boundingBox;
+              const cxRatio = (box.originX + box.width / 2) / videoWidth;
               const sideWord = getSideWord(cxRatio);
               const dist = getDistanceMeters(sizeRatio);
               const fullObstacleText = getObstacleText(sideWord, dist);
-              handleObstacle(fullObstacleText);
+              statusEl.innerText = fullObstacleText;
+              speakObstacleOnce(fullObstacleText);
+              const now = Date.now();
+              if (now - lastBeepTime > 800) { lastBeepTime = now; if (sizeRatio >= 0.15) { playBeep('obstacle'); } else { playBeep('small'); } }
             }
-          } else if (wallBlocked) {
-            obstacleConfirmCount = 0;
-            handleObstacle(getObstacleText(getT('frontWord'), 1));
-          } else { handleClearPath(); }
-        } else if (wallBlocked) {
-          obstacleConfirmCount = 0;
-          handleObstacle(getObstacleText(getT('frontWord'), 1));
-        } else { handleClearPath(); }
+          } else if (wallBlocked) { obstacleConfirmCount = 0; alertWallDoorStairs(); } else { handleClearPath(); }
+        } else if (wallBlocked) { obstacleConfirmCount = 0; alertWallDoorStairs(); } else { handleClearPath(); }
       } else {
-        if (wallBlocked) { obstacleConfirmCount = 0; handleObstacle(getObstacleText(getT('frontWord'), 1)); } else { handleClearPath(); }
+        if (wallBlocked) { obstacleConfirmCount = 0; alertWallDoorStairs(); } else { handleClearPath(); }
       }
     } catch (e) { console.error(e); }
   }
   if (isLive) { window.requestAnimationFrame(predictWebcam); }
 }
-// Clear path function. It speaks only clear path. It never speaks left or right check message while walking.
 function handleClearPath() {
   obstacleConfirmCount = 0;
   const now = Date.now();
+  // FIX 2 - Agar abhi Alert chal raha hai to Clear bilkul na bole, na tone bajaye
+  if (currentMode === "obstacle" || isSpeakingObstacle || now < clearBlockedUntil) {
+    statusEl.innerText = lastObstacleName || getT('clearPath');
+    return;
+  }
   if (currentMode !== "clear") {
-    currentMode = "clear"; lastObstacleName = ""; lastObstacleSpokenText = "";
-    speakClearForce();
+    currentMode = "clear"; lastObstacleName = ""; obstacleSpokenForThis = "";
+    if (isSpeakingObstacle) { window.speechSynthesis.cancel(); isSpeakingObstacle = false; }
     lastClearSpeakTime = now;
     startClearTone();
+    speak(getT('clearPath'), false, true);
   } else {
-    if (now - lastClearSpeakTime > 4000) {
-      lastClearSpeakTime = now;
-      speak(getT('clearPath'), false);
-    }
-    startClearTone();
+    if (now - lastClearSpeakTime > 4000) { lastClearSpeakTime = now; speak(getT('clearPath'), false, true); }
   }
   statusEl.innerText = getT('clearPath');
+  startClearTone();
   if (totalWalkedMeters >= 5 && (totalWalkedMeters - lastAnnouncedWalkedMeters) >= 10) {
     lastAnnouncedWalkedMeters = Math.round(totalWalkedMeters);
     lastWalkAnnounceTime = now;
@@ -553,7 +541,7 @@ function stopCamera() {
   if (gpsWatchId) { try{ navigator.geolocation.clearWatch(gpsWatchId); }catch(e){} gpsWatchId = null; }
   if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
   video.srcObject = null; statusEl.innerText = "STATUS: OFF"; startBtn.style.display = 'block'; startBtn.innerText = 'START'; stopBtn.style.display = 'none';
-  isSpeakingObstacle = false; clearWaitCount = 0; currentMode = "clear"; lastObstacleName = ""; lastObstacleSpokenText = ""; obstacleConfirmCount = 0; wallConfirmCount = 0; isDetectorLoading = false; totalWalkedMeters = 0; hasLastGps = false; lastAnnouncedWalkedMeters = 0;
+  isSpeakingObstacle = false; clearWaitCount = 0; currentMode = "clear"; lastObstacleName = ""; obstacleSpokenForThis = ""; obstacleConfirmCount = 0; wallConfirmCount = 0; isDetectorLoading = false; totalWalkedMeters = 0; hasLastGps = false; lastAnnouncedWalkedMeters = 0; gpsConsecutiveMoves = 0; gpsPendingMeters = 0; clearBlockedUntil = 0;
 }
 langSel.addEventListener('change', () => { lightVibration(); });
 langSel.addEventListener('click', () => { lightVibration(); });
