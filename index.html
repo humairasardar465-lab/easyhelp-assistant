@@ -158,14 +158,16 @@ let isDetectorLoading = false;
 let wallConfirmCount = 0;
 let wallCanvas = null;
 let lastWallCheck = 0;
-let OBSTACLE_CONFIRM_NEEDED = 2;
-let REQUIRED_CONFIDENCE = 40;
+// Confidence is 50 percent. Object must be seen 5 times continuously to confirm.
+let OBSTACLE_CONFIRM_NEEDED = 5;
+let REQUIRED_CONFIDENCE = 50;
 let OBSTACLE_SIZE_RATIO = 0.02;
-let WALL_CONFIRM_NEEDED = 2;
+let WALL_CONFIRM_NEEDED = 5;
+// Side objects are ignored until they are close. Close means size ratio 0.06 or more.
+let SIDE_CLOSE_SIZE_RATIO = 0.06;
 let lastFrameAvg = -1;
 let clearToneTimer = null;
-let lastObstacleTime = 0;
-let obstacleSpokenForThis = "";
+let lastObstacleSpokenText = "";
 let totalWalkedMeters = 0;
 let lastGpsLat = 0;
 let lastGpsLng = 0;
@@ -179,11 +181,6 @@ let gpsStartTime = 0;
 let gpsLastTime = 0;
 let gpsConsecutiveMoves = 0;
 let gpsPendingMeters = 0;
-// Auto recovery variables
-let lastPredictTime = 0;
-let watchdogTimer = null;
-let lastVoiceCheck = 0;
-let isWatchdogRunning = false;
 const translations = {
   'ur-PK': { loading: 'سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔', started: 'اسمارٹ کین آن ہے۔ کیمرہ اور سنسور ایکٹو ہیں۔', stopClose: 'الرٹ ہو جاؤ', clearPath: 'رستہ صاف ہے، آگے بڑھیں۔', camError: 'کیمرہ کی اجازت دیں', netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ', meterWord: 'میٹر', frontWord: 'سامنے', leftWord: 'بائیں', rightWord: 'دائیں', obstacleWord: 'رکاوٹ', walkedWord: 'آپ', walkedWord2: 'میٹر چل چکے ہیں', clearLeft: 'بائیں سائیڈ رستہ صاف ہے', clearRight: 'دائیں سائیڈ رستہ صاف ہے', clearBoth: 'بائیں دائیں دیکھ کر چلیں' },
   'en-US': { loading: 'Sensor turning on. Please wait.', started: 'Smart Cane is on. Camera active.', stopClose: 'Alert', clearPath: 'Path is clear, move forward.', camError: 'Allow camera access', netError: 'Internet or model loading issue', meterWord: 'meter', frontWord: 'front', leftWord: 'left', rightWord: 'right', obstacleWord: 'obstacle', walkedWord: 'You have walked', walkedWord2: 'meters', clearLeft: 'Left side path is clear', clearRight: 'Right side path is clear', clearBoth: 'Check left and right and move' },
@@ -191,4 +188,373 @@ const translations = {
   'ar-SA': { loading: 'جاري تشغيل المستشعر.', started: 'العصا الذكية تعمل.', stopClose: 'تنبيه', clearPath: 'الطريق خالٍ، تقدم.', camError: 'السماح بالكاميرا', netError: 'مشكلة في الإنترنت أو النموذج', meterWord: 'متر', frontWord: 'أمام', leftWord: 'يسار', rightWord: 'يمين', obstacleWord: 'عائق', walkedWord: 'لقد مشيت', walkedWord2: 'متر', clearLeft: 'الجهة اليسرى خالية', clearRight: 'الجهة اليمنى خالية', clearBoth: 'انظر يمينا ويسارا' },
   'pa-IN': { loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ਹੈ।', started: 'ਸਮਾਰਟ ਕੇਨ ਚਾਲੂ ਹੈ।', stopClose: 'ਅਲਰਟ', clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਅੱਗੇ ਵਧੋ।', camError: 'ਕੈਮਰਾ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ', netError: 'ਇੰਟਰਨੈੱਟ ਜਾਂ ਮਾਡਲ ਦੀ ਸਮੱਸਿਆ', meterWord: 'ਮੀਟਰ', frontWord: 'ਸਾਹਮਣੇ', leftWord: 'ਖੱਬੇ', rightWord: 'ਸੱਜੇ', obstacleWord: 'ਰੁਕਾਵਟ', walkedWord: 'ਤੁਸੀਂ', walkedWord2: 'ਮੀਟਰ ਚੱਲ ਚੁੱਕੇ ਹੋ', clearLeft: 'ਖੱਬੇ ਪਾਸੇ ਰਸਤਾ ਸਾਫ਼ ਹੈ', clearRight: 'ਸੱਜੇ ਪਾਸੇ ਰਸਤਾ ਸਾਫ਼ ਹੈ', clearBoth: 'ਖੱਬੇ ਸੱਜੇ ਦੇਖ ਕੇ ਚੱਲੋ' },
   'ps-PK': { loading: 'سنسور روان دی. مهرباني وکئ انتظار وکئ.', started: 'سمارټ کین روان دی.', stopClose: 'خبردار', clearPath: 'لار سمه ده، مخکې لاړ شئ.', camError: 'د کامرې اجازه ورکړئ', netError: 'د انټرنیټ ستونزه', meterWord: 'متره', frontWord: 'مخکې', leftWord: 'کیڼ', rightWord: 'ښي', obstacleWord: 'خنډ', walkedWord: 'تاسو', walkedWord2: 'متره تللي یاست', clearLeft: 'کیڼ اړخ لار سمه ده', clearRight: 'ښي اړخ لار سمه ده', clearBoth: 'کیڼ ښي وګورئ' },
-  'fa-IR': { loading: 'سنسور در حال روشن شدن است.', started: 'اسمارت کین روشن است.', stopClose: 'هشدار', clearPath: 'مسیر باز است، جلو بروید.', camError: 'اجازه دسترسی به دوربین', netError: 'مشکل اینترنت یا مدل', meterWord: 'متر', frontWord: 'جلو', leftWord: 'چپ', rightWord: 'راست', obstacleWord: 'مانع', walkedWord: 'شما', walkedWord2: 'متر راه رفته‌اید', clearLeft: 'سمت چپ مسیر باز است', clearRight: 'سمت راست مسیر باز است', clear
+  'fa-IR': { loading: 'سنسور در حال روشن شدن است.', started: 'اسمارت کین روشن است.', stopClose: 'هشدار', clearPath: 'مسیر باز است، جلو بروید.', camError: 'اجازه دسترسی به دوربین', netError: 'مشکل اینترنت یا مدل', meterWord: 'متر', frontWord: 'جلو', leftWord: 'چپ', rightWord: 'راست', obstacleWord: 'مانع', walkedWord: 'شما', walkedWord2: 'متر راه رفته‌اید', clearLeft: 'سمت چپ مسیر باز است', clearRight: 'سمت راست مسیر باز است', clearBoth: 'چپ و راست را نگاه کنید' },
+  'sd-PK': { loading: 'سينسر آن ٿي رهيو آهي. مهرباني ڪري انتظار ڪريو.', started: 'سمارٽ ڪين آن آهي.', stopClose: 'خبردار', clearPath: 'رستو صاف آهي، اڳيان وڌو.', camError: 'ڪيمرا جي اجازت ڏيو', netError: 'انٽرنيٽ يا ماڊل جو مسئلو', meterWord: 'ميٽر', frontWord: 'سامهون', leftWord: 'کاٻي', rightWord: 'ساڄي', obstacleWord: 'رڪاوٽ', walkedWord: 'توهان', walkedWord2: 'ميٽر هليا آهيو', clearLeft: 'کاٻي پاسي رستو صاف آهي', clearRight: 'ساڄي پاسي رستو صاف آهي', clearBoth: 'کاٻي ساڄي ڏسي هلو' },
+  'bn-BD': { loading: 'সেন্সর চালু হচ্ছে। অনুগ্রহ করে অপেক্ষা করুন।', started: 'স্মার্ট কেন চালু আছে।', stopClose: 'সতর্কতা', clearPath: 'পথ পরিষ্কার, সামনে এগিয়ে যান।', camError: 'ক্যামেরার অনুমতি দিন', netError: 'ইন্টারনেট বা মডেলের সমস্যা', meterWord: 'মিটার', frontWord: 'সামনে', leftWord: 'বাম', rightWord: 'ডান', obstacleWord: 'বাধা', walkedWord: 'আপনি', walkedWord2: 'মিটার হেঁটেছেন', clearLeft: 'বাম পাশে পথ পরিষ্কার', clearRight: 'ডান পাশে পথ পরিষ্কার', clearBoth: 'বাম ডান দেখে চলুন' },
+  'tr-TR': { loading: 'Sensör açılıyor. Lütfen bekleyin.', started: 'Akıllı Baston açık.', stopClose: 'Uyarı', clearPath: 'Yol temiz, ilerleyin.', camError: 'Kamera izni verin', netError: 'İnternet veya model sorunu', meterWord: 'metre', frontWord: 'ön', leftWord: 'sol', rightWord: 'sağ', obstacleWord: 'engel', walkedWord: 'Sen', walkedWord2: 'metre yürüdün', clearLeft: 'Sol taraf yol temiz', clearRight: 'Sağ taraf yol temiz', clearBoth: 'Sağa sola bakarak yürü' },
+  'zh-CN': { loading: '传感器正在开启，请稍候。', started: '智能盲杖已开启。', stopClose: '警告', clearPath: '道路畅通，请前进。', camError: '请允许访问相机', netError: '网络或模型加载问题', meterWord: '米', frontWord: '前方', leftWord: '左侧', rightWord: '右侧', obstacleWord: '障碍物', walkedWord: '你已经走了', walkedWord2: '米', clearLeft: '左侧道路畅通', clearRight: '右侧道路畅通', clearBoth: '左右看看再走' },
+  'es-ES': { loading: 'Sensor encendiéndose. Por favor espere.', started: 'Bastón inteligente encendido.', stopClose: 'Alerta', clearPath: 'El camino está despejado, avance.', camError: 'Permitir acceso a la cámara', netError: 'Problema de internet o modelo', meterWord: 'metro', frontWord: 'frente', leftWord: 'izquierda', rightWord: 'derecha', obstacleWord: 'obstáculo', walkedWord: 'Has caminado', walkedWord2: 'metros', clearLeft: 'Lado izquierdo despejado', clearRight: 'Lado derecho despejado', clearBoth: 'Mira a ambos lados' },
+  'fr-FR': { loading: 'Activation du capteur. Veuillez patienter.', started: 'Canne intelligente active.', stopClose: 'Alerte', clearPath: 'La voie est libre, avancez.', camError: "Autoriser l'accès à la caméra", netError: 'Problème Internet ou de modèle', meterWord: 'mètre', frontWord: 'devant', leftWord: 'gauche', rightWord: 'droite', obstacleWord: 'obstacle', walkedWord: 'Vous avez marché', walkedWord2: 'mètres', clearLeft: 'Côté gauche libre', clearRight: 'Côté droit libre', clearBoth: 'Regardez des deux côtés' },
+  'de-DE': { loading: 'Sensor wird eingeschaltet. Bitte warten.', started: 'Intelligenter Stock ist an.', stopClose: 'Warnung', clearPath: 'Weg ist frei, gehen Sie weiter.', camError: 'Kamerazugriff erlauben', netError: 'Internet- oder Modellproblem', meterWord: 'Meter', frontWord: 'vorne', leftWord: 'links', rightWord: 'rechts', obstacleWord: 'Hindernis', walkedWord: 'Sie sind gelaufen', walkedWord2: 'Meter', clearLeft: 'Links ist frei', clearRight: 'Rechts ist frei', clearBoth: 'Links und rechts schauen' },
+  'ja-JP': { loading: 'センサーを起動しています。お待ちください。', started: 'スマートケーンがオンです。', stopClose: '警告', clearPath: '道はクリアです、進んでください。', camError: 'カメラのアクセスを許可してください', netError: 'インターネットまたはモデルの読み込みエラー', meterWord: 'メートル', frontWord: '前方', leftWord: '左', rightWord: '右', obstacleWord: '障害物', walkedWord: 'あなたは', walkedWord2: 'メートル歩きました', clearLeft: '左側はクリアです', clearRight: '右側はクリアです', clearBoth: '左右を確認してください' },
+  'ko-KR': { loading: '센서 켜지는 중입니다. 잠시 기다려 주세요.', started: '스마트 지팡이가 켜졌습니다.', stopClose: '경고', clearPath: '길이 깨끗합니다, 앞으로 가세요.', camError: '카메라 권한을 허용해주세요', netError: '인터넷 또는 모델 문제', meterWord: '미터', frontWord: '앞', leftWord: '왼쪽', rightWord: '오른쪽', obstacleWord: '장애물', walkedWord: '당신은', walkedWord2: '미터 걸었습니다', clearLeft: '왼쪽 길이 깨끗합니다', clearRight: '오른쪽 길이 깨끗합니다', clearBoth: '양쪽을 확인하세요' },
+  'ru-RU': { loading: 'Датчик включается. Пожалуйста, подождите.', started: 'Умная трость включена.', stopClose: 'Внимание', clearPath: 'Путь чист, идите вперед.', camError: 'Разрешите доступ к камере', netError: 'Проблема с интернетом или моделью', meterWord: 'метр', frontWord: 'впереди', leftWord: 'слева', rightWord: 'справа', obstacleWord: 'препятствие', walkedWord: 'Вы прошли', walkedWord2: 'метров', clearLeft: 'Слева свободно', clearRight: 'Справа свободно', clearBoth: 'Посмотрите по сторонам' },
+  'it-IT': { loading: 'Sensore in accensione. Attendere prego.', started: 'Bastone intelligente attivo.', stopClose: 'Attenzione', clearPath: 'La strada è libera, procedi.', camError: 'Consenti accesso alla fotocamera', netError: 'Problema internet o modello', meterWord: 'metri', frontWord: 'davanti', leftWord: 'sinistra', rightWord: 'destra', obstacleWord: 'ostacolo', walkedWord: 'Hai camminato', walkedWord2: 'metri', clearLeft: 'Sinistra libera', clearRight: 'Destra libera', clearBoth: 'Guarda da entrambi i lati' },
+  'id-ID': { loading: 'Sensor menyala. Harap tunggu.', started: 'Tongkat pintar aktif.', stopClose: 'Peringatan', clearPath: 'Jalur aman, silakan maju.', camError: 'Izinkan akses kamera', netError: 'Masalah internet atau model', meterWord: 'meter', frontWord: 'depan', leftWord: 'kiri', rightWord: 'kanan', obstacleWord: 'halangan', walkedWord: 'Anda telah berjalan', walkedWord2: 'meter', clearLeft: 'Kiri aman', clearRight: 'Kanan aman', clearBoth: 'Lihat kiri kanan' },
+  'vi-VN': { loading: 'Đang bật cảm biến. Vui lòng đợi.', started: 'Gậy thông minh đã bật.', stopClose: 'Cảnh báo', clearPath: 'Đường thông thoáng, hãy tiến lên.', camError: 'Cho phép truy cập camera', netError: 'Lỗi internet hoặc mô hình', meterWord: 'mét', frontWord: 'trước', leftWord: 'trái', rightWord: 'phải', obstacleWord: 'vật cản', walkedWord: 'Bạn đã đi', walkedWord2: 'mét', clearLeft: 'Bên trái thông thoáng', clearRight: 'Bên phải thông thoáng', clearBoth: 'Nhìn hai bên' },
+  'th-TH': { loading: 'กำลังเปิดใช้งานเซ็นเซอร์ กรุณารอสักครู่', started: 'ไม้เท้าอัจฉริยะเปิดใช้งานแล้ว', stopClose: 'แจ้งเตือน', clearPath: 'ทางโล่ง เดินหน้าต่อได้', camError: 'อนุญาตให้เข้าถึงกล้อง', netError: 'ปัญหาอินเทอร์เน็ตหรือโมเดล', meterWord: 'เมตร', frontWord: 'ข้างหน้า', leftWord: 'ซ้าย', rightWord: 'ขวา', obstacleWord: 'สิ่งกีดขวาง', walkedWord: 'คุณได้เดิน', walkedWord2: 'เมตร', clearLeft: 'ด้านซ้ายโล่ง', clearRight: 'ด้านขวาโล่ง', clearBoth: 'มองซ้ายขวา' },
+  'nl-NL': { loading: 'Sensor wordt ingeschakeld. Even geduld.', started: 'Slimme stok is aan.', stopClose: 'Waarschuwing', clearPath: 'Pad is vrij, ga verder.', camError: 'Cameratoegang toestaan', netError: 'Internet- of modelprobleem', meterWord: 'meter', frontWord: 'voor', leftWord: 'links', rightWord: 'rechts', obstacleWord: 'obstakel', walkedWord: 'Je hebt gelopen', walkedWord2: 'meter', clearLeft: 'Links is vrij', clearRight: 'Rechts is vrij', clearBoth: 'Kijk beide kanten op' },
+  'pl-PL': { loading: 'Włączanie czujnika. Proszę czekać.', started: 'Inteligentna laska włączona.', stopClose: 'Ostrzeżenie', clearPath: 'Droga wolna, idź do przodu.', camError: 'Zezwól na dostęp do kamery', netError: 'Problem z internetem lub modelem', meterWord: 'metr', frontWord: 'przód', leftWord: 'lewo', rightWord: 'prawo', obstacleWord: 'przeszkoda', walkedWord: 'Przeszedłeś', walkedWord2: 'metrów', clearLeft: 'Lewa strona wolna', clearRight: 'Prawa strona wolna', clearBoth: 'Rozejrzyj się' },
+  'uk-UA': { loading: 'Увімкнення датчика. Будь ласка, зачекайте.', started: 'Розумна тростина увімкнена.', stopClose: 'Увага', clearPath: 'Шлях вільний, рушайте вперед.', camError: 'Дозвольте доступ до камери', netError: 'Проблема з інтернетом або моделлю', meterWord: 'метр', frontWord: 'попереду', leftWord: 'ліворуч', rightWord: 'праворуч', obstacleWord: 'перешкода', walkedWord: 'Ви пройшли', walkedWord2: 'метрів', clearLeft: 'Ліворуч вільно', clearRight: 'Праворуч вільно', clearBoth: 'Подивіться в обидва боки' },
+  'el-GR': { loading: 'Ενεργοποίηση αισθητήρα. Περιμένετε.', started: 'Το έξυπνο μπαστούνι είναι ενεργό.', stopClose: 'Προσοχή', clearPath: 'Ο δρόμος είναι καθαρός, προχωρήστε.', camError: 'Να επιτρέπεται η πρόσβαση στην κάμερα', netError: 'Πρόβλημα διαδικτύου ή μοντέλου', meterWord: 'μέτρα', frontWord: 'μπροστά', leftWord: 'αριστερά', rightWord: 'δεξιά', obstacleWord: 'εμπόδιο', walkedWord: 'Έχετε περπατήσει', walkedWord2: 'μέτρα', clearLeft: 'Αριστερά ελεύθερα', clearRight: 'Δεξιά ελεύθερα', clearBoth: 'Κοιτάξτε και τις δύο πλευρές' },
+  'he-IL': { loading: 'החיישן מופעל. נא להמתין.', started: 'המקל החכם פועל.', stopClose: 'אזהרה', clearPath: 'הדרך פנויה, התקדם.', camError: 'אפשר גישה למצלמה', netError: 'בעיית אינטרנט או מודל', meterWord: 'מטר', frontWord: 'לפנים', leftWord: 'שמאל', rightWord: 'ימין', obstacleWord: 'מכשול', walkedWord: 'הלכת', walkedWord2: 'מטרים', clearLeft: 'שמאל פנוי', clearRight: 'ימין פנוי', clearBoth: 'הבט לשני הצדדים' },
+  'sv-SE': { loading: 'Sensorn slås på. Vänta.', started: 'Smart käpp är på.', stopClose: 'Varning', clearPath: 'Vägen är fri, gå framåt.', camError: 'Tillåt kameratkomst', netError: 'Internet- eller modellproblem', meterWord: 'meter', frontWord: 'fram', leftWord: 'vänster', rightWord: 'höger', obstacleWord: 'hinder', walkedWord: 'Du har gått', walkedWord2: 'meter', clearLeft: 'Vänster är fritt', clearRight: 'Höger är fritt', clearBoth: 'Titta åt båda hållen' },
+  'no-NO': { loading: 'Sensor slås på. Vennligst vent.', started: 'Smart stokk er på.', stopClose: 'Advarsel', clearPath: 'Veien er fri, gå framover.', camError: 'Tillat kameratilgang', netError: 'Internet- eller modellproblem', meterWord: 'meter', frontWord: 'foran', leftWord: 'venstre', rightWord: 'høyre', obstacleWord: 'hinder', walkedWord: 'Du har gått', walkedWord2: 'meter', clearLeft: 'Venstre er fri', clearRight: 'Høyre er fri', clearBoth: 'Se til begge sider' },
+  'fi-FI': { loading: 'Anturi käynnistyy. Odota hetki.', started: 'Älykäs kepi päällä.', stopClose: 'Varoitus', clearPath: 'Tie on vapaa, jatka matkaa.', camError: 'Salli kameran käyttö', netError: 'Internet- tai malliongelma', meterWord: 'metriä', frontWord: 'edessä', leftWord: 'vasen', rightWord: 'oikea', obstacleWord: 'este', walkedWord: 'Olet kävellyt', walkedWord2: 'metriä', clearLeft: 'Vasen on vapaa', clearRight: 'Oikea on vapaa', clearBoth: 'Katso molempiin suuntiin' },
+  'da-DK': { loading: 'Sensor tænder. Vent venligst.', started: 'Smart stok er tændt.', stopClose: 'Advarsel', clearPath: 'Vejen er fri, gå fremad.', camError: 'Tillad kameraadgang', netError: 'Internet- eller modelproblem', meterWord: 'meter', frontWord: 'foran', leftWord: 'venstre', rightWord: 'højre', obstacleWord: 'forhindring', walkedWord: 'Du har gået', walkedWord2: 'meter', clearLeft: 'Venstre er fri', clearRight: 'Højre er fri', clearBoth: 'Kig til begge sider' },
+  'cs-CZ': { loading: 'Senzor se zapíná. Prosím čekejte.', started: 'Chytrá hůl je zapnuta.', stopClose: 'Pozor', clearPath: 'Cesta je volná, jděte vpřed.', camError: 'Povolit přístup ke kameře', netError: 'Problém s internetem nebo modelem', meterWord: 'metr', frontWord: 'vpředu', leftWord: 'vlevo', rightWord: 'vpravo', obstacleWord: 'překážka', walkedWord: 'Ušli jste', walkedWord2: 'metrů', clearLeft: 'Vlevo volno', clearRight: 'Vpravo volno', clearBoth: 'Podívejte se na obě strany' },
+  'hu-HU': { loading: 'Érzékelő bekapcsolása. Kérjük, várjon.', started: 'Intelligens bot bekapcsolva.', stopClose: 'Figyelmeztetés', clearPath: 'Az út tiszta, haladjon előre.', camError: 'Kamera hozzáférés engedélyezése', netError: 'Internet vagy modell hiba', meterWord: 'méter', frontWord: 'elöl', leftWord: 'balra', rightWord: 'jobbra', obstacleWord: 'akadály', walkedWord: 'Ön ment', walkedWord2: 'métert', clearLeft: 'Balra szabad', clearRight: 'Jobbra szabad', clearBoth: 'Nézz mindkét oldalra' },
+  'ro-RO': { loading: 'Senzorul pornește. Vă rugăm așteptați.', started: 'Bastonul inteligent este pornit.', stopClose: 'Atenție', clearPath: 'Drumul este liber, mergeți înainte.', camError: 'Permite accesul la cameră', netError: 'Problemă de internet sau model', meterWord: 'metri', frontWord: 'față', leftWord: 'stânga', rightWord: 'dreapta', obstacleWord: 'obstacol', walkedWord: 'Ai mers', walkedWord2: 'metri', clearLeft: 'Stânga este liberă', clearRight: 'Dreapta este liberă', clearBoth: 'Uită-te în ambele părți' },
+  'ms-MY': { loading: 'Sensor sedang dihidupkan. Sila tunggu.', started: 'Tongkat pintar dihidupkan.', stopClose: 'Amaran', clearPath: 'Jalan bersih, teruskan berjalan.', camError: 'Benarkan akses kamera', netError: 'Masalah internet atau model', meterWord: 'meter', frontWord: 'depan', leftWord: 'kiri', rightWord: 'kanan', obstacleWord: 'halangan', walkedWord: 'Anda telah berjalan', walkedWord2: 'meter', clearLeft: 'Kiri bersih', clearRight: 'Kanan bersih', clearBoth: 'Lihat kiri kanan' },
+  'fil-PH': { loading: 'Bukas ang sensor. Mangyaring maghintay.', started: 'Naka-on ang smart cane.', stopClose: 'Babala', clearPath: 'Malinis ang daan, sumulong.', camError: 'Payagan ang pag-access sa camera', netError: 'Problema sa internet o modelo', meterWord: 'metro', frontWord: 'harap', leftWord: 'kaliwa', rightWord: 'kanan', obstacleWord: 'balakid', walkedWord: 'Nakalakad ka na ng', walkedWord2: 'metro', clearLeft: 'Kaliwa ay malinis', clearRight: 'Kanan ay malinis', clearBoth: 'Tumingin sa magkabilang panig' },
+  'sw-KE': { loading: 'Sensor inawashwa. Tafadhali subiri.', started: 'Fimbo ya smart imewashwa.', stopClose: 'Onyo', clearPath: 'Njia iko wazi, songa mbele.', camError: 'Ruhusu ufikiaji wa kamera', netError: 'Shida ya mtandao au mfano', meterWord: 'mita', frontWord: 'mbele', leftWord: 'kushoto', rightWord: 'kulia', obstacleWord: 'kikwazo', walkedWord: 'Umetembea', walkedWord2: 'mita', clearLeft: 'Kushoto iko wazi', clearRight: 'Kulia iko wazi', clearBoth: 'Angalia pande zote' },
+  'af-ZA': { loading: 'Sensor skakel aan. Wag asseblief.', started: 'Slim kierie is aan.', stopClose: 'Waarskuwing', clearPath: 'Pad is skoon, beweeg vorentoe.', camError: 'Laat kameratoegang toe', netError: 'Internet- of modelprobleem', meterWord: 'meter', frontWord: 'voor', leftWord: 'links', rightWord: 'regs', obstacleWord: 'hindernis', walkedWord: 'Jy het geloop', walkedWord2: 'meter', clearLeft: 'Links is skoon', clearRight: 'Regs is skoon', clearBoth: 'Kyk albei kante' },
+  'sq-AL': { loading: 'Sensori po ndizet. Ju lutem prisni.', started: 'Bastoni i zgjuar është ndezur.', stopClose: 'Kujdes', clearPath: 'Rruga është e pastër, ecni përpara.', camError: 'Lejo qasjen në kamerë', netError: 'Problem me internetin ose modelin', meterWord: 'metra', frontWord: 'përpara', leftWord: 'majtas', rightWord: 'djathtas', obstacleWord: 'pengesë', walkedWord: 'Ke ecur', walkedWord2: 'metra', clearLeft: 'Majtas është e pastër', clearRight: 'Djathtas është e pastër', clearBoth: 'Shiko nga të dyja anët' },
+  'am-ET': { loading: 'ዳሳሽ እየበራ ነው። እባክዎ ይጠብቁ።', started: 'ብልጥ በትር በርቷል።', stopClose: 'ማስጠንቀቂያ', clearPath: 'መንገዱ ንጹህ ነው፣ ወደፊት ይሂዱ።', camError: 'የካሜራ መዳረሻ ፍቀድ', netError: 'የኢንተርኔት ወይም የሞዴል ችግር', meterWord: 'ሜትር', frontWord: 'ከፊት', leftWord: 'ግራ', rightWord: 'ቀኝ', obstacleWord: 'እንቅፋት', walkedWord: 'አንተ', walkedWord2: 'ሜትር ሄደሃል', clearLeft: 'ግራ መንገድ ንጹህ ነው', clearRight: 'ቀኝ መንገድ ንጹህ ነው', clearBoth: 'ሁለቱንም ጎን ይመልከቱ' },
+  'hy-AM': { loading: 'Սենսորը միանում է։ Խնդրում ենք սպասել։', started: 'Խելացի ձեռնափայտը միացված է։', stopClose: 'Զգուշացում', clearPath: 'Ճանապարհը մաքուր է, առաջ գնացեք։', camError: 'Թույլատրել տեսախցիկի մուտքը', netError: 'Ինտերնետի կամ մոդելի խնդիր', meterWord: 'մետր', frontWord: 'առջևում', leftWord: 'ձախ', rightWord: 'աջ', obstacleWord: 'խոչընդոտ', walkedWord: 'Դուք քայլել եք', walkedWord2: 'մետր', clearLeft: 'Ձախը մաքուր է', clearRight: 'Աջը մաքուր է', clearBoth: 'Նայեք երկու կողմերը' },
+  'az-AZ': { loading: 'Sensor işə düşür. Zəhmət olmasa gözləyin.', started: 'Ağıllı əsa işləyir.', stopClose: 'Diqqət', clearPath: 'Yol təmizdir, irəli gedin.', camError: 'Kameraya icazə verin', netError: 'İnternet və ya model problemi', meterWord: 'metr', frontWord: 'öndə', leftWord: 'solda', rightWord: 'sağda', obstacleWord: 'maneə', walkedWord: 'Sən', walkedWord2: 'metr getdin', clearLeft: 'Sol tərəf təmizdir', clearRight: 'Sağ tərəf təmizdir', clearBoth: 'Hər iki tərəfə baxın' },
+  'eu-ES': { loading: 'Sentsorea pizten ari da. Itxaron mesedez.', started: 'Makila adimenduna piztuta dago.', stopClose: 'Oharra', clearPath: 'Bidea garbi dago, aurrera egin.', camError: 'Baimendu kameraren sarbidea', netError: 'Internet edo modelo arazoa', meterWord: 'metro', frontWord: 'aurrean', leftWord: 'ezkerra', rightWord: 'eskuina', obstacleWord: 'oztopoa', walkedWord: 'Zu ibili zara', walkedWord2: 'metro', clearLeft: 'Ezkerra garbi dago', clearRight: 'Eskuina garbi dago', clearBoth: 'Begiratu bi aldeetara' },
+  'be-BY': { loading: 'Датчик уключаецца. Калі ласка, пачакайце.', started: 'Разумны тросць уключаны.', stopClose: 'Папярэджанне', clearPath: 'Шлях чысты, ідзіце наперад.', camError: 'Дазволіць доступ да камеры', netError: 'Праблема з інтэрнэтам або мадэлью', meterWord: 'метр', frontWord: 'наперадзе', leftWord: 'злева', rightWord: 'справа', obstacleWord: 'перашкода', walkedWord: 'Вы прайшлі', walkedWord2: 'метраў', clearLeft: 'Злева чыста', clearRight: 'Справа чыста', clearBoth: 'Паглядзіце ў абодва бакі' },
+  'bs-BA': { loading: 'Senzor se uključuje. Molimo sačekajte.', started: 'Pametni štap je uključen.', stopClose: 'Upozorenje', clearPath: 'Put je čist, idite naprijed.', camError: 'Dozvolite pristup kameri', netError: 'Problem s internetom ili modelom', meterWord: 'metar', frontWord: 'ispred', leftWord: 'lijevo', rightWord: 'desno', obstacleWord: 'prepreka', walkedWord: 'Prešli ste', walkedWord2: 'metara', clearLeft: 'Lijevo je čisto', clearRight: 'Desno je čisto', clearBoth: 'Pogledajte na obje strane' },
+  'bg-BG': { loading: 'Сензорът се включва. Моля, изчакайте.', started: 'Умният бастун е включен.', stopClose: 'Внимание', clearPath: 'Пътят е чист, продължете напред.', camError: 'Разрешете достъпа до камерата', netError: 'Проблем с интернет или модел', meterWord: 'метра', frontWord: 'отпред', leftWord: 'ляво', rightWord: 'дясно', obstacleWord: 'препятствие', walkedWord: 'Вървели сте', walkedWord2: 'метра', clearLeft: 'Отляво е чисто', clearRight: 'Отдясно е чисто', clearBoth: 'Погледнете от двете страни' },
+  'ca-ES': { loading: "El sensor s'està encenent. Si us plau, espereu.", started: 'El bastó intel·ligent està encès.', stopClose: 'Alerta', clearPath: 'El camí està net, avanceu.', camError: "Permet l'accés a la càmera", netError: "Problema d'internet o model", meterWord: 'metre', frontWord: 'davant', leftWord: 'esquerra', rightWord: 'dreta', obstacleWord: 'obstacle', walkedWord: 'Has caminat', walkedWord2: 'metres', clearLeft: 'Esquerra neta', clearRight: 'Dreta neta', clearBoth: 'Mireu als dos costats' },
+  'hr-HR': { loading: 'Senzor se uključuje. Molimo pričekajte.', started: 'Pametni štap je uključen.', stopClose: 'Upozorenje', clearPath: 'Put je čist, krenite naprijed.', camError: 'Dopusti pristup kameri', netError: 'Problem s internetom ili modelom', meterWord: 'metar', frontWord: 'ispred', leftWord: 'lijevo', rightWord: 'desno', obstacleWord: 'prepreka', walkedWord: 'Prešli ste', walkedWord2: 'metara', clearLeft: 'Lijevo je čisto', clearRight: 'Desno je čisto', clearBoth: 'Pogledajte na obje strane' },
+  'et-EE': { loading: 'Andur lülitub sisse. Palun oodake.', started: 'Nutikas kepp on sees.', stopClose: 'Hoiatus', clearPath: 'Tee on puhas, liikuge edasi.', camError: 'Luba kaamera juurdepääs', netError: 'Internet või mudeli probleem', meterWord: 'meetrit', frontWord: 'ees', leftWord: 'vasak', rightWord: 'parem', obstacleWord: 'takistus', walkedWord: 'Oled kõndinud', walkedWord2: 'meetrit', clearLeft: 'Vasak on puhas', clearRight: 'Parem on puhas', clearBoth: 'Vaata mõlemale poole' },
+  'gl-ES': { loading: 'O sensor estase acendendo. Por favor, agarde.', started: 'O caxato intelixente está acendido.', stopClose: 'Alerta', clearPath: 'O camiño está limpo, avanza.', camError: 'Permitir o acceso á cámara', netError: 'Problema de internet ou modelo', meterWord: 'metro', frontWord: 'diante', leftWord: 'esquerda', rightWord: 'dereita', obstacleWord: 'obstáculo', walkedWord: 'Camiñaches', walkedWord2: 'metros', clearLeft: 'Esquerda limpa', clearRight: 'Dereita limpa', clearBoth: 'Mira aos dous lados' },
+  'ka-GE': { loading: 'სენსორი ირთვება. გთხოვთ დაელოდოთ.', started: 'ჭკვიანი ჯოხი ჩართულია.', stopClose: 'გაფრთხილება', clearPath: 'გზა სუფთაა, წინ იარეთ.', camError: 'კამერაზე წვდომის ნებადართვა', netError: 'ინტერნეტის ან მოდელის პრობლემა', meterWord: 'მეტრი', frontWord: 'წინ', leftWord: 'მარცხნივ', rightWord: 'მარჯვნივ', obstacleWord: 'დაბრკოლება', walkedWord: 'თქვენ გაიარეთ', walkedWord2: 'მეტრი', clearLeft: 'მარცხნივ სუფთაა', clearRight: 'მარჯვნივ სუფთაა', clearBoth: 'ორივე მხარეს შეხედეთ' },
+  'gu-IN': { loading: 'સેન્સર ચાલુ થઈ રહ્યું છે. કૃપા કરીને રાહ જુઓ.', started: 'સ્માર્ટ કેન ચાલુ છે.', stopClose: 'ચેતવણી', clearPath: 'રસ્તો સાફ છે, આગળ વધો.', camError: 'કેમેરાની મંજૂરી આપો', netError: 'ઇન્ટરનેટ અથવા મોડેલની સમસ્યા', meterWord: 'મીટર', frontWord: 'આગળ', leftWord: 'ડાબી', rightWord: 'જમણી', obstacleWord: 'અવરોધ', walkedWord: 'તમે', walkedWord2: 'મીટર ચાલ્યા છો', clearLeft: 'ડાબી બાજુ રસ્તો સાફ છે', clearRight: 'જમણી બાજુ રસ્તો સાફ છે', clearBoth: 'બંને બાજુ જોઈને ચાલો' },
+  'is-IS': { loading: 'Skynjari kveikir á sér. Vinsamlegast bíðið.', started: 'Snjallstafur er kveiktur.', stopClose: 'Viðvörun', clearPath: 'Vegurinn er hreinn, haltu áfram.', camError: 'Leyfa aðgang að myndavél', netError: 'Vandamál með internet eða líkan', meterWord: 'metra', frontWord: 'framundan', leftWord: 'vinstri', rightWord: 'hægri', obstacleWord: 'hindrun', walkedWord: 'Þú hefur gengið', walkedWord2: 'metra', clearLeft: 'Vinstri er hreinn', clearRight: 'Hægri er hreinn', clearBoth: 'Skoðið báðar hliðar' },
+  'ga-IE': { loading: 'Braiteoir á chasadh air. Fan le do thoil.', started: 'Cán Chliste ar siúl.', stopClose: 'Rabhadh', clearPath: 'Tá an bealach soiléir, bog ar aghaidh.', camError: 'Ceadaigh rochtain ar an gceamara', netError: 'Fadhb idirlín nó mhúnla', meterWord: 'méadar', frontWord: 'roimh', leftWord: 'clé', rightWord: 'deas', obstacleWord: 'constaic', walkedWord: 'Shiúil tú', walkedWord2: 'méadar', clearLeft: 'Tá an chlé soiléir', clearRight: 'Tá an deas soiléir', clearBoth: 'Féach ar an dá thaobh' },
+  'jv-JA': { loading: 'Sensor urip. Mangga ngenteni.', started: 'Tongkat pinter diaktifake.', stopClose: 'Pèngetan', clearPath: 'Dalan resik, mangga maju.', camError: 'Idinake akses kamera', netError: 'Masalah internet utawa model', meterWord: 'meter', frontWord: 'ngarep', leftWord: 'kiwa', rightWord: 'tengen', obstacleWord: 'halangan', walkedWord: 'Kowe wis mlaku', walkedWord2: 'meter', clearLeft: 'Kiwa resik', clearRight: 'Tengen resik', clearBoth: 'Deloken kiwa tengen' },
+  'kn-IN': { loading: 'ಸೆನ್ಸಾರ್ ಆನ್ ಆಗುತ್ತಿದೆ. ದಯವಿಟ್ಟು ನಿರೀಕ್ಷಿಸಿ.', started: 'ಸ್ಮಾರ್ಟ್ ಕೇನ್ ಆನ್ ಆಗಿದೆ.', stopClose: 'ಎಚ್ಚರಿಕೆ', clearPath: 'ದಾರಿ ಸ್ಪಷ್ಟವಾಗಿದೆ, ಮುಂದೆ ಸಗಿರಿ.', camError: 'ಕ್ಯಾಮೆರಾ ಅನುಮತಿ ನೀಡಿ', netError: 'ಇಂಟರ್ನೆಟ್ ಅಥವಾ ಮಾದರಿ ಸಮಸ್ಯೆ', meterWord: 'ಮೀಟರ್', frontWord: 'ಮುಂದೆ', leftWord: 'ಎಡ', rightWord: 'ಬಲ', obstacleWord: 'ಅಡೆತಡೆ', walkedWord: 'ನೀವು', walkedWord2: 'ಮೀಟರ್ ನಡೆದಿದ್ದೀರಿ', clearLeft: 'ಎಡಭಾಗ ಸ್ವಚ್ಛವಾಗಿದೆ', clearRight: 'ಬಲಭಾಗ ಸ್ವಚ್ಛವಾಗಿದೆ', clearBoth: 'ಎರಡೂ ಕಡೆ ನೋಡಿ' },
+  'kk-KZ': { loading: 'Сенсор қосылуда. Күте тұрыңыз.', started: 'Ақылды таяқ қосулы.', stopClose: 'Назар', clearPath: 'Жол таза, алға жүріңіз.', camError: 'Камераға рұқсат беру', netError: 'Интернет немесе модель мәселесі', meterWord: 'метр', frontWord: 'алда', leftWord: 'сол', rightWord: 'оң', obstacleWord: 'кедергі', walkedWord: 'Сіз', walkedWord2: 'метр жүрдіңіз', clearLeft: 'Сол жақ таза', clearRight: 'Оң жақ таза', clearBoth: 'Екі жаққа қараңыз' },
+  'km-KH': { loading: 'ឧបករណ៍ចាប់សញ្ញាកំពុងបើក។ សូមរង់ចាំ។', started: 'ឈើច្រត់ឆ្លាតវៃត្រូវបានបើក។', stopClose: 'ការជូនដំណឹង', clearPath: 'ផ្លូវស្អាត សូមដើរទៅមុខ។', camError: 'អនុញ្ញាតឱ្យប្រើប្រាស់កាមេរ៉ា', netError: 'បញ្ហាអ៊ីនធឺណិត ឬម៉ូដែល', meterWord: 'ម៉ែត្រ', frontWord: 'ខាងមុខ', leftWord: 'ឆ្វេង', rightWord: 'ស្តាំ', obstacleWord: 'ឧបសគ្គ', walkedWord: 'អ្នកបានដើរ', walkedWord2: 'ម៉ែត្រ', clearLeft: 'ខាងឆ្វេងស្អាត', clearRight: 'ខាងស្តាំស្អាត', clearBoth: 'មើលទាំងសងខាង' },
+  'ky-KG': { loading: 'Сенсор күйүп жатат. Сураныч күтө туруңуз.', started: 'Акылдуу таяк күйгүзүлдү.', stopClose: 'Эскертүү', clearPath: 'Жол таза, алга жылыңыз.', camError: 'Камерага уруксат берүү', netError: 'Интернет же модель көйгөйү', meterWord: 'метр', frontWord: 'алдыда', leftWord: 'сол', rightWord: 'оң', obstacleWord: 'тоскоолдук', walkedWord: 'Сиз', walkedWord2: 'метр бастыңыз', clearLeft: 'Сол жак таза', clearRight: 'Оң жак таза', clearBoth: 'Эки жакты караңыз' },
+  'lo-LA': { loading: 'ເຊັນເຊີກຳລັງເປີດ. ກະລຸນາລໍຖ້າ.', started: 'ໄມ້ເທົ້າອັດສະລິຍະເປີດຢູ່.', stopClose: 'ຄຳເຕືອນ', clearPath: 'ທາງສະອາດ, ເດີນໜ້າຕໍ່ໄປ.', camError: 'ອະນຸຍາດໃຫ້ເຂົ້າເຖິງກ້ອງຖ່າຍຮູບ', netError: 'ບັນຫາອິນເຕີເນັດ ຫຼື ໂມເດວ', meterWord: 'ແມັດ', frontWord: 'ຂ້າງໜ້າ', leftWord: 'ຊ້າຍ', rightWord: 'ຂວາ', obstacleWord: 'ສິ່ງກີດຂວາງ', walkedWord: 'ທ່ານໄດ້ຍ່າງ', walkedWord2: 'ແມັດ', clearLeft: 'ດ້ານຊ້າຍສະອາດ', clearRight: 'ດ້ານຂວາສະອາດ', clearBoth: 'ເບິ່ງທັງສອງດ້ານ' },
+  'lv-LV': { loading: 'Sensors ieslēdzas. Lūdzu, uzgaidiet.', started: 'Viedais spieķis ir ieslēgts.', stopClose: 'Brīdinājums', clearPath: 'Ceļš ir brīvs, virzieties uz priekšu.', camError: 'Atļaut kameras piekļuvi', netError: 'Interneta vai modeļa problēma', meterWord: 'metri', frontWord: 'priekšā', leftWord: 'pa kreisi', rightWord: 'pa labi', obstacleWord: 'šķērslis', walkedWord: 'Jūs esat nogājis', walkedWord2: 'metrus', clearLeft: 'Pa kreisi ir brīvs', clearRight: 'Pa labi ir brīvs', clearBoth: 'Paskatieties uz abām pusēm' },
+  'lt-LT': { loading: 'Jutiklis įsijungia. Palaukite.', started: 'Išmanioji lazdelė įjungta.', stopClose: 'Įspėjimas', clearPath: 'Kelias švarus, judėkite į priekį.', camError: 'Leisti prieigą prie kameros', netError: 'Interneto arba modelio problema', meterWord: 'metrų', frontWord: 'priekyje', leftWord: 'kairėje', rightWord: 'dešinėje', obstacleWord: 'kliūtis', walkedWord: 'Jūs nuėjote', walkedWord2: 'metrų', clearLeft: 'Kairė laisva', clearRight: 'Dešinė laisva', clearBoth: 'Pažiūrėkite į abi puses' },
+  'mk-MK': { loading: 'Сензорот се вклучува. Ве молиме почекајте.', started: 'Паметниот бастун е вклучен.', stopClose: 'Предупредување', clearPath: 'Патот е чист, одете напред.', camError: 'Дозволи пристап до камера', netError: 'Проблем со интернет или модел', meterWord: 'метри', frontWord: 'напред', leftWord: 'лево', rightWord: 'десно', obstacleWord: 'пречка', walkedWord: 'Вие поминавте', walkedWord2: 'метри', clearLeft: 'Лево е чисто', clearRight: 'Десно е чисто', clearBoth: 'Погледнете на двете страни' },
+  'mg-MG': { loading: 'Mandeha ny sensor. Andraso kely azafady.', started: 'Mandeha ilay tehina marani-tsaina.', stopClose: 'Fampitandremana', clearPath: 'Madio ny lalana, mandehana.', camError: 'Omeo alalana ny fakana sary', netError: "Olana amin'ny internet na modely", meterWord: 'metatra', frontWord: 'eo aloha', leftWord: 'ankavia', rightWord: 'ankavanana', obstacleWord: 'sakana', walkedWord: 'Nandeha ianao', walkedWord2: 'metatra', clearLeft: 'Ankavia madio', clearRight: 'Ankavanana madio', clearBoth: 'Jereo ny andaniny roa' },
+  'ml-IN': { loading: 'സെൻസർ ഓൺ ആകുന്നു. ദയവായി കാത്തിരിക്കുക.', started: 'സ്മാർട്ട് കെയ്ൻ ഓൺ ആണ്.', stopClose: 'മുന്നറിയിപ്പ്', clearPath: 'വഴി വ്യക്തമാണ്, മുന്നോട്ട് പോവുക.', camError: 'ക്യാമറ അനുമതി നൽകുക', netError: 'ഇന്റർനെറ്റ് അല്ലെങ്കിൽ മോഡൽ പ്രശ്നം', meterWord: 'മീറ്റർ', frontWord: 'മുന്നിൽ', leftWord: 'ഇടത്', rightWord: 'വലത്', obstacleWord: 'തടസ്സം', walkedWord: 'നിങ്ങൾ', walkedWord2: 'മീറ്റർ നടന്നു', clearLeft: 'ഇടത് വശം വ്യക്തമാണ്', clearRight: 'വലത് വശം വ്യക്തമാണ്', clearBoth: 'രണ്ട് വശവും നോക്കുക' },
+  'mt-MT': { loading: 'Is-sensor qed jinxtegħel. Jekk jogħġbok stenna.', started: 'Il-kannamiela intelliġenti mixgħula.', stopClose: 'Twissija', clearPath: "It-triq hija nadifa, imxi 'l quddiem.", camError: 'Ħalli l-aċċess għall-kamera', netError: 'Problema fl-internet jew fil-mudell', meterWord: 'metri', frontWord: 'quddiem', leftWord: 'xellug', rightWord: 'lemin', obstacleWord: 'ostaklu', walkedWord: 'Inti mxejt', walkedWord2: 'metri', clearLeft: 'Ix-xellug nadif', clearRight: 'Il-lemin nadif', clearBoth: 'Ħares lejn iż-żewġ naħat' },
+  'mi-NZ': { loading: 'Kei te whakahura te pūoko. Tēnā whakatā.', started: 'Kei te ora te tokotoko atamai.', stopClose: 'Whakatūpato', clearPath: 'He mārama te huarahi, haere whakamua.', camError: 'Whakaae ki te uru ki te kāmera', netError: 'Raru ipurangi, tauira rānei', meterWord: 'mita', frontWord: 'mua', leftWord: 'mauī', rightWord: 'matau', obstacleWord: 'raru', walkedWord: 'Kua hikoi koe', walkedWord2: 'mita', clearLeft: 'Kei te mārama te mauī', clearRight: 'Kei te mārama te matau', clearBoth: 'Titiro ki ngā taha e rua' },
+  'mr-IN': { loading: 'सेन्सर चालू होत आहे. कृपया प्रतीक्षा करा.', started: 'स्मार्ट केन चालू आहे.', stopClose: 'चेतावणी', clearPath: 'रस्ता साफ आहे, पुढे जा.', camError: 'कॅमेऱ्याची परवानगी द्या', netError: 'इंटरनेट किंवा मॉडेलची समस्या', meterWord: 'मीटर', frontWord: 'पुढे', leftWord: 'डावी', rightWord: 'उजवी', obstacleWord: 'अडथळा', walkedWord: 'तुम्ही', walkedWord2: 'मीटर चालला आहात', clearLeft: 'डावी बाजू साफ आहे', clearRight: 'उजवी बाजू साफ आहे', clearBoth: 'दोन्ही बाजूंना पहा' },
+  'mn-MN': { loading: 'Мэдрэгч асаж байна. Түр хүлээнэ үү.', started: 'Ухаалаг таяг асаалттай байна.', stopClose: 'Анхааруулга', clearPath: 'Зам цэвэр байна, урагшаа яваарай.', camError: 'Камерын эрх олгох', netError: 'Интернэт эсвэл загварын асуудал', meterWord: 'метр', frontWord: 'урдаа', leftWord: 'зүүн', rightWord: 'баруун', obstacleWord: 'саад', walkedWord: 'Та', walkedWord2: 'метр явсан', clearLeft: 'Зүүн тал цэвэр', clearRight: 'Баруун тал цэвэр', clearBoth: 'Хоёр талдаа хараарай' },
+  'ne-NP': { loading: 'सेन्सर अन हुँदैछ। कृपया प्रतीक्षा गर्नुहोस्।', started: 'स्मार्ट केन अन छ।', stopClose: 'चेतावनी', clearPath: 'बाटो सफा छ, अगाडि बढ्नुहोस्।', camError: 'क्यामेरा अनुमति दिनुहोस्', netError: 'इन्टरनेट वा मोडेल समस्या', meterWord: 'मिटर', frontWord: 'अगाडि', leftWord: 'बायाँ', rightWord: 'दायाँ', obstacleWord: 'अवरोध', walkedWord: 'तपाईं', walkedWord2: 'मिटर हिँड्नुभयो', clearLeft: 'बायाँ तिर सफा छ', clearRight: 'दायाँ तिर सफा छ', clearBoth: 'दुवै तिर हेर्नुहोस्' },
+  'fa-AF': { loading: 'سنسور روشن می‌شود. لطفاً انتظار بکشید.', started: 'عصای هوشمند روشن است.', stopClose: 'هشدار', clearPath: 'راه باز است، پیش بروید.', camError: 'اجازه دسترسی به کامره', netError: 'مشکل انترنت یا مدل', meterWord: 'متر', frontWord: 'پیش', leftWord: 'چپ', rightWord: 'راست', obstacleWord: 'مانع', walkedWord: 'شما', walkedWord2: 'متر راه رفته‌اید', clearLeft: 'سمت چپ باز است', clearRight: 'سمت راست باز است', clearBoth: 'به هر دو طرف نگاه کنید' },
+  'pt-BR': { loading: 'Sensor ligando. Por favor, aguarde.', started: 'Bengala inteligente ligada.', stopClose: 'Alerta', clearPath: 'Caminho livre, siga em frente.', camError: 'Permitir acesso à câmera', netError: 'Problema de internet ou modelo', meterWord: 'metro', frontWord: 'frente', leftWord: 'esquerda', rightWord: 'direita', obstacleWord: 'obstáculo', walkedWord: 'Você caminhou', walkedWord2: 'metros', clearLeft: 'Esquerda livre', clearRight: 'Direita livre', clearBoth: 'Olhe para os dois lados' },
+  'pt-PT': { loading: 'Sensor a ligar. Por favor, aguarde.', started: 'Bengala inteligente ligada.', stopClose: 'Alerta', clearPath: 'Caminho limpo, avance.', camError: 'Permitir acesso à câmara', netError: 'Problema de internet ou modelo', meterWord: 'metro', frontWord: 'frente', leftWord: 'esquerda', rightWord: 'direita', obstacleWord: 'obstáculo', walkedWord: 'Caminhaste', walkedWord2: 'metros', clearLeft: 'Esquerda livre', clearRight: 'Direita livre', clearBoth: 'Olha para os dois lados' },
+  'qu-PE': { loading: 'Sensor kicharikun. Suyaykuy.', started: "Yachayniyuq k'ana kichasqa kachkan.", stopClose: 'Willakuy', clearPath: "Ñan ch'uya kachkan, ñawpaqman purisqayki.", camError: 'Kamirata saqiy', netError: 'Internet icha modelo sasachakuy', meterWord: 'metru', frontWord: 'ñawpaq', leftWord: "lloq'i", rightWord: 'paña', obstacleWord: "hark'ay", walkedWord: 'Qan', walkedWord2: 'metru purisqanki', clearLeft: "Lloq'i ch'uya", clearRight: "Paña ch'uya", clearBoth: 'Iskay laduta qhawariy' },
+  'sm-SM': { loading: 'O loʻo faʻaola le masini. Faʻamolemole faatali.', started: 'Ua ola le tootoo poto.', stopClose: 'Lapataʻiga', clearPath: 'Ua saʻo le ala, alu i luma.', camError: 'Faataga le avanoa i le mea pueata', netError: 'Faʻafitauli i le initaneti poo le faʻataʻitaʻiga', meterWord: 'mita', frontWord: 'luma', leftWord: 'agavale', rightWord: 'taumatau', obstacleWord: 'faʻalavelave', walkedWord: 'Ua e savali', walkedWord2: 'mita', clearLeft: 'Agavale e saʻo', clearRight: 'Taumatau e saʻo', clearBoth: 'Vaʻai i itu e lua' },
+  'sr-RS': { loading: 'Сензор се укључује. Молимо сачекајте.', started: 'Паметни штап је укључен.', stopClose: 'Упозорење', clearPath: 'Пут је чист, наставите напред.', camError: 'Дозволи приступ камери', netError: 'Проблем са интернетом или модела', meterWord: 'метар', frontWord: 'испред', leftWord: 'лево', rightWord: 'десно', obstacleWord: 'препрека', walkedWord: 'Прешли сте', walkedWord2: 'метара', clearLeft: 'Levo je čisto', clearRight: 'Desno je čisto', clearBoth: 'Pogledajte na obe strane' },
+  'sn-ZW': { loading: 'Sensor irikubatidzwa. Ndapota mirira.', started: 'Tsvimbo yakachenjera yakabatidzwa.', stopClose: 'Yambiro', clearPath: 'Nzira yakachena, famba mberi.', camError: 'Bvumira kuwanikwa kwekhamera', netError: 'Dambudziko reineti kana modheru', meterWord: 'mita', frontWord: 'mberi', leftWord: 'kuruboshwe', rightWord: 'kurudyi', obstacleWord: 'chipingamupini', walkedWord: 'Wafamba', walkedWord2: 'mamita', clearLeft: 'Kuruboshwe kwakachena', clearRight: 'Kurudyi kwakachena', clearBoth: 'Tarisa mativi ese' },
+  'si-LK': { loading: 'සංවේදකය සක්‍රිය වෙමින් පවතී. කරුණාකර රැඳී සිටින්න.', started: 'ස්මාර්ට් කේන් එක ක්‍රියාත්මකයි.', stopClose: 'අවවාදයයි', clearPath: 'මාර්ගය පිරිසිදුයි, ඉදිරියට යන්න.', camError: 'කැමරා අවසරය ලබා දෙන්න', netError: 'අන්තර්ජාල හෝ ආකෘති ගැටළුවක්', meterWord: 'මීටර්', frontWord: 'ඉදිරියෙන්', leftWord: 'වම්', rightWord: 'දකුණු', obstacleWord: 'බාධකය', walkedWord: 'ඔබ', walkedWord2: 'මීටර් ගියා', clearLeft: 'වම් පැත්ත පිරිසිදුයි', clearRight: 'දකුණු පැත්ත පිරිසිදුයි', clearBoth: 'දෙපැත්තම බලන්න' },
+  'sk-SK': { loading: 'Senzor sa zapína. Čakajte prosím.', started: 'Inteligentná palica je zapnutá.', stopClose: 'Pozor', clearPath: 'Cesta je voľná, pokračujte v chôdzi.', camError: 'Povoliť prístup ku kamere', netError: 'Problém s internetom alebo modelom', meterWord: 'meter', frontWord: 'vpredu', leftWord: 'vľavo', rightWord: 'vpravo', obstacleWord: 'prekážka', walkedWord: 'Prešli ste', walkedWord2: 'metrov', clearLeft: 'Vľavo voľno', clearRight: 'Vpravo voľno', clearBoth: 'Pozrite sa na obe strany' },
+  'sl-SI': { loading: 'Senzor se vklaplja. Prosim počakajte.', started: 'Pametna palica je vklopljena.', stopClose: 'Opozorilo', clearPath: 'Pot je čista, nadaljujte naprej.', camError: 'Dovoli dostop do kamere', netError: 'Težava z internetom ali modelom', meterWord: 'metrov', frontWord: 'spredaj', leftWord: 'levo', rightWord: 'desno', obstacleWord: 'ovira', walkedWord: 'Prehodili ste', walkedWord2: 'metrov', clearLeft: 'Levo je čisto', clearRight: 'Desno je čisto', clearBoth: 'Poglejte na obe strani' },
+  'so-SO': { loading: 'Dareemaha ayaa shidmaya. Fadlan sug.', started: 'Usha caqli-gal ah waa shidantahay.', stopClose: 'Digniin', clearPath: 'Wadadu waa nadiif, horay u soco.', camError: 'Oggolow gelitaanka kamarada', netError: 'Dhibaatada internetka ama tusaalaha', meterWord: 'mitir', frontWord: 'horta', leftWord: 'bidix', rightWord: 'midig', obstacleWord: 'caqabad', walkedWord: 'Waxaad socotay', walkedWord2: 'mitir', clearLeft: 'Bidix waa nadiif', clearRight: 'Midig waa nadiif', clearBoth: 'Fiiri labada dhinac' },
+  'su-SU': { loading: 'Sensor nuju hurung. Mangga antosan.', started: 'Tongkat pinter hurung.', stopClose: 'Peringetan', clearPath: 'Jalan bersih, mangga maju.', camError: 'Idinan aksés kaméra', netError: 'Masalah internét atanapi model', meterWord: 'méter', frontWord: 'payun', leftWord: 'kénca', rightWord: 'katuhu', obstacleWord: 'halangan', walkedWord: 'Anjeun parantos leumpang', walkedWord2: 'méter', clearLeft: 'Kénca bersih', clearRight: 'Katuhu bersih', clearBoth: 'Tempo dua sisi' },
+  'sw-TZ': { loading: 'Sensor inawashwa. Tafadhali subiri.', started: 'Fimbo ya smart imewashwa.', stopClose: 'Onyo', clearPath: 'Njia iko wazi, songa mbele.', camError: 'Ruhusu ufikiaji wa kamera', netError: 'Shida ya mtandao au mfano', meterWord: 'mita', frontWord: 'mbele', leftWord: 'kushoto', rightWord: 'kulia', obstacleWord: 'kikwazo', walkedWord: 'Umetembea', walkedWord2: 'mita', clearLeft: 'Kushoto iko wazi', clearRight: 'Kulia iko wazi', clearBoth: 'Angalia pande zote' },
+  'tg-TJ': { loading: 'Сенсор фаъол мешавад. Лутфан интизор шавед.', started: 'Чӯбдасти ҳушманд фаъол аст.', stopClose: 'Огоҳӣ', clearPath: 'Роҳ тоза аст, ба пеш равед.', camError: 'Иҷозати дастрасӣ ба камера', netError: 'Мушкилоти интернет ё модел', meterWord: 'метр', frontWord: 'пеш', leftWord: 'чап', rightWord: 'рост', obstacleWord: 'монеа', walkedWord: 'Шумо', walkedWord2: 'метр роҳ рафтед', clearLeft: 'Чап тоза аст', clearRight: 'Рост тоза аст', clearBoth: 'Ба ҳар ду тараф нигоҳ кунед' },
+  'ta-IN': { loading: 'சென்சார் ஆன் ஆகிறது. தயவுசெய்து காத்திருக்கவும்.', started: 'ஸ்மார்ட் கேன் ஆன் செய்யப்பட்டுள்ளது.', stopClose: 'எச்சரிக்கை', clearPath: 'பாதை தெளிவாக உள்ளது, முன்னோக்கிச் செல்லவும்.', camError: 'கேமரா அனுமதியை வழங்கவும்', netError: 'இணையம் அல்லது மாதிரி சிக்கல்', meterWord: 'மீட்டர்', frontWord: 'முன்', leftWord: 'இடது', rightWord: 'வலது', obstacleWord: 'தடை', walkedWord: 'நீங்கள்', walkedWord2: 'மீட்டர் நடந்துள்ளீர்கள்', clearLeft: 'இடது பக்கம் தெளிவாக உள்ளது', clearRight: 'வலது பக்கம் தெளிவாக உள்ளது', clearBoth: 'இரு பக்கமும் பாருங்கள்' },
+  'ta-LK': { loading: 'சென்சார் ஆன் ஆகிறது. தயவுசெய்து காத்திருக்கவும்.', started: 'ஸ்மார்ட் கேன் ஆன் செய்யப்பட்டுள்ளது.', stopClose: 'எச்சரிக்கை', clearPath: 'பாதை தெளிவாக உள்ளது, முன்னோக்கிச் செல்லவும்.', camError: 'கேமரா அனுமதியை வழங்கவும்', netError: 'இணையம் அல்லது மாதிரி சிக்கல்', meterWord: 'மீட்டர்', frontWord: 'முன்', leftWord: 'இடது', rightWord: 'வலது', obstacleWord: 'தடை', walkedWord: 'நீங்கள்', walkedWord2: 'மீட்டர் நடந்துள்ளீர்கள்', clearLeft: 'இடது பக்கம் தெளிவாக உள்ளது', clearRight: 'வலது பக்கம் தெளிவாக உள்ளது', clearBoth: 'இரு பக்கமும் பாருங்கள்' },
+  'te-IN': { loading: 'సెన్సార్ ఆన్ అవుతోంది. దయచేసి వేచి ఉండండి.', started: 'స్మార్ట్ కేన్ ఆన్ చేయబడింది.', stopClose: 'హెచ్చరిక', clearPath: 'దారి శుభ్రంగా ఉంది, ముందుకు సాగండి.', camError: 'క్యామేరా అనుమతిని ఇవ్వండి', netError: 'ఇంటర్నెట్ లేదా మోడల్ సమస్య', meterWord: 'మీటర్లు', frontWord: 'ముందు', leftWord: 'ఎడమ', rightWord: 'కుడి', obstacleWord: 'అడ్డంకి', walkedWord: 'మీరు', walkedWord2: 'మీటర్లు నడిచారు', clearLeft: 'ఎడమ వైపు శుభ్రంగా ఉంది', clearRight: 'కుడి వైపు శుభ్రంగా ఉంది', clearBoth: 'రెండు వైపులా చూడండి' },
+  'uz-UZ': { loading: 'Sensor yoqilmoqda. Iltimos, kuting.', started: 'Aqlli hassa yoqilgan.', stopClose: 'Ogohlantirish', clearPath: 'Yo‘l toza, oldinga yuring.', camError: 'Kameraga ruxsat berish', netError: 'Internet yoki model muammosi', meterWord: 'metr', frontWord: 'oldinda', leftWord: 'chap', rightWord: 'o‘ng', obstacleWord: 'to‘siq', walkedWord: 'Siz', walkedWord2: 'metr yurdingiz', clearLeft: 'Chap tomon toza', clearRight: 'O‘ng tomon toza', clearBoth: 'Ikkala tomonga qarang' },
+  'cy-GB': { loading: 'Sensor yn troi ymlaen. Arhoswch.', started: "Mae'r ffon dmat ar ymlaen.", stopClose: 'Rhybudd', clearPath: "Mae'r ffordd yn lân, ewch ymlaen.", camError: "Caniatáu mynediad i'r camera", netError: 'Problem rhyngrwyd neu fodel', meterWord: 'metr', frontWord: 'blaen', leftWord: 'chwith', rightWord: 'dde', obstacleWord: 'rhwystr', walkedWord: 'Rydych wedi cerdded', walkedWord2: 'metr', clearLeft: 'Chwith yn lân', clearRight: 'De yn lân', clearBoth: 'Edrychwch ar y ddwy ochr' },
+  'yi-YI': { loading: 'סענסאָר קערט זיך אָן. ביטע וואַרטן.', started: 'סמאַרט גואַן איז אויף.', stopClose: 'וואָרענונג', clearPath: 'דער וועג איז ריין, גיין פאָרויס.', camError: 'לאָזן אַקסעס צו אַפּאַראַט', netError: 'אינטערנעץ אָדער מאָדעל פּראָבלעם', meterWord: 'מעטער', frontWord: 'פאָרויס', leftWord: 'לינקס', rightWord: 'רעכטס', obstacleWord: 'שטערונג', walkedWord: 'איר האָט געגאנגען', walkedWord2: 'מעטער', clearLeft: 'לינקס איז ריין', clearRight: 'רעכטס איז ריין', clearBoth: 'קוק ביידע זייטן' },
+  'yo-NG': { loading: 'Sensọ n tan. Jọwọ duro.', started: 'Ọgọ ti o ni oye wa ni tan.', stopClose: 'Ikilọ', clearPath: 'Ọna mọ, tẹsiwaju.', camError: 'Gba aaye si kamẹra laaye', netError: 'Iṣoro intanẹẹti tabi awoṣe', meterWord: 'mita', frontWord: 'iwaju', leftWord: 'osi', rightWord: 'ọtun', obstacleWord: 'idiwọ', walkedWord: 'O ti rin', walkedWord2: 'mita', clearLeft: 'Osi mọ', clearRight: 'Ọtun mọ', clearBoth: 'Wo ẹgbẹ mejeeji' },
+  'zu-ZA': { loading: 'I-sensor iyavula. Sicela ulinde.', started: 'Induku ehlakaniphile ivuliwe.', stopClose: 'Isexwayiso', clearPath: 'Indlela ihlanzekile, qhubeka phambili.', camError: 'Vumela ukufinyelela kukhamera', netError: 'Inkinga ye-intanethi noma yemodeli', meterWord: 'mita', frontWord: 'phambili', leftWord: 'kwesokunxele', rightWord: 'kwesokudla', obstacleWord: 'isithiyo', walkedWord: 'Uhambe', walkedWord2: 'mita', clearLeft: 'Kwesokunxele kuhlanzekile', clearRight: 'Kwesokudla kuhlanzekile', clearBoth: 'Bheka nhlangothi zombili' }
+};
+function getT(key) { const lang = langSel.value; if (translations[lang] && translations[lang][key]) { return translations[lang][key]; } return translations['en-US'][key] || key; }
+function getObstacleText(sideWord, dist) { return getT('stopClose') + ", " + sideWord + ", " + dist + " " + getT('meterWord') + " " + getT('obstacleWord'); }
+function getDistanceMeters(sizeRatio) { if (sizeRatio <= 0) return 4; let d = 0.45 / Math.sqrt(sizeRatio); if (d > 4) d = 4; if (d < 0.5) d = 0.5; return Math.round(d * 10) / 10; }
+function getSideWord(cxRatio) { if (cxRatio < 0.40) return getT('leftWord'); if (cxRatio > 0.60) return getT('rightWord'); return getT('frontWord'); }
+function getDistanceBetween(lat1, lon1, lat2, lon2) { const R = 6371000; const dLat = (lat2 - lat1) * Math.PI / 180; const dLon = (lon2 - lon1) * Math.PI / 180; const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2) * Math.sin(dLon/2); const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); return R * c; }
+function startGPS() { try { if ('geolocation' in navigator) {
+  gpsStartTime = Date.now(); gpsConsecutiveMoves = 0; gpsPendingMeters = 0; gpsLastTime = 0;
+  gpsWatchId = navigator.geolocation.watchPosition(function(p){
+  if (Date.now() - gpsStartTime < 5000) { lastGpsLat = p.coords.latitude; lastGpsLng = p.coords.longitude; hasLastGps = true; return; }
+  if (!p.coords.accuracy || p.coords.accuracy > 20) return;
+  if (p.coords.speed !== null && p.coords.speed !== undefined && p.coords.speed < 0.3) { gpsConsecutiveMoves = 0; gpsPendingMeters = 0; lastGpsLat = p.coords.latitude; lastGpsLng = p.coords.longitude; return; }
+  let nowT = Date.now();
+  if (gpsLastTime && (nowT - gpsLastTime) < 1500) return;
+  gpsLastTime = nowT;
+  currentLat = p.coords.latitude; currentLng = p.coords.longitude;
+  if (!hasLastGps) { lastGpsLat = currentLat; lastGpsLng = currentLng; hasLastGps = true; return; }
+  const step = getDistanceBetween(lastGpsLat, lastGpsLng, currentLat, currentLng);
+  if (step < 1.2 || step > 25) { gpsConsecutiveMoves = 0; gpsPendingMeters = 0; lastGpsLat = currentLat; lastGpsLng = currentLng; return; }
+  gpsConsecutiveMoves++; gpsPendingMeters += step; lastGpsLat = currentLat; lastGpsLng = currentLng;
+  if (gpsConsecutiveMoves >= 2) { totalWalkedMeters += gpsPendingMeters; gpsPendingMeters = 0; gpsConsecutiveMoves = 0; }
+}, function(e){}, { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }); } } catch(e){} }
+function triggerVibration() { if ('vibrate' in navigator) { try { navigator.vibrate([200, 100, 200]); } catch (e) {} } }
+function lightVibration() { if ('vibrate' in navigator) { try { navigator.vibrate(15); } catch (e) {} } }
+function playBeep(type) {
+  try {
+    if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+    if (type === 'small') {
+      const now = audioCtx.currentTime;
+      [0, 0.16].forEach(function(offset) {
+        const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+        o.connect(g); g.connect(audioCtx.destination);
+        o.type = 'sine'; o.frequency.setValueAtTime(880, now + offset);
+        g.gain.setValueAtTime(0.12, now + offset);
+        g.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.12);
+        o.start(now + offset); o.stop(now + offset + 0.12);
+      });
+      return;
+    }
+    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    if (type === 'clear') {
+      osc.frequency.setValueAtTime(659.25, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      osc.start(); osc.stop(audioCtx.currentTime + 0.35);
+    } else if (type === 'obstacle') {
+      const now = audioCtx.currentTime;
+      osc.frequency.setValueAtTime(220, now);
+      osc.frequency.setValueAtTime(180, now + 0.1);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.setValueAtTime(0.3, now + 0.1);
+      osc.start(now); osc.stop(now + 0.22);
+    }
+  } catch (e) {}
+}
+// Voice function. Obstacle voice has priority. Clear voice never speaks at the same time as obstacle voice.
+function speak(text, isObstacle = false) {
+  if (!text) return;
+  if (!('speechSynthesis' in window)) return;
+  if (isObstacle) {
+    if (text === lastObstacleSpokenText && isSpeakingObstacle) return;
+    try { window.speechSynthesis.cancel(); } catch(e){}
+    isSpeakingObstacle = true;
+    lastObstacleSpokenText = text;
+  } else {
+    if (isSpeakingObstacle) return;
+    if (text === lastSpoken && Date.now() - lastSpeakTime < 1000) return;
+  }
+  lastSpoken = text; lastSpeakTime = Date.now();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = langSel.value;
+  utterance.onend = () => { if (isObstacle) { isSpeakingObstacle = false; } };
+  utterance.onerror = () => { if (isObstacle) { isSpeakingObstacle = false; } };
+  window.speechSynthesis.speak(utterance);
+}
+function speakClearForce() {
+  try { window.speechSynthesis.cancel(); } catch(e){}
+  isSpeakingObstacle = false;
+  lastObstacleSpokenText = "";
+  lastSpoken = ""; lastSpeakTime = 0;
+  speak(getT('clearPath'), false);
+}
+function startClearTone() {
+  if (clearToneTimer) return;
+  clearToneTimer = setInterval(function(){
+    if (isLive && currentMode === "clear") { playBeep('clear'); }
+  }, 1000);
+}
+function stopClearTone() { if (clearToneTimer) { clearInterval(clearToneTimer); clearToneTimer = null; } }
+function isWallDoorStairsBlocked() {
+  try {
+    if (!video || !video.videoWidth) return false;
+    const now = Date.now();
+    if (now - lastWallCheck < 80) return wallConfirmCount >= WALL_CONFIRM_NEEDED;
+    lastWallCheck = now;
+    if (!wallCanvas) { wallCanvas = document.createElement('canvas'); wallCanvas.width = 32; wallCanvas.height = 24; }
+    const ctx = wallCanvas.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(video, 0, 0, 32, 24);
+    const d = ctx.getImageData(0, 0, 32, 24).data;
+    function getStats(x0, x1, y0, y1) {
+      let min = 255, max = 0, sum = 0, count = 0;
+      for (let y = y0; y < y1; y++) {
+        for (let x = x0; x < x1; x++) {
+          const idx = (y * 32 + x) * 4;
+          const g = (d[idx] + d[idx+1] + d[idx+2]) / 3;
+          sum += g; count++; if (g < min) min = g; if (g > max) max = g;
+        }
+      }
+      return { range: max - min, avg: sum / count };
+    }
+    let top = getStats(8, 24, 0, 6);
+    let centre = getStats(8, 24, 6, 18);
+    let bottom = getStats(8, 24, 18, 24);
+    let allAvg = (top.avg + centre.avg + bottom.avg) / 3;
+    let isMoving = false;
+    if (lastFrameAvg !== -1) { if (Math.abs(allAvg - lastFrameAvg) > 25) isMoving = true; }
+    lastFrameAvg = allAvg;
+    if (isMoving) { wallConfirmCount = 0; return false; }
+    let isWall = false;
+    if (centre.range < 70 && bottom.range < 90 && centre.avg > 15) isWall = true;
+    if (top.range < 80 && centre.range < 70 && bottom.range < 90) isWall = true;
+    if (centre.range < 45 && centre.avg > 15) isWall = true;
+    if (isWall) { wallConfirmCount++; } else { wallConfirmCount = 0; }
+    return wallConfirmCount >= WALL_CONFIRM_NEEDED;
+  } catch(e) { return false; }
+}
+function alertWallDoorStairs() { handleObstacle(getObstacleText(getT('frontWord'), 1)); }
+function handleObstacle(fullObstacleText) {
+  statusEl.innerText = fullObstacleText;
+  currentMode = "obstacle";
+  stopClearTone();
+  if (lastObstacleName !== fullObstacleText) {
+    lastObstacleName = fullObstacleText;
+    triggerVibration(); speak(fullObstacleText, true);
+  }
+  const now = Date.now();
+  if (now - lastBeepTime > 800) { lastBeepTime = now; playBeep('obstacle'); }
+}
+function handleClearPath() {
+  currentMode = "clear";
+  lastObstacleName = "";
+  lastObstacleSpokenText = "";
+  statusEl.innerText = getT('clearPath');
+  startClearTone();
+  const now = Date.now();
+  if (now - lastClearSpeakTime > 4000) {
+    lastClearSpeakTime = now;
+    speakClearForce();
+  }
+  if (totalWalkedMeters - lastAnnouncedWalkedMeters >= 50 && now - lastWalkAnnounceTime > 10000) {
+    lastAnnouncedWalkedMeters = totalWalkedMeters;
+    lastWalkAnnounceTime = now;
+    speak(getT('walkedWord') + " " + Math.round(totalWalkedMeters) + " " + getT('walkedWord2'), false);
+  }
+}
+async function waitForMediapipe() {
+  if (window.FilesetResolver && window.ObjectDetector) return true;
+  return new Promise(function(resolve) {
+    let done = false;
+    const t = setTimeout(function() { if (!done) { done = true; resolve(false); } }, 15000);
+    window.addEventListener('mediapipe-loaded', function() { if (!done) { done = true; clearTimeout(t); resolve(true); } }, { once: true });
+  });
+}
+async function initDetector() {
+  if (objectDetector) return true;
+  if (isDetectorLoading) return false;
+  isDetectorLoading = true;
+  try {
+    statusEl.innerText = getT('loading');
+    const ok = await waitForMediapipe();
+    if (!ok) { throw new Error('mediapipe timeout'); }
+    const vision = await window.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm");
+    const detectorPromise = window.ObjectDetector.createFromOptions(vision, { baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite", delegate: "CPU" }, scoreThreshold: 0.50, runningMode: "VIDEO" });
+    const timeoutPromise = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('model timeout')); }, 15000); });
+    objectDetector = await Promise.race([detectorPromise, timeoutPromise]);
+    isDetectorLoading = false;
+    return true;
+  } catch (err) {
+    console.error(err);
+    isDetectorLoading = false;
+    objectDetector = null;
+    if (isLive) { statusEl.innerText = getT('netError'); speak(getT('netError'), false); }
+    return false;
+  }
+}
+async function startCamera() {
+  try {
+    if (isLive || stream) return;
+    statusEl.innerText = getT('loading');
+    startBtn.innerText = 'PLEASE WAIT...';
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { statusEl.innerText = getT('camError'); speak(getT('camError'), false); startBtn.innerText = 'START'; return; }
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+    video.srcObject = stream;
+    startGPS();
+    video.onloadedmetadata = async () => {
+      try { await video.play(); } catch(e) {}
+      isLive = true; statusEl.innerText = getT('started'); speak(getT('started'), false);
+      startBtn.style.display = 'none'; stopBtn.style.display = 'block';
+      window.requestAnimationFrame(predictWebcam);
+      const ok = await initDetector();
+      if (!ok && isLive) { statusEl.innerText = getT('netError'); }
+    };
+  } catch (err) {
+    console.error(err);
+    startBtn.innerText = 'START';
+    statusEl.innerText = getT('camError'); speak(getT('camError'), false);
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  }
+}
+let lastVideoTime = -1;
+async function predictWebcam() {
+  if (!isLive) return;
+  if (!objectDetector) {
+    if (isLive) { window.requestAnimationFrame(predictWebcam); }
+    return;
+  }
+  if (video.currentTime !== lastVideoTime && video.readyState >= 2) {
+    lastVideoTime = video.currentTime; frameCount++;
+    try {
+      const startTimeMs = performance.now();
+      const detections = objectDetector.detectForVideo(video, startTimeMs);
+      const hasObjectDetected = detections && detections.detections && detections.detections.length > 0;
+      let wallBlocked = isWallDoorStairsBlocked();
+      if (wallBlocked) {
+        obstacleConfirmCount = 0;
+        alertWallDoorStairs();
+        if (isLive) { window.requestAnimationFrame(predictWebcam); }
+        return;
+      }
+      if (!hasObjectDetected) {
+        obstacleConfirmCount = 0; nothingCount++; clearWaitCount++;
+        if (nothingCount >= 2) { handleClearPath(); }
+        if (isLive) { window.requestAnimationFrame(predictWebcam); }
+        return;
+      }
+      let closest = detections.detections[0]; let maxArea = 0;
+      for (let det of detections.detections) { const area = det.boundingBox.width * det.boundingBox.height; if (area > maxArea) { maxArea = area; closest = det; } }
+      const confidence = Math.round(closest.categories[0].score * 100);
+      const bb = closest.boundingBox;
+      const sizeRatio = (bb.width * bb.height) / (video.videoWidth * video.videoHeight);
+      const cxRatio = (bb.originX + bb.width / 2) / video.videoWidth;
+      const sideWord = getSideWord(cxRatio);
+      const isSide = (cxRatio < 0.40 || cxRatio > 0.60);
+      // Side far small objects are ignored, they do not block the path.
+      if (isSide && sizeRatio < SIDE_CLOSE_SIZE_RATIO) {
+        obstacleConfirmCount = 0; nothingCount++; 
+        if (nothingCount >= 2) { handleClearPath(); }
+        if (isLive) { window.requestAnimationFrame(predictWebcam); }
+        return;
+      }
+      if (confidence < REQUIRED_CONFIDENCE || sizeRatio < OBSTACLE_SIZE_RATIO) {
+        obstacleConfirmCount = 0; nothingCount++;
+        if (nothingCount >= 2) { handleClearPath(); }
+        if (isLive) { window.requestAnimationFrame(predictWebcam); }
+        return;
+      }
+      const dist = getDistanceMeters(sizeRatio);
+      obstacleConfirmCount++;
+      nothingCount = 0;
+      if (obstacleConfirmCount >= OBSTACLE_CONFIRM_NEEDED) {
+        handleObstacle(getObstacleText(sideWord, dist));
+      }
+    } catch(e) {}
+  }
+  if (isLive) { window.requestAnimationFrame(predictWebcam); }
+}
+startBtn.addEventListener('click', startCamera);
+stopBtn.addEventListener('click', function(){
+  isLive = false; stopClearTone();
+  try { if (gpsWatchId) navigator.geolocation.clearWatch(gpsWatchId); } catch(e){}
+  try { window.speechSynthesis.cancel(); } catch(e){}
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  video.srcObject = null; statusEl.innerText = "STATUS: OFF";
+  startBtn.style.display = 'block'; stopBtn.style.display = 'none'; startBtn.innerText = 'START';
+});
+openMapsBtn.addEventListener('click', function(){
+  const dest = destinationInput.value.trim();
+  const url = dest ? "https://www.google.com/maps/search/" + encodeURIComponent(dest) : "https://www.google.com/maps";
+  window.open(url, "_blank");
+});
+langSel.addEventListener('change', function(){ lastSpoken = ""; });
+</script>
+</body>
+</html>
