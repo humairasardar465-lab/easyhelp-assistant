@@ -169,7 +169,7 @@ button:active{opacity:0.8;}
     <h2>ABOUT APP</h2>
     <div class="sub">Your Eyes Smart Cane v2.0</div>
     <p style="font-size:14px; line-height:1.6; color:#94a3b8;">
-      This application is specially designed to assist visually impaired individuals in real-time obstacle detection, navigation, and environmental awareness using local AI and Google Gemini cloud intelligence. Created by Humaira Sardar from Okara City.
+      This application is specially designed to assist visually impaired individuals in real-time obstacle detection, navigation, and environmental awareness using local AI and Google Gemini cloud intelligence. Created by Humaira Sardar from Okara City, Pakistan.
     </p>
     <button id="backFromAboutBtn" class="btn-secondary">BACK</button>
   </div>
@@ -213,6 +213,7 @@ let lastFrameTime = 0;
 let watchdogTimer = null;
 let lastGeminiCallTime = 0;
 let isGeminiRunning = false;
+let lastObstacleSpokenTime = 0;
 
 let OBSTACLE_CONFIRM_NEEDED = 2;
 let REQUIRED_CONFIDENCE = 42;
@@ -229,11 +230,11 @@ let gpsStartTime = 0, gpsLastTime = 0, gpsConsecutiveMoves = 0, gpsPendingMeters
 let potholeConfirmCount = 0;
 
 const translations = {
-  'en-US': { loading: 'Sensor turning on. Please wait.', started: 'Smart Cane is on. Camera active.', stopClose: 'Alert', clearPath: 'Path is clear, move forward.', camError: 'Allow camera access', netError: 'Internet or model loading issue', meterWord: 'meter', frontWord: 'front', leftWord: 'left', rightWord: 'right', obstacleWord: 'obstacle', walkedWord: 'You have walked', walkedWord2: 'meters', potholeWord: 'Pothole below, be careful', aiAnalyzing: 'Gemini AI analyzing scene...', aiError: 'AI response issue' },
-  'ur-PK': { loading: 'سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔', started: 'اسمارٹ کین آن ہے۔ کیمرہ اور سنسور ایکٹو ہیں۔', stopClose: 'الرٹ ہو جاؤ', clearPath: 'رستہ صاف ہے، آگے بڑھیں۔', camError: 'کیمرہ کی اجازت دیں', netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ', meterWord: 'میٹر', frontWord: 'سامنے', leftWord: 'بائیں', rightWord: 'دائیں', obstacleWord: 'رکاوٹ', walkedWord: 'آپ', walkedWord2: 'میٹر چل چکے ہیں', potholeWord: 'نیچے گڑھا ہے، احتیاط کریں', aiAnalyzing: 'جیمینی اے آئی منظر کا تجزیہ کر رہا ہے...', aiError: 'اے آئی رسپانس میں مسئلہ' },
+  'en-US': { loading: 'Sensor turning on. Please wait.', started: 'Smart Cane is on. Camera active.', stopClose: 'Alert', clearPath: 'Path is clear, move forward.', camError: 'Camera permission denied. Please allow camera access in browser settings.', netError: 'Internet or model loading issue', meterWord: 'meter', frontWord: 'front', leftWord: 'left', rightWord: 'right', obstacleWord: 'obstacle', walkedWord: 'You have walked', walkedWord2: 'meters', potholeWord: 'Pothole below, be careful', aiAnalyzing: 'Gemini AI analyzing scene...', aiError: 'AI response issue' },
+  'ur-PK': { loading: 'سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔', started: 'اسمارٹ کین آن ہے۔ کیمرہ اور سنسور ایکٹو ہیں۔', stopClose: 'الرٹ ہو جاؤ', clearPath: 'رستہ صاف ہے، آگے بڑھیں۔', camError: 'کیمرہ کی پرمیشن نہیں ملی۔ براہ کرم براؤزر یا فون کی سیٹنگز میں جا کر کیمرہ کی اجازت ان ایبل کریں۔', netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ', meterWord: 'میٹر', frontWord: 'سامنے', leftWord: 'بائیں', rightWord: 'دائیں', obstacleWord: 'رکاوٹ', walkedWord: 'آپ', walkedWord2: 'میٹر چل چکے ہیں', potholeWord: 'نیچے گڑھا ہے، احتیاط کریں', aiAnalyzing: 'جیمینی اے آئی منظر کا تجزیہ کر رہا ہے...', aiError: 'اے آئی رسپانس میں مسئلہ' },
   'hi-IN': { loading: 'सेंसर चालू हो रहा है।', started: 'स्मार्ट केन चालू है।', stopClose: 'अलर्ट', clearPath: 'रास्ता साफ है, आगे बढ़ें।', camError: 'कैमरा अनुमति दें', netError: 'इंटरनेट या मॉडल समस्या', meterWord: 'मीटर', frontWord: 'सामने', leftWord: 'बाएं', rightWord: 'दाएं', obstacleWord: 'बाधा', walkedWord: 'आप', walkedWord2: 'मीटर चल चुके हैं', potholeWord: 'नीचे गड्ढा है, सावधान रहें', aiAnalyzing: 'जेमिनी एआई विश्लेषण कर रहा है...', aiError: 'एआई समस्या' },
   'ar-SA': { loading: 'جاري تشغيل المستشعر.', started: 'العصا الذكية تعمل.', stopClose: 'تنبيه', clearPath: 'الطريق خالٍ، تقدم.', camError: 'السماح بالكاميرا', netError: 'مشكلة في الإنترنت أو النموذج', meterWord: 'متر', frontWord: 'أمام', leftWord: 'يسار', rightWord: 'يمين', obstacleWord: 'عائق', walkedWord: 'لقد مشيت', walkedWord2: 'متر', potholeWord: 'حفرة بالأسفل، انتبه', aiAnalyzing: 'جيميني يحلل المشهد...', aiError: 'مشكلة في الذكاء الاصطناعي' },
-  'pa-IN': { loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ਹੈ।', started: 'ਸਮਾਰਟ ਕੇਨ ਚਾਲੂ ਹੈ।', stopClose: 'ਅਲਰਟ', clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਅੱਗੇ ਵਧੋ।', camError: 'ਕੈਮਰਾ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ', netError: 'ਇੰਟਰਨੈੱਟ ਜਾਂ ਮਾਡਲ ਦੀ ਸਮੱਸਿਆ', meterWord: 'ਮੀਟਰ', frontWord: 'ਸਾਹਮਣੇ', leftWord: 'ਖੱਬੇ', rightWord: 'ਸੱਜੇ', obstacleWord: 'ਰੁਕਾਵਟ', walkedWord: 'ਤੁਸੀਂ', walkedWord2: 'ਮੀਟਰ ਚੱਲ ਚੁੱਕੇ ਹੋ', potholeWord: 'ਹੇਠਾਂ ਟੋਆ ਹੈ, ਸਾਵਧਾਨ ਰਹੋ', aiAnalyzing: 'ਏਆਈ ਜਾਂچ ਕਰ ਰਿਹਾ है...', aiError: 'ਏਆਈ ਸਮੱਸਿਆ' },
+  'pa-IN': { loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ہے۔', started: 'ਸਮਾਰਟ ਕੇਨ ਚਾਲੂ ਹੈ።', stopClose: 'ਅਲਰਟ', clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਅੱਗੇ ਵਧੋ።', camError: 'ਕੈਮਰਾ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ', netError: 'ਇੰਟਰਨੈੱਟ ਜਾਂ ਮਾਡਲ ਦੀ ਸਮੱਸਿਆ', meterWord: 'ਮੀਟਰ', frontWord: 'ਸਾਹਮਣੇ', leftWord: 'ਖੱਬੇ', rightWord: 'ਸੱਜੇ', obstacleWord: 'ਰੁਕਾਵਟ', walkedWord: 'ਤੁਸੀਂ', walkedWord2: 'ਮੀਟਰ ਚੱਲ ਚੁੱਕੇ ਹੋ', potholeWord: 'ਹੇਠਾਂ ਟੋਆ ਹੈ, ਸਾਵਧਾਨ ਰਹੋ', aiAnalyzing: 'ਏਆਈ ਜਾਂچ ਕਰ ਰਿਹਾ है...', aiError: 'ਏਆਈ ਸਮੱਸਿਆ' },
   'ps-PK': { loading: 'سنسور روان دی. مهرباني وکئ انتظار وکئ.', started: 'سمارټ کین روان دی.', stopClose: 'خبردار', clearPath: 'لار سمه ده، مخکې لاړ شئ.', camError: 'د کامرې اجازه ورکړئ', netError: 'د انټرنیټ ستونزه', meterWord: 'متره', frontWord: 'مخکې', leftWord: 'کیڼ', rightWord: 'ښي', obstacleWord: 'خنډ', walkedWord: 'تاسو', walkedWord2: 'متره تللي یاست', potholeWord: 'لاندې ګړنګ دی، احتیاط وکړئ', aiAnalyzing: 'جیمینی منظر ارزیابی کوي...', aiError: 'د اے آئی ستونزه' },
   'fa-IR': { loading: 'سنسور در حال روشن شدن است.', started: 'اسمارت کین روشن است.', stopClose: 'هشدار', clearPath: 'مسیر باز است، جلو بروید.', camError: 'اجازه دسترسی به دوربین', netError: 'مشکل اینترنت یا مدل', meterWord: 'متر', frontWord: 'جلو', leftWord: 'چپ', rightWord: 'راست', obstacleWord: 'مانع', walkedWord: 'شما', walkedWord2: 'متر راه رفته‌اید', potholeWord: 'پایین چاله است، احتیاط کنید', aiAnalyzing: 'هوش مصنوعی در حال بررسی...', aiError: 'مشکل هوش مصنوعی' },
   'sd-PK': { loading: 'سينسر آن ٿي رهيو آهي. مهرباني ڪري انتظار ڪريو.', started: 'سمارٽ ڪين آن آهي.', stopClose: 'خبردار', clearPath: 'رستو صاف آهي، اڳيان وڌو.', camError: 'ڪيمرا جي اجازت ڏيو', netError: 'انٽرنيٽ يا ماڊل جو مسئلو', meterWord: 'ميٽر', frontWord: 'سامهون', leftWord: 'کاٻي', rightWord: 'ساڄي', obstacleWord: 'رڪاوٽ', walkedWord: 'توهان', walkedWord2: 'ميٽر هليا آهيو', potholeWord: 'هيٺان کڏو آهي، احتیاط ڪريو', aiAnalyzing: 'جیميني منظر چيڪ ڪري پيو...', aiError: 'مسئلو آھي' },
@@ -374,13 +375,15 @@ function speak(text, isObstacle = false) {
   if (!text) return;
   if (!('speechSynthesis' in window)) return;
   if (isObstacle) {
-    if (text === lastObstacleSpokenText && isSpeakingObstacle) return;
+    const now = Date.now();
+    if (now - lastObstacleSpokenTime < 7000 && text === lastObstacleSpokenText) return;
+    lastObstacleSpokenTime = now;
     try { window.speechSynthesis.cancel(); } catch(e){}
     isSpeakingObstacle = true;
     lastObstacleSpokenText = text;
   } else {
     if (isSpeakingObstacle) return;
-    if (text === lastSpoken && Date.now() - lastSpeakTime < 1000) return;
+    if (text === lastSpoken && Date.now() - lastSpeakTime < 1500) return;
   }
   lastSpoken = text;
   lastSpeakTime = Date.now();
@@ -519,14 +522,14 @@ function handleObstacle(fullObstacleText) {
   statusEl.innerText = fullObstacleText;
   currentMode = "obstacle";
   stopClearTone();
-  if (lastObstacleName !== fullObstacleText || Date.now() - lastSpeakTime > 4000) {
+  if (lastObstacleName !== fullObstacleText || Date.now() - lastSpeakTime > 6000) {
     lastObstacleName = fullObstacleText;
     triggerVibration();
     speak(fullObstacleText, true);
     triggerGeminiCloudAnalysis();
   }
   const now = Date.now();
-  if (now - lastBeepTime > 800) {
+  if (now - lastBeepTime > 1200) {
     lastBeepTime = now;
     playBeep('obstacle');
   }
@@ -539,7 +542,7 @@ function handleClearPath() {
   statusEl.innerText = getT('clearPath');
   startClearTone();
   const now = Date.now();
-  if (now - lastClearSpeakTime > 4000) {
+  if (now - lastClearSpeakTime > 5000) {
     lastClearSpeakTime = now;
     speakClearForce();
   }
@@ -553,7 +556,7 @@ function handleClearPath() {
 async function triggerGeminiCloudAnalysis() {
   if (isGeminiRunning) return;
   const now = Date.now();
-  if (now - lastGeminiCallTime < 4000) return;
+  if (now - lastGeminiCallTime < 8000) return;
   if (!video || !video.videoWidth) return;
   
   isGeminiRunning = true;
@@ -634,18 +637,39 @@ async function initDetector() {
   }
 }
 
+async function requestAllPermissionsSequentially() {
+  try {
+    statusEl.innerText = "Requesting Camera permission...";
+    const camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+    camStream.getTracks().forEach(t => t.stop());
+    
+    if ('geolocation' in navigator) {
+      statusEl.innerText = "Requesting GPS permission...";
+      await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 });
+      });
+    }
+    return true;
+  } catch (err) {
+    console.error("Permission error:", err);
+    alert(getT('camError'));
+    statusEl.innerText = getT('camError');
+    return false;
+  }
+}
+
 async function startCamera() {
   try {
     if (isLive || stream) return;
-    statusEl.innerText = getT('loading');
-    startBtn.innerText = 'PLEASE WAIT...';
     
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      statusEl.innerText = getT('camError');
-      speak(getT('camError'), false);
+    const permGranted = await requestAllPermissionsSequentially();
+    if (!permGranted) {
       startBtn.innerText = 'START';
       return;
     }
+
+    statusEl.innerText = getT('loading');
+    startBtn.innerText = 'PLEASE WAIT...';
     
     stream = await navigator.mediaDevices.getUserMedia({
       video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } },
@@ -702,7 +726,7 @@ async function predictWebcam() {
   if (!isLive) return;
   lastFrameTime = Date.now();
   
-  if (frameCount % 3 !== 0) {
+  if (frameCount % 4 !== 0) {
     frameCount++;
     if (isLive) window.requestAnimationFrame(predictWebcam);
     return;
@@ -836,9 +860,9 @@ requestPermsBtn.addEventListener('click', async () => {
     if ('vibrate' in navigator) {
       navigator.vibrate(100);
     }
-    alert("Permissions granted successfully!");
+    alert("Permissions granted successfully! You can change permission settings anytime in your browser/device settings.");
   } catch (e) {
-    alert("Permission denied or error occurred.");
+    alert("Permission denied. Please enable permissions manually in your browser site settings.");
   }
 });
 
