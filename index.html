@@ -137,19 +137,16 @@ button:active{opacity:0.8;}
       <option value="zu-ZA">isiZulu (South Africa)</option>
     </select>
 
+    <video id="webcam" autoplay playsinline muted></video>
+    <div id="status">STATUS: OFF</div>
+
+    <button id="startBtn" class="btn-main">START</button>
+    <button id="askAiBtn" class="btn-ai">Ask too smart Cane</button>
+    <button id="stopBtn" class="btn-stop" style="display:none;">STOP</button>
+    
     <div class="flex-row">
       <button id="settingsNavBtn" class="btn-secondary">SETTINGS</button>
     </div>
-
-    <div id="status">STATUS: OFF</div>
-    
-    <button id="startBtn" class="btn-main">START</button>
-    <button id="askAiBtn" class="btn-ai" style="display:none;">Ask too smart Cane</button>
-    <button id="stopBtn" class="btn-stop" style="display:none;">STOP</button>
-    
-    <video id="webcam" autoplay playsinline muted></video>
-    
-    <a id="waBtn" href="https://wa.me/923030133274" target="_blank" class="btn-wa">CONTACT WHATSAPP</a>
   </div>
 
   <div id="settingsView" class="view-section">
@@ -159,6 +156,8 @@ button:active{opacity:0.8;}
     <label for="destinationInput">DESTINATION</label>
     <input type="text" id="destinationInput" placeholder="">
     <button id="openMapsBtn" class="btn-map">OPEN MAPS</button>
+    
+    <a id="waBtn" href="https://wa.me/923030133274" target="_blank" class="btn-wa">CONTACT WHATSAPP</a>
     
     <button id="aboutNavBtn" class="btn-secondary">ABOUT APP</button>
     <button id="backToHomeBtn" class="btn-secondary">BACK TO HOME</button>
@@ -214,9 +213,9 @@ let isGeminiRunning = false;
 let lastObstacleSpokenTime = 0;
 
 let OBSTACLE_CONFIRM_NEEDED = 1;
-let REQUIRED_CONFIDENCE = 42;
+let REQUIRED_CONFIDENCE = 50;
 let OBSTACLE_SIZE_RATIO = 0.02;
-let WALL_CONFIRM_NEEDED = 2;
+let WALL_CONFIRM_NEEDED = 1;
 let SIDE_CLOSE_SIZE_RATIO = 0.06;
 let lastFrameAvg = -1;
 let clearToneTimer = null;
@@ -228,16 +227,12 @@ let gpsStartTime = 0, gpsLastTime = 0, gpsConsecutiveMoves = 0, gpsPendingMeters
 let potholeConfirmCount = 0;
 
 const translations = {
-  'en-US': { loading: 'Sensor turning on. Please wait.', started: 'Smart Cane is on. Camera active.', stopClose: 'Alert', clearPath: 'Path is clear, move forward.', camError: 'Camera permission denied. Please allow camera access in browser settings.', netError: 'Internet or model loading issue', meterWord: 'meter', frontWord: 'front', leftWord: 'left', rightWord: 'right', obstacleWord: 'obstacle', walkedWord: 'You have walked', walkedWord2: 'meters', potholeWord: 'Pothole below, be careful', aiAnalyzing: 'Gemini AI analyzing scene...', aiError: 'AI response issue' },
-  'ur-PK': { loading: 'سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔', started: 'اسمارٹ کین آن ہے۔ کیمرہ اور سنسور ایکٹو ہیں۔', stopClose: 'الرٹ ہو جاؤ', clearPath: 'رستہ صاف ہے، آگے بڑھیں۔', camError: 'کیمرہ کی پرمیشن نہیں ملی۔ براہ کرم براؤزر یا فون کی سیٹنگز میں جا کر کیمرہ کی اجازت ان ایبل کریں۔', netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ', meterWord: 'میٹر', frontWord: 'سامنے', leftWord: 'بائیں', rightWord: 'دائیں', obstacleWord: 'رکاوٹ', walkedWord: 'آپ', walkedWord2: 'میٹر چل چکے ہیں', potholeWord: 'نیچے گڑھا ہے، احتیاط کریں', aiAnalyzing: 'جیمینی اے آئی منظر کا تجزیہ کر رہا ہے...', aiError: 'اے آئی رسپانس میں مسئلہ' },
-  'hi-IN': { loading: 'सेंसर चालू हो रहा है।', started: 'स्मार्ट केन चालू है।', stopClose: 'अलर्ट', clearPath: 'रास्ता साफ है, आगे बढ़ें।', camError: 'कैमरा अनुमति दें', netError: 'इंटरनेट या मॉडल समस्या', meterWord: 'मीटर', frontWord: 'सामने', leftWord: 'बाएं', rightWord: 'दाएं', obstacleWord: 'बाधा', walkedWord: 'आप', walkedWord2: 'मीटर चल चुके हैं', potholeWord: 'नीचे गड्ढा है, सावधान रहें', aiAnalyzing: 'जेमिनी एआई विश्लेषण कर रहा है...', aiError: 'एआई समस्या' },
-  'ar-SA': { loading: 'جاري تشغيل المستشعر.', started: 'العصا الذكية تعمل.', stopClose: 'تنبيه', clearPath: 'الطريق خالٍ، تقدم.', camError: 'السماح بالكاميرا', netError: 'مشكلة في الإنترنت أو النموذج', meterWord: 'متر', frontWord: 'أمام', leftWord: 'يسار', rightWord: 'يمين', obstacleWord: 'عائق', walkedWord: 'لقد مشيت', walkedWord2: 'متر', potholeWord: 'حفرة بالأسفل، انتبه', aiAnalyzing: 'جيميني يحلل المشهد...', aiError: 'مشكلة في الذكاء الاصطناعي' },
-  'pa-IN': { loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ہے۔', started: 'ਸਮਾਰਟ ਕੇਨ ਚਾਲੂ ਹੈ።', stopClose: 'ਅਲਰਟ', clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਅੱਗੇ ਵਧੋ።', camError: 'ਕੈਮਰਾ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ', netError: 'ਇੰਟਰਨੈੱਟ ਜਾਂ ਮਾਡਲ ਦੀ ਸਮੱਸਿਆ', meterWord: 'ਮੀਟਰ', frontWord: 'ਸਾਹਮਣੇ', leftWord: 'ਖੱਬੇ', rightWord: 'ਸੱਜੇ', obstacleWord: 'ਰੁਕਾਵਟ', walkedWord: 'ਤੁਸੀਂ', walkedWord2: 'ਮੀਟਰ ਚੱਲ ਚੁੱਕੇ ਹੋ', potholeWord: 'ਹੇਠਾਂ ਟੋਆ ਹੈ, ਸਾਵਧਾਨ ਰਹੋ', aiAnalyzing: 'ਏਆਈ ਜਾਂچ ਕਰ ਰਿਹਾ है...', aiError: 'ਏਆਈ ਸਮੱਸਿਆ' },
-  'ps-PK': { loading: 'سنسور روان دی. مهرباني وکئ انتظار وکئ.', started: 'سمارټ کین روان دی.', stopClose: 'خبردار', clearPath: 'لار سمه ده، مخکې لاړ شئ.', camError: 'د کامرې اجازه ورکړئ', netError: 'د انټرنیټ ستونزه', meterWord: 'متره', frontWord: 'مخکې', leftWord: 'کیڼ', rightWord: 'ښي', obstacleWord: 'خنډ', walkedWord: 'تاسو', walkedWord2: 'متره تللي یاست', potholeWord: 'لاندې ګړنګ دی، احتیاط وکړئ', aiAnalyzing: 'جیمینی منظر ارزیابی کوي...', aiError: 'د اے آئی ستونزه' },
-  'fa-IR': { loading: 'سنسور در حال روشن شدن است.', started: 'اسمارت کین روشن است.', stopClose: 'هشدار', clearPath: 'مسیر باز است، جلو بروید.', camError: 'اجازه دسترسی به دوربین', netError: 'مشکل اینترنت یا مدل', meterWord: 'متر', frontWord: 'جلو', leftWord: 'چپ', rightWord: 'راست', obstacleWord: 'مانع', walkedWord: 'شما', walkedWord2: 'متر راه رفته‌اید', potholeWord: 'پایین چاله است، احتیاط کنید', aiAnalyzing: 'هوش مصنوعی در حال بررسی...', aiError: 'مشکل هوش مصنوعی' },
-  'sd-PK': { loading: 'سينسر آن ٿي رهيو آهي. مهرباني ڪري انتظار ڪريو.', started: 'سمارٽ ڪين آن آهي.', stopClose: 'خبردار', clearPath: 'رستو صاف آهي، اڳيان وڌو.', camError: 'ڪيمرا جي اجازت ڏيو', netError: 'انٽرنيٽ يا ماڊل جو مسئلو', meterWord: 'ميٽر', frontWord: 'سامهون', leftWord: 'کاٻي', rightWord: 'ساڄي', obstacleWord: 'رڪاوٽ', walkedWord: 'توهان', walkedWord2: 'ميٽر هليا آهيو', potholeWord: 'هيٺان کڏو آهي، احتیاط ڪريو', aiAnalyzing: 'جیميني منظر چيڪ ڪري پيو...', aiError: 'مسئلو آھي' },
-  'bn-BD': { loading: 'সেন্সর চালু হচ্ছে।', started: 'স্মার্ট কেন চালু আছে।', stopClose: 'সতর্কতা', clearPath: 'পথ পরিষ্কার, সামনে এগিয়ে যান।', camError: 'ক্যামেরার অনুমতি দিন', netError: 'ইন্টারনেট বা মডেলের সমস্যা', meterWord: 'মিটার', frontWord: 'সামনে', leftWord: 'বাম', rightWord: 'ডান', obstacleWord: 'বাধা', walkedWord: 'আপনি', walkedWord2: 'মিটার হেঁটেছেন', potholeWord: 'নিচে গর্ত আছে, সাবধান', aiAnalyzing: 'এআই বিশ্লেষণ করছে...', aiError: 'এআই সমস্যা' },
-  'tr-TR': { loading: 'Sensör açılıyor. Lütfen bekleyin.', started: 'Akıllı Baston açık.', stopClose: 'Uyarı', clearPath: 'Yol temiz, ilerleyin.', camError: 'Kamera izni verin', netError: 'İnternet veya model sorunu', meterWord: 'metre', frontWord: 'ön', leftWord: 'sol', rightWord: 'sağ', obstacleWord: 'engel', walkedWord: 'Sen', walkedWord2: 'metre yürüdün', potholeWord: 'Aşağıda çukur var, dikkat et', aiAnalyzing: 'Yapay zeka analiz ediyor...', aiError: 'AI hatası' }
+  'en-US': { loading: 'Sensor turning on. Please wait.', started: 'Smart Cane is on. Camera active.', stopClose: 'Alert', clearPath: 'Path is clear, move forward.', camError: 'Camera permission denied. Please allow camera access in browser settings.', netError: 'Internet or model loading issue', meterWord: 'meter', frontWord: 'front', leftWord: 'left', rightWord: 'right', obstacleWord: 'obstacle', walkedWord: 'You have walked', walkedWord2: 'meters', potholeWord: 'Pothole below, be careful', aiAnalyzing: 'Analyzing scene...', aiError: 'AI response issue', camNotStarted: 'Please start the camera first' },
+  'ur-PK': { loading: 'سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔', started: 'اسمارٹ کین آن ہے۔ کیمرہ اور سنسور ایکٹو ہیں۔', stopClose: 'الرٹ ہو جاؤ', clearPath: 'رستہ صاف ہے، آگے بڑھیں۔', camError: 'کیمرہ کی پرمیشن نہیں ملی۔ براہ کرم براؤزر یا فون کی سیٹنگز میں جا کر کیمرہ کی اجازت ان ایبل کریں۔', netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ', meterWord: 'میٹر', frontWord: 'سامنے', leftWord: 'بائیں', rightWord: 'دائیں', obstacleWord: 'رکاوٹ', walkedWord: 'آپ', walkedWord2: 'میٹر چل چکے ہیں', potholeWord: 'نیچے گڑھا ہے، احتیاط کریں', aiAnalyzing: 'منظر کا تجزیہ کیا جا رہا ہے...', aiError: 'اے آئی رسپانس میں مسئلہ', camNotStarted: 'براہ کرم پہلے کیمرہ آن کریں' },
+  'hi-IN': { loading: 'सेंसर चालू हो रहा है।', started: 'स्मार्ट केन चालू है।', stopClose: 'अलर्ट', clearPath: 'रास्ता साफ है, आगे बढ़ें।', camError: 'कैमरा अनुमति दें', netError: 'इंटरनेट या मॉडल समस्या', meterWord: 'मीटर', frontWord: 'सामने', leftWord: 'बाएं', rightWord: 'दाएं', obstacleWord: 'बाधा', walkedWord: 'आप', walkedWord2: 'मीटर चल चुके हैं', potholeWord: 'नीचे गड्ढा है, सावधान रहें', aiAnalyzing: 'विश्लेषण कर रहा है...', aiError: 'एआई समस्या', camNotStarted: 'कृपया पहले कैमरा चालू करें' },
+  'ar-SA': { loading: 'جاري تشغيل المستشعر.', started: 'العصا الذكية تعمل.', stopClose: 'تنبيه', clearPath: 'الطريق خالٍ، تقدم.', camError: 'السماح بالكاميرا', netError: 'مشكلة في الإنترنت أو النموذج', meterWord: 'متر', frontWord: 'أمام', leftWord: 'يسار', rightWord: 'يمين', obstacleWord: 'عائق', walkedWord: 'لقد مشيت', walkedWord2: 'متر', potholeWord: 'حفرة بالأسفل، انتبه', aiAnalyzing: 'جاري تحليل المشهد...', aiError: 'مشكلة في الذكاء الاصطناعي', camNotStarted: 'الرجاء تشغيل الكاميرا أولاً' },
+  'pa-IN': { loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ہے۔', started: 'ਸਮਾਰਟ ਕੇਨ ਚਾਲੂ ਹੈ।', stopClose: 'ਅਲਰਟ', clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਅੱਗੇ ਵਧੋ।', camError: 'ਕੈਮਰਾ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ', netError: 'ਇੰਟਰਨੈੱਟ ਜਾਂ ਮਾਡਲ ਦੀ ਸਮੱਸਿਆ', meterWord: 'ਮੀਟਰ', frontWord: 'ਸਾਹਮਣੇ', leftWord: 'ਖੱਬੇ', rightWord: 'ਸੱਜੇ', obstacleWord: 'ਰੁਕਾਵਟ', walkedWord: 'ਤੁਸੀਂ', walkedWord2: 'ਮੀਟਰ ਚੱਲ ਚੁੱਕੇ ਹੋ', potholeWord: 'ਹੇਠਾਂ ਟੋਆ ਹੈ, ਸਾਵਧਾਨ ਰਹੋ', aiAnalyzing: 'ਜਾਂਚ ਕਰ ਰਿਹਾ ਹੈ...', aiError: 'ਏਆਈ ਸਮੱਸਿਆ', camNotStarted: 'ਕਿਰਪਾ ਕਰਕੇ ਪਹਿਲਾਂ ਕੈਮਰਾ ਚਾਲੂ ਕਰੋ' },
+  'ps-PK': { loading: 'سنسور روان دی. مهرباني وکئ انتظار وکئ.', started: 'سمارټ کین روان دی.', stopClose: 'خبردار', clearPath: 'لار سمه ده، مخکې لاړ شئ.', camError: 'د کامرې اجازه ورکړئ', netError: 'د انټرنیټ ستونزه', meterWord: 'متره', frontWord: 'مخکې', leftWord: 'کیڼ', rightWord: 'ښي', obstacleWord: 'خنډ', walkedWord: 'تاسو', walkedWord2: 'متره تللي یاست', potholeWord: 'لاندې ګړنګ دی، احتیاط وکړئ', aiAnalyzing: 'منظر ارزونه...', aiError: 'د اے آئی ستونزه', camNotStarted: 'مهرباني وکئ لومړی کامره چالان کړئ' }
 };
 
 function getT(key) {
@@ -502,7 +497,7 @@ function isPotholeBlocked() {
     } else {
       potholeConfirmCount = 0;
     }
-    return potholeConfirmCount >= 3;
+    return potholeConfirmCount >= 2;
   } catch(e) {
     return false;
   }
@@ -561,7 +556,12 @@ function handleClearPath() {
 
 async function triggerGeminiCloudAnalysis() {
   if (isGeminiRunning) return;
-  if (!video || !video.videoWidth) return;
+  
+  if (!isLive || !video || !video.videoWidth) {
+    speak(getT('camNotStarted'), false);
+    statusEl.innerText = getT('camNotStarted');
+    return;
+  }
   
   isGeminiRunning = true;
   
@@ -582,7 +582,7 @@ async function triggerGeminiCloudAnalysis() {
       body: JSON.stringify({
         contents: [{
           parts: [
-            { text: "Describe what exact obstacle, wall, door, table, or danger is directly in front in a short sentence using the selected language or English/Urdu." },
+            { text: "Describe what exact obstacle, wall, door, table, or danger is directly in front in a short sentence using the selected language or English/Urdu without mentioning any technical terms." },
             { inline_data: { mime_type: "image/jpeg", data: base64Data } }
           ]
         }]
@@ -596,7 +596,7 @@ async function triggerGeminiCloudAnalysis() {
       speak(aiText, true);
     }
   } catch (err) {
-    console.error("Gemini AI error:", err);
+    console.error("AI error:", err);
     statusEl.innerText = getT('aiError');
     speak(getT('aiError'), false);
   } finally {
@@ -624,7 +624,7 @@ async function initDetector() {
     const vision = await window.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm");
     const detectorPromise = window.ObjectDetector.createFromOptions(vision, {
       baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite", delegate: "CPU" },
-      scoreThreshold: 0.42,
+      scoreThreshold: 0.50,
       runningMode: "VIDEO"
     });
     const timeoutPromise = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('model timeout')); }, 15000); });
@@ -683,7 +683,7 @@ async function requestSequentialPermissions() {
       await waitForMediapipe();
     },
     async () => {
-      statusEl.innerText = "Step 9/10: Preparing Gemini API Cloud Link...";
+      statusEl.innerText = "Step 9/10: Preparing Smart Cane Network Link...";
       await new Promise(r => setTimeout(r, 300));
     },
     async () => {
@@ -728,7 +728,6 @@ async function startCamera() {
       speak(getT('started'), false);
       startBtn.style.display = 'none';
       stopBtn.style.display = 'block';
-      askAiBtn.style.display = 'block';
       window.requestAnimationFrame(predictWebcam);
       const ok = await initDetector();
       if (!ok && isLive) {
@@ -850,7 +849,6 @@ function stopCamera() {
   startBtn.style.display = 'block';
   startBtn.innerText = 'START';
   stopBtn.style.display = 'none';
-  askAiBtn.style.display = 'none';
   isSpeakingObstacle = false;
   currentMode = "clear";
   lastObstacleName = "";
