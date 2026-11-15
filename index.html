@@ -137,9 +137,6 @@ button:active{opacity:0.8;}
       <option value="zu-ZA">isiZulu (South Africa)</option>
     </select>
 
-    <label for="destinationInput">DESTINATION</label>
-    <input type="text" id="destinationInput" placeholder="">
-    
     <div class="flex-row">
       <button id="settingsNavBtn" class="btn-secondary">SETTINGS</button>
     </div>
@@ -147,7 +144,7 @@ button:active{opacity:0.8;}
     <div id="status">STATUS: OFF</div>
     
     <button id="startBtn" class="btn-main">START</button>
-    <button id="askAiBtn" class="btn-ai" style="display:none;">ASK GEMINI AI VIEW</button>
+    <button id="askAiBtn" class="btn-ai" style="display:none;">Ask too smart Cane</button>
     <button id="stopBtn" class="btn-stop" style="display:none;">STOP</button>
     
     <video id="webcam" autoplay playsinline muted></video>
@@ -159,7 +156,10 @@ button:active{opacity:0.8;}
     <h2>SETTINGS & OPTIONS</h2>
     <div class="sub">Manage Navigation & Information</div>
     
+    <label for="destinationInput">DESTINATION</label>
+    <input type="text" id="destinationInput" placeholder="">
     <button id="openMapsBtn" class="btn-map">OPEN MAPS</button>
+    
     <button id="aboutNavBtn" class="btn-secondary">ABOUT APP</button>
     <button id="backToHomeBtn" class="btn-secondary">BACK TO HOME</button>
   </div>
@@ -213,10 +213,10 @@ let lastGeminiCallTime = 0;
 let isGeminiRunning = false;
 let lastObstacleSpokenTime = 0;
 
-let OBSTACLE_CONFIRM_NEEDED = 2;
+let OBSTACLE_CONFIRM_NEEDED = 1;
 let REQUIRED_CONFIDENCE = 42;
 let OBSTACLE_SIZE_RATIO = 0.02;
-let WALL_CONFIRM_NEEDED = 3;
+let WALL_CONFIRM_NEEDED = 2;
 let SIDE_CLOSE_SIZE_RATIO = 0.06;
 let lastFrameAvg = -1;
 let clearToneTimer = null;
@@ -232,7 +232,7 @@ const translations = {
   'ur-PK': { loading: 'سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔', started: 'اسمارٹ کین آن ہے۔ کیمرہ اور سنسور ایکٹو ہیں۔', stopClose: 'الرٹ ہو جاؤ', clearPath: 'رستہ صاف ہے، آگے بڑھیں۔', camError: 'کیمرہ کی پرمیشن نہیں ملی۔ براہ کرم براؤزر یا فون کی سیٹنگز میں جا کر کیمرہ کی اجازت ان ایبل کریں۔', netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ', meterWord: 'میٹر', frontWord: 'سامنے', leftWord: 'بائیں', rightWord: 'دائیں', obstacleWord: 'رکاوٹ', walkedWord: 'آپ', walkedWord2: 'میٹر چل چکے ہیں', potholeWord: 'نیچے گڑھا ہے، احتیاط کریں', aiAnalyzing: 'جیمینی اے آئی منظر کا تجزیہ کر رہا ہے...', aiError: 'اے آئی رسپانس میں مسئلہ' },
   'hi-IN': { loading: 'सेंसर चालू हो रहा है।', started: 'स्मार्ट केन चालू है।', stopClose: 'अलर्ट', clearPath: 'रास्ता साफ है, आगे बढ़ें।', camError: 'कैमरा अनुमति दें', netError: 'इंटरनेट या मॉडल समस्या', meterWord: 'मीटर', frontWord: 'सामने', leftWord: 'बाएं', rightWord: 'दाएं', obstacleWord: 'बाधा', walkedWord: 'आप', walkedWord2: 'मीटर चल चुके हैं', potholeWord: 'नीचे गड्ढा है, सावधान रहें', aiAnalyzing: 'जेमिनी एआई विश्लेषण कर रहा है...', aiError: 'एआई समस्या' },
   'ar-SA': { loading: 'جاري تشغيل المستشعر.', started: 'العصا الذكية تعمل.', stopClose: 'تنبيه', clearPath: 'الطريق خالٍ، تقدم.', camError: 'السماح بالكاميرا', netError: 'مشكلة في الإنترنت أو النموذج', meterWord: 'متر', frontWord: 'أمام', leftWord: 'يسار', rightWord: 'يمين', obstacleWord: 'عائق', walkedWord: 'لقد مشيت', walkedWord2: 'متر', potholeWord: 'حفرة بالأسفل، انتبه', aiAnalyzing: 'جيميني يحلل المشهد...', aiError: 'مشكلة في الذكاء الاصطناعي' },
-  'pa-IN': { loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ہے۔', started: 'ਸਮਾਰਟ ਕੇਨ ਚਾਲੂ ਹੈ።', stopClose: 'ਅਲਰਟ', clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਅੱਗੇ ਵਧੋ।', camError: 'ਕੈਮਰਾ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ', netError: 'ਇੰਟਰਨੈੱਟ ਜਾਂ ਮਾਡਲ ਦੀ ਸਮੱਸਿਆ', meterWord: 'ਮੀਟਰ', frontWord: 'ਸਾਹਮਣੇ', leftWord: 'ਖੱਬੇ', rightWord: 'ਸੱਜੇ', obstacleWord: 'ਰੁਕਾਵਟ', walkedWord: 'ਤੁਸੀਂ', walkedWord2: 'ਮੀਟਰ ਚੱਲ ਚੁੱਕੇ ਹੋ', potholeWord: 'ਹੇਠਾਂ ਟੋਆ ਹੈ, ਸਾਵਧਾਨ ਰਹੋ', aiAnalyzing: 'ਏਆਈ ਜਾਂچ ਕਰ ਰਿਹਾ है...', aiError: 'ਏਆਈ ਸਮੱਸਿਆ' },
+  'pa-IN': { loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ہے۔', started: 'ਸਮਾਰਟ ਕੇਨ ਚਾਲੂ ਹੈ።', stopClose: 'ਅਲਰਟ', clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਅੱਗੇ ਵਧੋ።', camError: 'ਕੈਮਰਾ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ', netError: 'ਇੰਟਰਨੈੱਟ ਜਾਂ ਮਾਡਲ ਦੀ ਸਮੱਸਿਆ', meterWord: 'ਮੀਟਰ', frontWord: 'ਸਾਹਮਣੇ', leftWord: 'ਖੱਬੇ', rightWord: 'ਸੱਜੇ', obstacleWord: 'ਰੁਕਾਵਟ', walkedWord: 'ਤੁਸੀਂ', walkedWord2: 'ਮੀਟਰ ਚੱਲ ਚੁੱਕੇ ਹੋ', potholeWord: 'ਹੇਠਾਂ ਟੋਆ ਹੈ, ਸਾਵਧਾਨ ਰਹੋ', aiAnalyzing: 'ਏਆਈ ਜਾਂچ ਕਰ ਰਿਹਾ है...', aiError: 'ਏਆਈ ਸਮੱਸਿਆ' },
   'ps-PK': { loading: 'سنسور روان دی. مهرباني وکئ انتظار وکئ.', started: 'سمارټ کین روان دی.', stopClose: 'خبردار', clearPath: 'لار سمه ده، مخکې لاړ شئ.', camError: 'د کامرې اجازه ورکړئ', netError: 'د انټرنیټ ستونزه', meterWord: 'متره', frontWord: 'مخکې', leftWord: 'کیڼ', rightWord: 'ښي', obstacleWord: 'خنډ', walkedWord: 'تاسو', walkedWord2: 'متره تللي یاست', potholeWord: 'لاندې ګړنګ دی، احتیاط وکړئ', aiAnalyzing: 'جیمینی منظر ارزیابی کوي...', aiError: 'د اے آئی ستونزه' },
   'fa-IR': { loading: 'سنسور در حال روشن شدن است.', started: 'اسمارت کین روشن است.', stopClose: 'هشدار', clearPath: 'مسیر باز است، جلو بروید.', camError: 'اجازه دسترسی به دوربین', netError: 'مشکل اینترنت یا مدل', meterWord: 'متر', frontWord: 'جلو', leftWord: 'چپ', rightWord: 'راست', obstacleWord: 'مانع', walkedWord: 'شما', walkedWord2: 'متر راه رفته‌اید', potholeWord: 'پایین چاله است، احتیاط کنید', aiAnalyzing: 'هوش مصنوعی در حال بررسی...', aiError: 'مشکل هوش مصنوعی' },
   'sd-PK': { loading: 'سينسر آن ٿي رهيو آهي. مهرباني ڪري انتظار ڪريو.', started: 'سمارٽ ڪين آن آهي.', stopClose: 'خبردار', clearPath: 'رستو صاف آهي، اڳيان وڌو.', camError: 'ڪيمرا جي اجازت ڏيو', netError: 'انٽرنيٽ يا ماڊل جو مسئلو', meterWord: 'ميٽر', frontWord: 'سامهون', leftWord: 'کاٻي', rightWord: 'ساڄي', obstacleWord: 'رڪاوٽ', walkedWord: 'توهان', walkedWord2: 'ميٽر هليا آهيو', potholeWord: 'هيٺان کڏو آهي، احتیاط ڪريو', aiAnalyzing: 'جیميني منظر چيڪ ڪري پيو...', aiError: 'مسئلو آھي' },
@@ -502,7 +502,7 @@ function isPotholeBlocked() {
     } else {
       potholeConfirmCount = 0;
     }
-    return potholeConfirmCount >= 4;
+    return potholeConfirmCount >= 3;
   } catch(e) {
     return false;
   }
@@ -646,41 +646,49 @@ async function initDetector() {
 async function requestSequentialPermissions() {
   const steps = [
     async () => {
-      statusEl.innerText = "Step 1/8: Requesting Camera Permission...";
+      statusEl.innerText = "Step 1/10: Requesting Camera Permission...";
       const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
       s.getTracks().forEach(t => t.stop());
     },
     async () => {
-      statusEl.innerText = "Step 2/8: Requesting Microphone Permission...";
+      statusEl.innerText = "Step 2/10: Requesting Microphone Permission...";
       const s = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
       s.getTracks().forEach(t => t.stop());
     },
     async () => {
-      statusEl.innerText = "Step 3/8: Initializing GPS Location...";
+      statusEl.innerText = "Step 3/10: Initializing GPS Location...";
       if ('geolocation' in navigator) {
         await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 6000 }));
       }
     },
     async () => {
-      statusEl.innerText = "Step 4/8: Checking Vibration Engine...";
+      statusEl.innerText = "Step 4/10: Checking Vibration Engine...";
       if ('vibrate' in navigator) { navigator.vibrate(50); }
     },
     async () => {
-      statusEl.innerText = "Step 5/8: Activating Text-to-Speech Engine...";
+      statusEl.innerText = "Step 5/10: Activating Text-to-Speech Engine...";
       if ('speechSynthesis' in window) { window.speechSynthesis.getVoices(); }
     },
     async () => {
-      statusEl.innerText = "Step 6/8: Configuring Audio Context...";
+      statusEl.innerText = "Step 6/10: Configuring Audio Context...";
       const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
       if (AudioCtxClass) { const tmpCtx = new AudioCtxClass(); tmpCtx.close(); }
     },
     async () => {
-      statusEl.innerText = "Step 7/8: Setting up Screen Lock Prevention...";
+      statusEl.innerText = "Step 7/10: Setting up Screen Lock Prevention...";
       if ('wakeLock' in navigator) { try { await navigator.wakeLock.request('screen'); } catch(e){} }
     },
     async () => {
-      statusEl.innerText = "Step 8/8: Finalizing System Setup...";
-      await new Promise(r => setTimeout(r, 600));
+      statusEl.innerText = "Step 8/10: Initializing MediaPipe Vision Runtime...";
+      await waitForMediapipe();
+    },
+    async () => {
+      statusEl.innerText = "Step 9/10: Preparing Gemini API Cloud Link...";
+      await new Promise(r => setTimeout(r, 300));
+    },
+    async () => {
+      statusEl.innerText = "Step 10/10: Finalizing System Setup...";
+      await new Promise(r => setTimeout(r, 400));
     }
   ];
 
