@@ -141,7 +141,6 @@ button:active{opacity:0.8;}
     <input type="text" id="destinationInput" placeholder="">
     
     <div class="flex-row">
-      <button id="openMapsBtn" class="btn-map">OPEN MAPS</button>
       <button id="settingsNavBtn" class="btn-secondary">SETTINGS</button>
     </div>
 
@@ -158,9 +157,9 @@ button:active{opacity:0.8;}
 
   <div id="settingsView" class="view-section">
     <h2>SETTINGS & OPTIONS</h2>
-    <div class="sub">Manage Permissions & Preferences</div>
+    <div class="sub">Manage Navigation & Information</div>
     
-    <button id="requestPermsBtn" class="btn-main">GRANT ALL PERMISSIONS (Camera, GPS, Audio)</button>
+    <button id="openMapsBtn" class="btn-map">OPEN MAPS</button>
     <button id="aboutNavBtn" class="btn-secondary">ABOUT APP</button>
     <button id="backToHomeBtn" class="btn-secondary">BACK TO HOME</button>
   </div>
@@ -195,7 +194,6 @@ const settingsNavBtn = document.getElementById('settingsNavBtn');
 const backToHomeBtn = document.getElementById('backToHomeBtn');
 const aboutNavBtn = document.getElementById('aboutNavBtn');
 const backFromAboutBtn = document.getElementById('backFromAboutBtn');
-const requestPermsBtn = document.getElementById('requestPermsBtn');
 
 let stream = null, isLive = false, objectDetector = null;
 let lastSpoken = "", lastSpeakTime = 0, lastBeepTime = 0, lastClearSpeakTime = 0;
@@ -234,7 +232,7 @@ const translations = {
   'ur-PK': { loading: 'سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔', started: 'اسمارٹ کین آن ہے۔ کیمرہ اور سنسور ایکٹو ہیں۔', stopClose: 'الرٹ ہو جاؤ', clearPath: 'رستہ صاف ہے، آگے بڑھیں۔', camError: 'کیمرہ کی پرمیشن نہیں ملی۔ براہ کرم براؤزر یا فون کی سیٹنگز میں جا کر کیمرہ کی اجازت ان ایبل کریں۔', netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ', meterWord: 'میٹر', frontWord: 'سامنے', leftWord: 'بائیں', rightWord: 'دائیں', obstacleWord: 'رکاوٹ', walkedWord: 'آپ', walkedWord2: 'میٹر چل چکے ہیں', potholeWord: 'نیچے گڑھا ہے، احتیاط کریں', aiAnalyzing: 'جیمینی اے آئی منظر کا تجزیہ کر رہا ہے...', aiError: 'اے آئی رسپانس میں مسئلہ' },
   'hi-IN': { loading: 'सेंसर चालू हो रहा है।', started: 'स्मार्ट केन चालू है।', stopClose: 'अलर्ट', clearPath: 'रास्ता साफ है, आगे बढ़ें।', camError: 'कैमरा अनुमति दें', netError: 'इंटरनेट या मॉडल समस्या', meterWord: 'मीटर', frontWord: 'सामने', leftWord: 'बाएं', rightWord: 'दाएं', obstacleWord: 'बाधा', walkedWord: 'आप', walkedWord2: 'मीटर चल चुके हैं', potholeWord: 'नीचे गड्ढा है, सावधान रहें', aiAnalyzing: 'जेमिनी एआई विश्लेषण कर रहा है...', aiError: 'एआई समस्या' },
   'ar-SA': { loading: 'جاري تشغيل المستشعر.', started: 'العصا الذكية تعمل.', stopClose: 'تنبيه', clearPath: 'الطريق خالٍ، تقدم.', camError: 'السماح بالكاميرا', netError: 'مشكلة في الإنترنت أو النموذج', meterWord: 'متر', frontWord: 'أمام', leftWord: 'يسار', rightWord: 'يمين', obstacleWord: 'عائق', walkedWord: 'لقد مشيت', walkedWord2: 'متر', potholeWord: 'حفرة بالأسفل، انتبه', aiAnalyzing: 'جيميني يحلل المشهد...', aiError: 'مشكلة في الذكاء الاصطناعي' },
-  'pa-IN': { loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ਹੈ।', started: 'ਸਮਾਰਟ ਕੇਨ ਚਾਲੂ ਹੈ।', stopClose: 'ਅਲਰਟ', clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਅੱਗੇ ਵਧੋ।', camError: 'ਕੈਮਰਾ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ', netError: 'ਇੰਟਰਨੈੱਟ ਜਾਂ ਮਾਡਲ ਦੀ ਸਮੱਸਿਆ', meterWord: 'ਮੀਟਰ', frontWord: 'ਸਾਹਮਣੇ', leftWord: 'ਖੱਬੇ', rightWord: 'ਸੱਜੇ', obstacleWord: 'ਰੁਕਾਵਟ', walkedWord: 'ਤੁਸੀਂ', walkedWord2: 'ਮੀਟਰ ਚੱਲ ਚੁੱਕੇ ਹੋ', potholeWord: 'ਹੇਠਾਂ ਟੋਆ ਹੈ, ਸਾਵਧਾਨ ਰਹੋ', aiAnalyzing: 'ਏਆਈ ਜਾਂچ ਕਰ ਰਿਹਾ है...', aiError: 'ਏਆਈ ਸਮੱਸਿਆ' },
+  'pa-IN': { loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ہے۔', started: 'ਸਮਾਰਟ ਕੇਨ ਚਾਲੂ ਹੈ።', stopClose: 'ਅਲਰਟ', clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਅੱਗੇ ਵਧੋ।', camError: 'ਕੈਮਰਾ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ', netError: 'ਇੰਟਰਨੈੱਟ ਜਾਂ ਮਾਡਲ ਦੀ ਸਮੱਸਿਆ', meterWord: 'ਮੀਟਰ', frontWord: 'ਸਾਹਮਣੇ', leftWord: 'ਖੱਬੇ', rightWord: 'ਸੱਜੇ', obstacleWord: 'ਰੁਕਾਵਟ', walkedWord: 'ਤੁਸੀਂ', walkedWord2: 'ਮੀਟਰ ਚੱਲ ਚੁੱਕੇ ਹੋ', potholeWord: 'ਹੇਠਾਂ ਟੋਆ ਹੈ, ਸਾਵਧਾਨ ਰਹੋ', aiAnalyzing: 'ਏਆਈ ਜਾਂچ ਕਰ ਰਿਹਾ है...', aiError: 'ਏਆਈ ਸਮੱਸਿਆ' },
   'ps-PK': { loading: 'سنسور روان دی. مهرباني وکئ انتظار وکئ.', started: 'سمارټ کین روان دی.', stopClose: 'خبردار', clearPath: 'لار سمه ده، مخکې لاړ شئ.', camError: 'د کامرې اجازه ورکړئ', netError: 'د انټرنیټ ستونزه', meterWord: 'متره', frontWord: 'مخکې', leftWord: 'کیڼ', rightWord: 'ښي', obstacleWord: 'خنډ', walkedWord: 'تاسو', walkedWord2: 'متره تللي یاست', potholeWord: 'لاندې ګړنګ دی، احتیاط وکړئ', aiAnalyzing: 'جیمینی منظر ارزیابی کوي...', aiError: 'د اے آئی ستونزه' },
   'fa-IR': { loading: 'سنسور در حال روشن شدن است.', started: 'اسمارت کین روشن است.', stopClose: 'هشدار', clearPath: 'مسیر باز است، جلو بروید.', camError: 'اجازه دسترسی به دوربین', netError: 'مشکل اینترنت یا مدل', meterWord: 'متر', frontWord: 'جلو', leftWord: 'چپ', rightWord: 'راست', obstacleWord: 'مانع', walkedWord: 'شما', walkedWord2: 'متر راه رفته‌اید', potholeWord: 'پایین چاله است، احتیاط کنید', aiAnalyzing: 'هوش مصنوعی در حال بررسی...', aiError: 'مشکل هوش مصنوعی' },
   'sd-PK': { loading: 'سينسر آن ٿي رهيو آهي. مهرباني ڪري انتظار ڪريو.', started: 'سمارٽ ڪين آن آهي.', stopClose: 'خبردار', clearPath: 'رستو صاف آهي، اڳيان وڌو.', camError: 'ڪيمرا جي اجازت ڏيو', netError: 'انٽرنيٽ يا ماڊل جو مسئلو', meterWord: 'ميٽر', frontWord: 'سامهون', leftWord: 'کاٻي', rightWord: 'ساڄي', obstacleWord: 'رڪاوٽ', walkedWord: 'توهان', walkedWord2: 'ميٽر هليا آهيو', potholeWord: 'هيٺان کڏو آهي، احتیاط ڪريو', aiAnalyzing: 'جیميني منظر چيڪ ڪري پيو...', aiError: 'مسئلو آھي' },
@@ -462,8 +460,8 @@ function isWallDoorStairsBlocked() {
       return false;
     }
     let isWall = false;
-    if (centre.range < 50 && centre.avg < 100) isWall = true;
-    if (top.range < 60 && bottom.range < 70) isWall = true;
+    if (centre.range < 65 && centre.avg < 120) isWall = true;
+    if (top.range < 75 && bottom.range < 85) isWall = true;
     if (isWall) {
       wallConfirmCount++;
     } else {
@@ -499,7 +497,7 @@ function isPotholeBlocked() {
     }
     let midAvg = getAvg(8, 24, 8, 16);
     let bottomAvg = getAvg(8, 24, 18, 24);
-    if (midAvg > 70 && bottomAvg < midAvg - 50) {
+    if (midAvg > 70 && bottomAvg < midAvg - 45) {
       potholeConfirmCount++;
     } else {
       potholeConfirmCount = 0;
@@ -522,15 +520,22 @@ function handleObstacle(fullObstacleText) {
   const now = Date.now();
   const isSameObstacle = (fullObstacleText === lastObstacleName);
   
-  if (!isSameObstacle || (now - lastSpeakTime > 4000)) {
+  if (!isSameObstacle) {
     lastObstacleName = fullObstacleText;
     lastSpeakTime = now;
     triggerVibration();
     speak(fullObstacleText, true);
-    triggerGeminiCloudAnalysis();
+  } else {
+    if (now - lastSpeakTime > 8000) {
+      lastSpeakTime = now;
+      triggerVibration();
+      speak(fullObstacleText, true);
+    } else {
+      triggerVibration();
+    }
   }
   
-  if (now - lastBeepTime > 800) {
+  if (now - lastBeepTime > 1000) {
     lastBeepTime = now;
     playBeep('obstacle');
   }
@@ -543,7 +548,7 @@ function handleClearPath() {
   statusEl.innerText = getT('clearPath');
   startClearTone();
   const now = Date.now();
-  if (now - lastClearSpeakTime > 5000) {
+  if (now - lastClearSpeakTime > 6000) {
     lastClearSpeakTime = now;
     speakClearForce();
   }
@@ -556,12 +561,9 @@ function handleClearPath() {
 
 async function triggerGeminiCloudAnalysis() {
   if (isGeminiRunning) return;
-  const now = Date.now();
-  if (now - lastGeminiCallTime < 5000) return;
   if (!video || !video.videoWidth) return;
   
   isGeminiRunning = true;
-  lastGeminiCallTime = now;
   
   try {
     const tempCanvas = document.createElement('canvas');
@@ -572,6 +574,7 @@ async function triggerGeminiCloudAnalysis() {
     const base64Data = tempCanvas.toDataURL('image/jpeg', 0.6).split(',')[1];
     
     statusEl.innerText = getT('aiAnalyzing');
+    speak(getT('aiAnalyzing'), false);
     
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -579,7 +582,7 @@ async function triggerGeminiCloudAnalysis() {
       body: JSON.stringify({
         contents: [{
           parts: [
-            { text: "Describe what exact obstacle, wall, door, or danger is directly in front in short sentence using the selected language or English/Urdu." },
+            { text: "Describe what exact obstacle, wall, door, table, or danger is directly in front in a short sentence using the selected language or English/Urdu." },
             { inline_data: { mime_type: "image/jpeg", data: base64Data } }
           ]
         }]
@@ -594,6 +597,8 @@ async function triggerGeminiCloudAnalysis() {
     }
   } catch (err) {
     console.error("Gemini AI error:", err);
+    statusEl.innerText = getT('aiError');
+    speak(getT('aiError'), false);
   } finally {
     isGeminiRunning = false;
   }
@@ -638,30 +643,59 @@ async function initDetector() {
   }
 }
 
-async function requestAllPermissionsSequentially() {
-  try {
-    statusEl.innerText = "Requesting Camera permission...";
-    const camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
-    camStream.getTracks().forEach(t => t.stop());
-    
-    if ('geolocation' in navigator) {
-      statusEl.innerText = "Requesting GPS permission...";
-      await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000 });
-      });
+async function requestSequentialPermissions() {
+  const steps = [
+    async () => {
+      statusEl.innerText = "Step 1/8: Requesting Camera Permission...";
+      const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+      s.getTracks().forEach(t => t.stop());
+    },
+    async () => {
+      statusEl.innerText = "Step 2/8: Requesting Microphone Permission...";
+      const s = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      s.getTracks().forEach(t => t.stop());
+    },
+    async () => {
+      statusEl.innerText = "Step 3/8: Initializing GPS Location...";
+      if ('geolocation' in navigator) {
+        await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, { timeout: 6000 }));
+      }
+    },
+    async () => {
+      statusEl.innerText = "Step 4/8: Checking Vibration Engine...";
+      if ('vibrate' in navigator) { navigator.vibrate(50); }
+    },
+    async () => {
+      statusEl.innerText = "Step 5/8: Activating Text-to-Speech Engine...";
+      if ('speechSynthesis' in window) { window.speechSynthesis.getVoices(); }
+    },
+    async () => {
+      statusEl.innerText = "Step 6/8: Configuring Audio Context...";
+      const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtxClass) { const tmpCtx = new AudioCtxClass(); tmpCtx.close(); }
+    },
+    async () => {
+      statusEl.innerText = "Step 7/8: Setting up Screen Lock Prevention...";
+      if ('wakeLock' in navigator) { try { await navigator.wakeLock.request('screen'); } catch(e){} }
+    },
+    async () => {
+      statusEl.innerText = "Step 8/8: Finalizing System Setup...";
+      await new Promise(r => setTimeout(r, 600));
     }
-    statusEl.innerText = "STATUS: OFF";
-    return true;
-  } catch (err) {
-    console.error("Permission error:", err);
-    alert(getT('camError'));
-    statusEl.innerText = getT('camError');
-    return false;
+  ];
+
+  for (let i = 0; i < steps.length; i++) {
+    try {
+      await steps[i]();
+    } catch (e) {
+      console.warn("Permission step " + (i+1) + " note:", e);
+    }
   }
+  statusEl.innerText = "STATUS: OFF";
 }
 
 window.addEventListener('load', async () => {
-  await requestAllPermissionsSequentially();
+  await requestSequentialPermissions();
 });
 
 async function startCamera() {
@@ -848,23 +882,6 @@ settingsNavBtn.addEventListener('click', () => { lightVibration(); homeView.clas
 backToHomeBtn.addEventListener('click', () => { lightVibration(); settingsView.classList.remove('active'); homeView.classList.add('active'); });
 aboutNavBtn.addEventListener('click', () => { lightVibration(); settingsView.classList.remove('active'); aboutView.classList.add('active'); });
 backFromAboutBtn.addEventListener('click', () => { lightVibration(); aboutView.classList.remove('active'); settingsView.classList.add('active'); });
-
-requestPermsBtn.addEventListener('click', async () => {
-  lightVibration();
-  try {
-    const s = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-    s.getTracks().forEach(t => t.stop());
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(() => {}, () => {});
-    }
-    if ('vibrate' in navigator) {
-      navigator.vibrate(100);
-    }
-    alert("Permissions granted successfully! You can change permission settings anytime in your browser/device settings.");
-  } catch (e) {
-    alert("Permission denied. Please enable permissions manually in your browser site settings.");
-  }
-});
 
 waBtn.addEventListener('click', () => { lightVibration(); });
 </script>
