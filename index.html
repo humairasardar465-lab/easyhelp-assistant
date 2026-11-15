@@ -3,36 +3,45 @@
 <head>
 <link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Your eyes smart cane created by Humaira Sardar</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Your Eyes Smart Cane - Humaira Sardar</title>
 <script type="module">
-  import { FilesetResolver, ObjectDetector } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/+esm";
-  window.FilesetResolver = FilesetResolver;
-  window.ObjectDetector = ObjectDetector;
-  window.dispatchEvent(new Event('mediapipe-loaded'));
+import { FilesetResolver, ObjectDetector } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/+esm";
+window.FilesetResolver = FilesetResolver;
+window.ObjectDetector = ObjectDetector;
+window.dispatchEvent(new Event('mediapipe-loaded'));
 </script>
 <style>
-*{box-sizing:border-box}
-body{font-family:Arial,sans-serif;background:#0a0f1e;color:#fff;margin:0;padding:16px}
-.top{max-width:620px;margin:auto;background:#111827;padding:22px;border-radius:16px}
-h2{text-align:center;color:#00ffcc;margin:0;letter-spacing:1px}
-.sub{text-align:center;font-size:12px;color:#94a3b8;margin:6px 0 14px}
-label{display:block;color:#00ffcc;font-size:13px;font-weight:700;margin:14px 0 6px}
-select,input{width:100%;padding:12px;border-radius:10px;border:1px solid #374151;background:#1f2937;color:#fff;font-size:15px}
-video{width:100%;height:320px;border-radius:12px;background:#000;object-fit:cover;margin-top:12px;border:3px solid #00ffcc}
-button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer;margin-top:10px;font-weight:700;width:100%}
-.btn-main{background:#00ffcc;color:#000}
-.btn-map{background:#0284c7;color:#fff}
-.btn-stop{background:#ef4444;color:#fff}
-.btn-wa{background:#25D366;color:#fff;text-decoration:none;display:block;text-align:center;padding:14px;font-size:16px;border-radius:10px;margin-top:10px;font-weight:700;width:100%}
-#status{text-align:center;margin:10px 0;font-weight:700;font-size:14px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:Arial,sans-serif;background:#0a0f1e;color:#fff;margin:0;padding:16px;touch-action:manipulation;}
+.container{max-width:620px;margin:auto;background:#111827;padding:22px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.5);}
+h2{text-align:center;color:#00ffcc;margin:0;letter-spacing:1px;font-size:24px;}
+.sub{text-align:center;font-size:12px;color:#94a3b8;margin:6px 0 14px;}
+label{display:block;color:#00ffcc;font-size:13px;font-weight:700;margin:14px 0 6px;}
+select,input{width:100%;padding:12px;border-radius:10px;border:1px solid #374151;background:#1f2937;color:#fff;font-size:15px;outline:none;}
+video{width:100%;height:280px;border-radius:12px;background:#000;object-fit:cover;margin-top:12px;border:3px solid #00ffcc;}
+button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer;margin-top:10px;font-weight:700;width:100%;transition:opacity 0.2s;}
+button:active{opacity:0.8;}
+.btn-main{background:#00ffcc;color:#000;}
+.btn-ai{background:#a855f7;color:#fff;}
+.btn-map{background:#0284c7;color:#fff;}
+.btn-stop{background:#ef4444;color:#fff;}
+.btn-secondary{background:#374151;color:#fff;}
+.btn-wa{background:#25D366;color:#fff;text-decoration:none;display:block;text-align:center;padding:14px;font-size:16px;border-radius:10px;margin-top:10px;font-weight:700;width:100%;}
+#status{text-align:center;margin:12px 0;font-weight:700;font-size:15px;color:#38bdf8;}
+.view-section{display:none;}
+.view-section.active{display:block;}
+.flex-row{display:flex;gap:10px;margin-top:10px;}
+.flex-row button{margin-top:0;}
 </style>
 </head>
 <body>
-<div class="top">
+<div class="container">
+<!-- HOME VIEW -->
+<div id="homeView" class="view-section active">
 <h2>SMART CANE</h2>
-<div class="sub">Your eyes smart cane created by Humaira Sardar</div>
-<label>SELECT LANGUAGE</label>
+<div class="sub">Your Eyes Smart Cane created by Humaira Sardar</div>
+<label for="voiceLanguage">SELECT LANGUAGE</label>
 <select id="voiceLanguage">
 <option value="ur-PK" selected>اردو (Pakistan)</option>
 <option value="en-US">English (United States)</option>
@@ -126,25 +135,56 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 <option value="yo-NG">Yorùbá (Nigeria)</option>
 <option value="zu-ZA">isiZulu (South Africa)</option>
 </select>
-<label>DESTINATION</label>
-<input type="text" id="destinationInput" placeholder="">
+<label for="destinationInput">DESTINATION</label>
+<input type="text" id="destinationInput" placeholder="منزل کا نام درج کریں">
+<div class="flex-row">
 <button id="openMapsBtn" class="btn-map">OPEN MAPS</button>
+<button id="settingsNavBtn" class="btn-secondary">SETTINGS</button>
+</div>
 <div id="status">STATUS: OFF</div>
 <button id="startBtn" class="btn-main">START</button>
-<button disabled id="liveAiBtn" class="btn-main" style="background:#a855f7;color:#fff;" onclick="window.location.href='liveai.html'">LIVE AI CAMERA</button>
+<button id="askAiBtn" class="btn-ai" style="display:none;">ASK GEMINI AI VIEW</button>
 <button id="stopBtn" class="btn-stop" style="display:none;">STOP</button>
 <video id="webcam" autoplay playsinline muted></video>
-<a id="waBtn" href="https://wa.me/923030133274" target="_blank" class="btn-wa">CONTACT WHATSAPP</a>
+<a id="waBtn" href="[https://wa.me/923030133274](https://wa.me/923030133274)" target="_blank" class="btn-wa">CONTACT WHATSAPP</a>
+</div>
+<!-- SETTINGS VIEW -->
+<div id="settingsView" class="view-section">
+<h2>SETTINGS & OPTIONS</h2>
+<div class="sub">Manage Permissions & Preferences</div>
+<button id="requestPermsBtn" class="btn-main">GRANT ALL PERMISSIONS (Camera, GPS, Audio)</button>
+<button id="aboutNavBtn" class="btn-secondary">ABOUT APP</button>
+<button id="backToHomeBtn" class="btn-secondary">BACK TO HOME</button>
+</div>
+<!-- ABOUT VIEW -->
+<div id="aboutView" class="view-section">
+<h2>ABOUT APP</h2>
+<div class="sub">Your Eyes Smart Cane v2.0</div>
+<p style="font-size:14px; line-height:1.6; color:#94a3b8;">
+This application is specially designed to assist visually impaired individuals in real-time obstacle detection, navigation, and environmental awareness using local AI and Google Gemini cloud intelligence. Created by Humaira Sardar from Okara City.
+</p>
+<button id="backFromAboutBtn" class="btn-secondary">BACK</button>
+</div>
 </div>
 <script>
+const GEMINI_API_KEY = "AIzaSyDI5btsG8Wu77sAj8gI9Ug8E_9Lr_FvN5A";
 const video = document.getElementById('webcam');
 const statusEl = document.getElementById('status');
 const langSel = document.getElementById('voiceLanguage');
 const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
+const askAiBtn = document.getElementById('askAiBtn');
 const openMapsBtn = document.getElementById('openMapsBtn');
 const destinationInput = document.getElementById('destinationInput');
 const waBtn = document.getElementById('waBtn');
+const homeView = document.getElementById('homeView');
+const settingsView = document.getElementById('settingsView');
+const aboutView = document.getElementById('aboutView');
+const settingsNavBtn = document.getElementById('settingsNavBtn');
+const backToHomeBtn = document.getElementById('backToHomeBtn');
+const aboutNavBtn = document.getElementById('aboutNavBtn');
+const backFromAboutBtn = document.getElementById('backFromAboutBtn');
+const requestPermsBtn = document.getElementById('requestPermsBtn');
 let stream = null, isLive = false, objectDetector = null;
 let lastSpoken = "", lastSpeakTime = 0, lastBeepTime = 0, lastClearSpeakTime = 0;
 let frameCount = 0;
@@ -159,8 +199,8 @@ let wallCanvas = null;
 let lastWallCheck = 0;
 let lastFrameTime = 0;
 let watchdogTimer = null;
-
-// FIX: Confidence 42% - 40 se 45 ke darmiyan
+let lastGeminiCallTime = 0;
+let isGeminiRunning = false;
 let OBSTACLE_CONFIRM_NEEDED = 2;
 let REQUIRED_CONFIDENCE = 42;
 let OBSTACLE_SIZE_RATIO = 0.02;
@@ -174,352 +214,577 @@ let lastGpsLat = 0, lastGpsLng = 0, hasLastGps = false, currentLat = 0, currentL
 let gpsWatchId = null, lastWalkAnnounceTime = 0, lastAnnouncedWalkedMeters = 0;
 let gpsStartTime = 0, gpsLastTime = 0, gpsConsecutiveMoves = 0, gpsPendingMeters = 0;
 let potholeConfirmCount = 0;
-
 const translations = {
-  'ur-PK': { loading: 'سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔', started: 'اسمارٹ کین آن ہے۔ کیمرہ اور سنسور ایکٹو ہیں۔', stopClose: 'الرٹ ہو جاؤ', clearPath: 'رستہ صاف ہے، آگے بڑھیں۔', camError: 'کیمرہ کی اجازت دیں', netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ', meterWord: 'میٹر', frontWord: 'سامنے', leftWord: 'بائیں', rightWord: 'دائیں', obstacleWord: 'رکاوٹ', walkedWord: 'آپ', walkedWord2: 'میٹر چل چکے ہیں', potholeWord: 'نیچے گڑھا ہے، احتیاط کریں' },
-  'en-US': { loading: 'Sensor turning on. Please wait.', started: 'Smart Cane is on. Camera active.', stopClose: 'Alert', clearPath: 'Path is clear, move forward.', camError: 'Allow camera access', netError: 'Internet or model loading issue', meterWord: 'meter', frontWord: 'front', leftWord: 'left', rightWord: 'right', obstacleWord: 'obstacle', walkedWord: 'You have walked', walkedWord2: 'meters', potholeWord: 'Pothole below, be careful' },
-  'hi-IN': { loading: 'सेंसर चालू हो रहा है।', started: 'स्मार्ट केन चालू है।', stopClose: 'अलर्ट', clearPath: 'रास्ता साफ है, आगे बढ़ें।', camError: 'कैमरा अनुमति दें', netError: 'इंटरनेट या मॉडल समस्या', meterWord: 'मीटर', frontWord: 'सामने', leftWord: 'बाएं', rightWord: 'दाएं', obstacleWord: 'बाधा', walkedWord: 'आप', walkedWord2: 'मीटर चल चुके हैं', potholeWord: 'नीचे गड्ढा है, सावधान रहें' },
-  'ar-SA': { loading: 'جاري تشغيل المستشعر.', started: 'العصا الذكية تعمل.', stopClose: 'تنبيه', clearPath: 'الطريق خالٍ، تقدم.', camError: 'السماح بالكاميرا', netError: 'مشكلة في الإنترنت أو النموذج', meterWord: 'متر', frontWord: 'أمام', leftWord: 'يسار', rightWord: 'يمين', obstacleWord: 'عائق', walkedWord: 'لقد مشيت', walkedWord2: 'متر', potholeWord: 'حفرة بالأسفل، انتبه' },
-  'pa-IN': { loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ਹੈ।', started: 'ਸਮਾਰਟ ਕੇਨ ਚਾਲੂ ਹੈ।', stopClose: 'ਅਲਰਟ', clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਅੱਗੇ ਵਧੋ।', camError: 'ਕੈਮਰਾ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ', netError: 'ਇੰਟਰਨੈੱਟ ਜਾਂ ਮਾਡਲ ਦੀ ਸਮੱਸਿਆ', meterWord: 'ਮੀਟਰ', frontWord: 'ਸਾਹਮਣੇ', leftWord: 'ਖੱਬੇ', rightWord: 'ਸੱਜੇ', obstacleWord: 'ਰੁਕਾਵਟ', walkedWord: 'ਤੁਸੀਂ', walkedWord2: 'ਮੀਟਰ ਚੱਲ ਚੁੱਕੇ ਹੋ', potholeWord: 'ਹੇਠਾਂ ਟੋਆ ਹੈ, ਸਾਵਧਾਨ ਰਹੋ' },
-  'ps-PK': { loading: 'سنسور روان دی. مهرباني وکئ انتظار وکئ.', started: 'سمارټ کین روان دی.', stopClose: 'خبردار', clearPath: 'لار سمه ده، مخکې لاړ شئ.', camError: 'د کامرې اجازه ورکړئ', netError: 'د انټرنیټ ستونزه', meterWord: 'متره', frontWord: 'مخکې', leftWord: 'کیڼ', rightWord: 'ښي', obstacleWord: 'خنډ', walkedWord: 'تاسو', walkedWord2: 'متره تللي یاست', potholeWord: 'لاندې ګړنګ دی، احتیاط وکړئ' },
-  'fa-IR': { loading: 'سنسور در حال روشن شدن است.', started: 'اسمارت کین روشن است.', stopClose: 'هشدار', clearPath: 'مسیر باز است، جلو بروید.', camError: 'اجازه دسترسی به دوربین', netError: 'مشکل اینترنت یا مدل', meterWord: 'متر', frontWord: 'جلو', leftWord: 'چپ', rightWord: 'راست', obstacleWord: 'مانع', walkedWord: 'شما', walkedWord2: 'متر راه رفته‌اید', potholeWord: 'پایین چاله است، احتیاط کنید' },
-  'sd-PK': { loading: 'سينسر آن ٿي رهيو آهي. مهرباني ڪري انتظار ڪريو.', started: 'سمارٽ ڪين آن آهي.', stopClose: 'خبردار', clearPath: 'رستو صاف آهي، اڳيان وڌو.', camError: 'ڪيمرا جي اجازت ڏيو', netError: 'انٽرنيٽ يا ماڊل جو مسئلو', meterWord: 'ميٽر', frontWord: 'سامهون', leftWord: 'کاٻي', rightWord: 'ساڄي', obstacleWord: 'رڪاوٽ', walkedWord: 'توهان', walkedWord2: 'ميٽر هليا آهيو', potholeWord: 'هيٺان کڏو آهي، احتیاط ڪريو' },
-  'bn-BD': { loading: 'সেন্সর চালু হচ্ছে।', started: 'স্মার্ট কেন চালু আছে।', stopClose: 'সতর্কতা', clearPath: 'পথ পরিষ্কার, সামনে এগিয়ে যান।', camError: 'ক্যামেরার অনুমতি দিন', netError: 'ইন্টারনেট বা মডেলের সমস্যা', meterWord: 'মিটার', frontWord: 'সামনে', leftWord: 'বাম', rightWord: 'ডান', obstacleWord: 'বাধা', walkedWord: 'আপনি', walkedWord2: 'মিটার হেঁটেছেন', potholeWord: 'নিচে গর্ত আছে, সাবধান' },
-  'tr-TR': { loading: 'Sensör açılıyor. Lütfen bekleyin.', started: 'Akıllı Baston açık.', stopClose: 'Uyarı', clearPath: 'Yol temiz, ilerleyin.', camError: 'Kamera izni verin', netError: 'İnternet veya model sorunu', meterWord: 'metre', frontWord: 'ön', leftWord: 'sol', rightWord: 'sağ', obstacleWord: 'engel', walkedWord: 'Sen', walkedWord2: 'metre yürüdün', potholeWord: 'Aşağıda çukur var, dikkat et' }
+'ur-PK': { loading: 'سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔', started: 'اسمارٹ کین آن ہے۔ کیمرہ اور سنسور ایکٹو ہیں۔', stopClose: 'الرٹ ہو جاؤ', clearPath: 'رستہ صاف ہے، آگے بڑھیں۔', camError: 'کیمرہ کی اجازت دیں', netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ', meterWord: 'میٹر', frontWord: 'سامنے', leftWord: 'بائیں', rightWord: 'دائیں', obstacleWord: 'رکاوٹ', walkedWord: 'آپ', walkedWord2: 'میٹر چل چکے ہیں', potholeWord: 'نیچے گڑھا ہے، احتیاط کریں', aiAnalyzing: 'جیمینی اے آئی منظر کا تجزیہ کر رہا ہے...', aiError: 'اے آئی رسپانس میں مسئلہ' },
+'en-US': { loading: 'Sensor turning on. Please wait.', started: 'Smart Cane is on. Camera active.', stopClose: 'Alert', clearPath: 'Path is clear, move forward.', camError: 'Allow camera access', netError: 'Internet or model loading issue', meterWord: 'meter', frontWord: 'front', leftWord: 'left', rightWord: 'right', obstacleWord: 'obstacle', walkedWord: 'You have walked', walkedWord2: 'meters', potholeWord: 'Pothole below, be careful', aiAnalyzing: 'Gemini AI analyzing scene...', aiError: 'AI response issue' },
+'hi-IN': { loading: 'सेंसर चालू हो रहा है।', started: 'स्मार्ट केन चालू है।', stopClose: 'अलर्ट', clearPath: 'रास्ता साफ है, आगे बढ़ें।', camError: 'कैमरा अनुमति दें', netError: 'इंटरनेट या मॉडल समस्या', meterWord: 'मीटर', frontWord: 'सामने', leftWord: 'बाएं', rightWord: 'दाएं', obstacleWord: 'बाधा', walkedWord: 'आप', walkedWord2: 'मीटर चल चुके हैं', potholeWord: 'नीचे गड्ढा है, सावधान रहें', aiAnalyzing: 'जेमिनी एआई विश्लेषण कर रहा है...', aiError: 'एआई समस्या' },
+'ar-SA': { loading: 'جاري تشغيل المستشعر.', started: 'العصا الذكية تعمل.', stopClose: 'تنبيه', clearPath: 'الطريق خالٍ، تقدم.', camError: 'السماح بالكاميرا', netError: 'مشكلة في الإنترنت أو النموذج', meterWord: 'متر', frontWord: 'أمام', leftWord: 'يسار', rightWord: 'يمين', obstacleWord: 'عائق', walkedWord: 'لقد مشيت', walkedWord2: 'متر', potholeWord: 'حفرة بالأسفل، انتبه', aiAnalyzing: 'جيميني يحلل المشهد...', aiError: 'مشكلة في الذكاء الاصطناعي' },
+'pa-IN': { loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ਹੈ।', started: 'ਸਮਾਰਟ ਕੇਨ ਚਾਲੂ ਹੈ।', stopClose: 'ਅਲਰਟ', clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਅੱਗੇ ਵਧੋ।', camError: 'ਕੈਮਰਾ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ', netError: 'ਇੰਟਰਨੈੱਟ ਜਾਂ ਮਾਡਲ ਦੀ ਸਮੱਸਿਆ', meterWord: 'ਮੀਟਰ', frontWord: 'ਸਾਹਮਣੇ', leftWord: 'ਖੱਬੇ', rightWord: 'ਸੱਜੇ', obstacleWord: 'ਰੁਕਾਵਟ', walkedWord: 'ਤੁਸੀਂ', walkedWord2: 'ਮੀਟਰ ਚੱਲ ਚੁੱਕੇ ਹੋ', potholeWord: 'ਹੇਠਾਂ ਟੋਆ ਹੈ, ਸਾਵਧਾਨ ਰਹੋ', aiAnalyzing: 'ਏਆਈ ਜਾਂچ ਕਰ ਰਿਹਾ है...', aiError: 'ਏਆਈ ਸਮੱਸਿਆ' },
+'ps-PK': { loading: 'سنسور روان دی. مهرباني وکئ انتظار وکئ.', started: 'سمارټ کین روان دی.', stopClose: 'خبردار', clearPath: 'لار سمه ده، مخکې لاړ شئ.', camError: 'د کامرې اجازه ورکړئ', netError: 'د انټرنیټ ستونزه', meterWord: 'متره', frontWord: 'مخکې', leftWord: 'کیڼ', rightWord: 'ښي', obstacleWord: 'خنډ', walkedWord: 'تاسو', walkedWord2: 'متره تللي یاست', potholeWord: 'لاندې ګړنګ دی، احتیاط وکړئ', aiAnalyzing: 'جیمینی منظر ارزیابی کوي...', aiError: 'د اے آئی ستونزه' },
+'fa-IR': { loading: 'سنسور در حال روشن شدن است.', started: 'اسمارت کین روشن است.', stopClose: 'هشدار', clearPath: 'مسیر باز است، جلو بروید.', camError: 'اجازه دسترسی به دوربین', netError: 'مشکل اینترنت یا مدل', meterWord: 'متر', frontWord: 'جلو', leftWord: 'چپ', rightWord: 'راست', obstacleWord: 'مانع', walkedWord: 'شما', walkedWord2: 'متر راه رفته‌اید', potholeWord: 'پایین چاله است، احتیاط کنید', aiAnalyzing: 'هوش مصنوعی در حال بررسی...', aiError: 'مشکل هوش مصنوعی' },
+'sd-PK': { loading: 'سينسر آن ٿي رهيو آهي. مهرباني ڪري انتظار ڪريو.', started: 'سمارٽ ڪين آن آهي.', stopClose: 'خبردار', clearPath: 'رستو صاف آهي، اڳيان وڌو.', camError: 'ڪيمرا جي اجازت ڏيو', netError: 'انٽرنيٽ يا ماڊل جو مسئلو', meterWord: 'ميٽر', frontWord: 'سامهون', leftWord: 'کاٻي', rightWord: 'ساڄي', obstacleWord: 'رڪاوٽ', walkedWord: 'توهان', walkedWord2: 'ميٽر هليا آهيو', potholeWord: 'هيٺان کڏو آهي، احتیاط ڪريو', aiAnalyzing: 'جیميني منظر چيڪ ڪري پيو...', aiError: 'مسئلو آھي' },
+'bn-BD': { loading: 'সেন্সর চালু হচ্ছে।', started: 'স্মার্ট কেন চালু আছে।', stopClose: 'সতর্কতা', clearPath: 'পথ পরিষ্কার, সামনে এগিয়ে যান।', camError: 'ক্যামেরার অনুমতি দিন', netError: 'ইন্টারনেট বা মডেলের সমস্যা', meterWord: 'মিটার', frontWord: 'সামনে', leftWord: 'বাম', rightWord: 'ডান', obstacleWord: 'বাধা', walkedWord: 'আপনি', walkedWord2: 'মিটার হেঁটেছেন', potholeWord: 'নিচে গর্ত আছে, সাবধান', aiAnalyzing: 'এআই বিশ্লেষণ করছে...', aiError: 'এআই সমস্যা' },
+'tr-TR': { loading: 'Sensör açılıyor. Lütfen bekleyin.', started: 'Akıllı Baston açık.', stopClose: 'Uyarı', clearPath: 'Yol temiz, ilerleyin.', camError: 'Kamera izni verin', netError: 'İnternet veya model sorunu', meterWord: 'metre', frontWord: 'ön', leftWord: 'sol', rightWord: 'sağ', obstacleWord: 'engel', walkedWord: 'Sen', walkedWord2: 'metre yürüdün', potholeWord: 'Aşağıda çukur var, dikkat et', aiAnalyzing: 'Yapay zeka analiz ediyor...', aiError: 'AI hatası' }
 };
-function getT(key) { const lang = langSel.value; if (translations[lang] && translations[lang][key]) { return translations[lang][key]; } return translations['en-US'][key] || key; }
-function getObstacleText(sideWord, dist) { return getT('stopClose') + ", " + sideWord + ", " + dist + " " + getT('meterWord') + " " + getT('obstacleWord'); }
-function getDistanceMeters(sizeRatio) { if (sizeRatio <= 0) return 4; let d = 0.45 / Math.sqrt(sizeRatio); if (d > 4) d = 4; if (d < 0.5) d = 0.5; return Math.round(d * 10) / 10; }
-function getSideWord(cxRatio) { if (cxRatio < 0.40) return getT('leftWord'); if (cxRatio > 0.60) return getT('rightWord'); return getT('frontWord'); }
-function getDistanceBetween(lat1, lon1, lat2, lon2) { const R = 6371000; const dLat = (lat2 - lat1) * Math.PI / 180; const dLon = (lon2 - lon1) * Math.PI / 180; const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2) * Math.sin(dLon/2); const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); return R * c; }
-function startGPS() { try { if ('geolocation' in navigator) {
-  gpsStartTime = Date.now(); gpsConsecutiveMoves = 0; gpsPendingMeters = 0; gpsLastTime = 0;
-  gpsWatchId = navigator.geolocation.watchPosition(function(p){
-  if (Date.now() - gpsStartTime < 5000) { lastGpsLat = p.coords.latitude; lastGpsLng = p.coords.longitude; hasLastGps = true; return; }
-  if (!p.coords.accuracy || p.coords.accuracy > 20) return;
-  if (p.coords.speed !== null && p.coords.speed !== undefined && p.coords.speed < 0.3) { gpsConsecutiveMoves = 0; gpsPendingMeters = 0; lastGpsLat = p.coords.latitude; lastGpsLng = p.coords.longitude; return; }
-  let nowT = Date.now();
-  if (gpsLastTime && (nowT - gpsLastTime) < 1500) return;
-  gpsLastTime = nowT;
-  currentLat = p.coords.latitude; currentLng = p.coords.longitude;
-  if (!hasLastGps) { lastGpsLat = currentLat; lastGpsLng = currentLng; hasLastGps = true; return; }
-  const step = getDistanceBetween(lastGpsLat, lastGpsLng, currentLat, currentLng);
-  if (step < 1.2 || step > 25) { gpsConsecutiveMoves = 0; gpsPendingMeters = 0; lastGpsLat = currentLat; lastGpsLng = currentLng; return; }
-  gpsConsecutiveMoves++; gpsPendingMeters += step; lastGpsLat = currentLat; lastGpsLng = currentLng;
-  if (gpsConsecutiveMoves >= 2) { totalWalkedMeters += gpsPendingMeters; gpsPendingMeters = 0; gpsConsecutiveMoves = 0; }
-}, function(e){}, { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 }); } } catch(e){} }
-function triggerVibration() { if ('vibrate' in navigator) { try { navigator.vibrate([200, 100, 200]); } catch (e) {} } }
-function lightVibration() { if ('vibrate' in navigator) { try { navigator.vibrate(15); } catch (e) {} } }
+function getT(key) {
+const lang = langSel.value;
+if (translations[lang] && translations[lang][key]) return translations[lang][key];
+return translations['en-US'][key] || key;
+}
+function getObstacleText(sideWord, dist) {
+return getT('stopClose') + ", " + sideWord + ", " + dist + " " + getT('meterWord') + " " + getT('obstacleWord');
+}
+function getDistanceMeters(sizeRatio) {
+if (sizeRatio <= 0) return 4;
+let d = 0.45 / Math.sqrt(sizeRatio);
+if (d > 4) d = 4;
+if (d < 0.5) d = 0.5;
+return Math.round(d * 10) / 10;
+}
+function getSideWord(cxRatio) {
+if (cxRatio < 0.40) return getT('leftWord');
+if (cxRatio > 0.60) return getT('rightWord');
+return getT('frontWord');
+}
+function getDistanceBetween(lat1, lon1, lat2, lon2) {
+const R = 6371000;
+const dLat = (lat2 - lat1) * Math.PI / 180;
+const dLon = (lon2 - lon1) * Math.PI / 180;
+const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+return R * c;
+}
+function startGPS() {
+try {
+if ('geolocation' in navigator) {
+gpsStartTime = Date.now();
+gpsConsecutiveMoves = 0;
+gpsPendingMeters = 0;
+gpsLastTime = 0;
+gpsWatchId = navigator.geolocation.watchPosition(function(p){
+if (Date.now() - gpsStartTime < 5000) {
+lastGpsLat = p.coords.latitude;
+lastGpsLng = p.coords.longitude;
+hasLastGps = true;
+return;
+}
+if (!p.coords.accuracy || p.coords.accuracy > 20) return;
+if (p.coords.speed !== null && p.coords.speed !== undefined && p.coords.speed < 0.3) {
+gpsConsecutiveMoves = 0;
+gpsPendingMeters = 0;
+lastGpsLat = p.coords.latitude;
+lastGpsLng = p.coords.longitude;
+return;
+}
+let nowT = Date.now();
+if (gpsLastTime && (nowT - gpsLastTime) < 1500) return;
+gpsLastTime = nowT;
+currentLat = p.coords.latitude;
+currentLng = p.coords.longitude;
+if (!hasLastGps) {
+lastGpsLat = currentLat;
+lastGpsLng = currentLng;
+hasLastGps = true;
+return;
+}
+const step = getDistanceBetween(lastGpsLat, lastGpsLng, currentLat, currentLng);
+if (step < 1.2 || step > 25) {
+gpsConsecutiveMoves = 0;
+gpsPendingMeters = 0;
+lastGpsLat = currentLat;
+lastGpsLng = currentLng;
+return;
+}
+gpsConsecutiveMoves++;
+gpsPendingMeters += step;
+lastGpsLat = currentLat;
+lastGpsLng = currentLng;
+if (gpsConsecutiveMoves >= 2) {
+totalWalkedMeters += gpsPendingMeters;
+gpsPendingMeters = 0;
+gpsConsecutiveMoves = 0;
+}
+}, function(e){}, { enableHighAccuracy: true, maximumAge: 1000, timeout: 10000 });
+}
+} catch(e){}
+}
+function triggerVibration() {
+if ('vibrate' in navigator) {
+try { navigator.vibrate([200, 100, 200]); } catch (e) {}
+}
+}
+function lightVibration() {
+if ('vibrate' in navigator) {
+try { navigator.vibrate(15); } catch (e) {}
+}
+}
 function playBeep(type) {
-  try {
-    if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-    if (audioCtx.state === 'suspended') { audioCtx.resume(); }
-    if (type === 'small') {
-      const now = audioCtx.currentTime;
-      [0, 0.16].forEach(function(offset) {
-        const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
-        o.connect(g); g.connect(audioCtx.destination);
-        o.type = 'sine'; o.frequency.setValueAtTime(880, now + offset);
-        g.gain.setValueAtTime(0.12, now + offset);
-        g.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.12);
-        o.start(now + offset); o.stop(now + offset + 0.12);
-      });
-      return;
-    }
-    const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    if (type === 'clear') {
-      osc.frequency.setValueAtTime(659.25, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-      osc.start(); osc.stop(audioCtx.currentTime + 0.35);
-    } else if (type === 'obstacle') {
-      const now = audioCtx.currentTime;
-      osc.frequency.setValueAtTime(220, now);
-      osc.frequency.setValueAtTime(180, now + 0.1);
-      gain.gain.setValueAtTime(0.3, now);
-      gain.gain.setValueAtTime(0.3, now + 0.1);
-      osc.start(now); osc.stop(now + 0.22);
-    }
-  } catch (e) {}
+try {
+if (!audioCtx) {
+audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+if (audioCtx.state === 'suspended') {
+audioCtx.resume();
+}
+const osc = audioCtx.createOscillator();
+const gain = audioCtx.createGain();
+osc.connect(gain);
+gain.connect(audioCtx.destination);
+if (type === 'clear') {
+osc.frequency.setValueAtTime(659.25, audioCtx.currentTime);
+gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+osc.start();
+osc.stop(audioCtx.currentTime + 0.35);
+} else if (type === 'obstacle') {
+const now = audioCtx.currentTime;
+osc.frequency.setValueAtTime(220, now);
+osc.frequency.setValueAtTime(180, now + 0.1);
+gain.gain.setValueAtTime(0.3, now);
+gain.gain.setValueAtTime(0.3, now + 0.1);
+osc.start(now);
+osc.stop(now + 0.22);
+}
+} catch (e) {}
 }
 function speak(text, isObstacle = false) {
-  if (!text) return;
-  if (!('speechSynthesis' in window)) return;
-  if (isObstacle) {
-    if (text === lastObstacleSpokenText && isSpeakingObstacle) return;
-    try { window.speechSynthesis.cancel(); } catch(e){}
-    isSpeakingObstacle = true;
-    lastObstacleSpokenText = text;
-  } else {
-    if (isSpeakingObstacle) return;
-    if (text === lastSpoken && Date.now() - lastSpeakTime < 1000) return;
-  }
-  lastSpoken = text; lastSpeakTime = Date.now();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = langSel.value;
-  utterance.rate = 1.1;
-  utterance.onend = () => { if (isObstacle) { isSpeakingObstacle = false; } };
-  utterance.onerror = () => { if (isObstacle) { isSpeakingObstacle = false; } };
-  window.speechSynthesis.speak(utterance);
+if (!text) return;
+if (!('speechSynthesis' in window)) return;
+if (isObstacle) {
+if (text === lastObstacleSpokenText && isSpeakingObstacle) return;
+try { window.speechSynthesis.cancel(); } catch(e){}
+isSpeakingObstacle = true;
+lastObstacleSpokenText = text;
+} else {
+if (isSpeakingObstacle) return;
+if (text === lastSpoken && Date.now() - lastSpeakTime < 1000) return;
+}
+lastSpoken = text;
+lastSpeakTime = Date.now();
+const utterance = new SpeechSynthesisUtterance(text);
+utterance.lang = langSel.value;
+utterance.rate = 1.1;
+const voices = window.speechSynthesis.getVoices();
+const targetVoice = voices.find(v => v.lang === langSel.value || v.lang.startsWith(langSel.value.slice(0, 2)));
+if (targetVoice) {
+utterance.voice = targetVoice;
+}
+utterance.onend = () => { if (isObstacle) { isSpeakingObstacle = false; } };
+utterance.onerror = () => { if (isObstacle) { isSpeakingObstacle = false; } };
+window.speechSynthesis.speak(utterance);
 }
 function speakClearForce() {
-  try { window.speechSynthesis.cancel(); } catch(e){}
-  isSpeakingObstacle = false;
-  lastObstacleSpokenText = "";
-  lastSpoken = ""; lastSpeakTime = 0;
-  speak(getT('clearPath'), false);
+try { window.speechSynthesis.cancel(); } catch(e){}
+isSpeakingObstacle = false;
+lastObstacleSpokenText = "";
+lastSpoken = "";
+lastSpeakTime = 0;
+speak(getT('clearPath'), false);
 }
 function startClearTone() {
-  if (clearToneTimer) return;
-  clearToneTimer = setInterval(function(){
-    if (isLive && currentMode === "clear") { playBeep('clear'); }
-  }, 1000);
+if (clearToneTimer) return;
+clearToneTimer = setInterval(function(){
+if (isLive && currentMode === "clear") { playBeep('clear'); }
+}, 1000);
 }
-function stopClearTone() { if (clearToneTimer) { clearInterval(clearToneTimer); clearToneTimer = null; } }
-
-// FIX: Deewar ab 3 bar dekh kar bolegi, aur roshni ka check behtar hai
+function stopClearTone() {
+if (clearToneTimer) {
+clearInterval(clearToneTimer);
+clearToneTimer = null;
+}
+}
 function isWallDoorStairsBlocked() {
-  try {
-    if (!video || !video.videoWidth) return false;
-    const now = Date.now();
-    if (now - lastWallCheck < 80) return wallConfirmCount >= WALL_CONFIRM_NEEDED;
-    lastWallCheck = now;
-    if (!wallCanvas) { wallCanvas = document.createElement('canvas'); wallCanvas.width = 32; wallCanvas.height = 24; }
-    const ctx = wallCanvas.getContext('2d', { willReadFrequently: true });
-    ctx.drawImage(video, 0, 0, 32, 24);
-    const d = ctx.getImageData(0, 0, 32, 24).data;
-    function getStats(x0, x1, y0, y1) {
-      let min = 255, max = 0, sum = 0, count = 0;
-      for (let y = y0; y < y1; y++) {
-        for (let x = x0; x < x1; x++) {
-          const idx = (y * 32 + x) * 4;
-          const g = (d[idx] + d[idx+1] + d[idx+2]) / 3;
-          sum += g; count++; if (g < min) min = g; if (g > max) max = g;
-        }
-      }
-      return { range: max - min, avg: sum / count };
-    }
-    let top = getStats(8, 24, 0, 6);
-    let centre = getStats(8, 24, 6, 18);
-    let bottom = getStats(8, 24, 18, 24);
-    let allAvg = (top.avg + centre.avg + bottom.avg) / 3;
-    let isMoving = false;
-    if (lastFrameAvg !== -1) { if (Math.abs(allAvg - lastFrameAvg) > 25) isMoving = true; }
-    lastFrameAvg = allAvg;
-    if (isMoving) { wallConfirmCount = 0; return false; }
-    // FIX: Andheray me ghalat alarm na aaye, is liye avg 15 se 30 kar diya
-    let isWall = false;
-    if (centre.range < 70 && bottom.range < 90 && centre.avg > 30) isWall = true;
-    if (top.range < 80 && centre.range < 70 && bottom.range < 90 && centre.avg > 30) isWall = true;
-    if (centre.range < 45 && centre.avg > 30) isWall = true;
-    if (isWall) { wallConfirmCount++; } else { wallConfirmCount = 0; }
-    return wallConfirmCount >= WALL_CONFIRM_NEEDED;
-  } catch(e) { return false; }
+try {
+if (!video || !video.videoWidth) return false;
+const now = Date.now();
+if (now - lastWallCheck < 80) return wallConfirmCount >= WALL_CONFIRM_NEEDED;
+lastWallCheck = now;
+if (!wallCanvas) {
+wallCanvas = document.createElement('canvas');
+wallCanvas.width = 32;
+wallCanvas.height = 24;
 }
-// FIX: Neeche garha / nali check - neeche wala hissa upar se bohat kala ho to garha
+const ctx = wallCanvas.getContext('2d', { willReadFrequently: true });
+ctx.drawImage(video, 0, 0, 32, 24);
+const d = ctx.getImageData(0, 0, 32, 24).data;
+function getStats(x0, x1, y0, y1) {
+let min = 255, max = 0, sum = 0, count = 0;
+for (let y = y0; y < y1; y++) {
+for (let x = x0; x < x1; x++) {
+const idx = (y * 32 + x) * 4;
+const g = (d[idx] + d[idx+1] + d[idx+2]) / 3;
+sum += g;
+count++;
+if (g < min) min = g;
+if (g > max) max = g;
+}
+}
+return { range: max - min, avg: sum / count };
+}
+let top = getStats(8, 24, 0, 6);
+let centre = getStats(8, 24, 6, 18);
+let bottom = getStats(8, 24, 18, 24);
+let allAvg = (top.avg + centre.avg + bottom.avg) / 3;
+let isMoving = false;
+if (lastFrameAvg !== -1) {
+if (Math.abs(allAvg - lastFrameAvg) > 25) isMoving = true;
+}
+lastFrameAvg = allAvg;
+if (isMoving) {
+wallConfirmCount = 0;
+return false;
+}
+let isWall = false;
+if (centre.range < 70 && bottom.range < 90 && centre.avg > 30) isWall = true;
+if (top.range < 80 && centre.range < 70 && bottom.range < 90 && centre.avg > 30) isWall = true;
+if (centre.range < 45 && centre.avg > 30) isWall = true;
+if (isWall) {
+wallConfirmCount++;
+} else {
+wallConfirmCount = 0;
+}
+return wallConfirmCount >= WALL_CONFIRM_NEEDED;
+} catch(e) {
+return false;
+}
+}
 function isPotholeBlocked() {
-  try {
-    if (!video || !video.videoWidth) return false;
-    if (!wallCanvas) { wallCanvas = document.createElement('canvas'); wallCanvas.width = 32; wallCanvas.height = 24; }
-    const ctx = wallCanvas.getContext('2d', { willReadFrequently: true });
-    ctx.drawImage(video, 0, 0, 32, 24);
-    const d = ctx.getImageData(0, 0, 32, 24).data;
-    function getAvg(x0, x1, y0, y1) {
-      let sum = 0, count = 0;
-      for (let y = y0; y < y1; y++) {
-        for (let x = x0; x < x1; x++) {
-          const idx = (y * 32 + x) * 4;
-          sum += (d[idx] + d[idx+1] + d[idx+2]) / 3; count++;
-        }
-      }
-      return sum / count;
-    }
-    let midAvg = getAvg(8, 24, 8, 16);
-    let bottomAvg = getAvg(8, 24, 18, 24);
-    // Neeche achanak bohat kala = garha ya nali ho sakti hai
-    if (midAvg > 40 && bottomAvg < midAvg - 35) { potholeConfirmCount++; } else { potholeConfirmCount = 0; }
-    return potholeConfirmCount >= 3;
-  } catch(e) { return false; }
+try {
+if (!video || !video.videoWidth) return false;
+if (!wallCanvas) {
+wallCanvas = document.createElement('canvas');
+wallCanvas.width = 32;
+wallCanvas.height = 24;
 }
-function alertWallDoorStairs() { handleObstacle(getObstacleText(getT('frontWord'), 1)); }
+const ctx = wallCanvas.getContext('2d', { willReadFrequently: true });
+ctx.drawImage(video, 0, 0, 32, 24);
+const d = ctx.getImageData(0, 0, 32, 24).data;
+function getAvg(x0, x1, y0, y1) {
+let sum = 0, count = 0;
+for (let y = y0; y < y1; y++) {
+for (let x = x0; x < x1; x++) {
+const idx = (y * 32 + x) * 4;
+sum += (d[idx] + d[idx+1] + d[idx+2]) / 3;
+count++;
+}
+}
+return sum / count;
+}
+let midAvg = getAvg(8, 24, 8, 16);
+let bottomAvg = getAvg(8, 24, 18, 24);
+if (midAvg > 40 && bottomAvg < midAvg - 35) {
+potholeConfirmCount++;
+} else {
+potholeConfirmCount = 0;
+}
+return potholeConfirmCount >= 3;
+} catch(e) {
+return false;
+}
+}
+function alertWallDoorStairs() {
+handleObstacle(getObstacleText(getT('frontWord'), 1));
+}
 function handleObstacle(fullObstacleText) {
-  statusEl.innerText = fullObstacleText;
-  currentMode = "obstacle";
-  stopClearTone();
-  // FIX: Agar wohi rukawat hai to bhi 4 second baad dobara bolay ga, taake awaz miss na ho
-  if (lastObstacleName !== fullObstacleText || Date.now() - lastSpeakTime > 4000) {
-    lastObstacleName = fullObstacleText;
-    triggerVibration(); speak(fullObstacleText, true);
-  }
-  const now = Date.now();
-  if (now - lastBeepTime > 800) { lastBeepTime = now; playBeep('obstacle'); }
+statusEl.innerText = fullObstacleText;
+currentMode = "obstacle";
+stopClearTone();
+if (lastObstacleName !== fullObstacleText || Date.now() - lastSpeakTime > 4000) {
+lastObstacleName = fullObstacleText;
+triggerVibration();
+speak(fullObstacleText, true);
+triggerGeminiCloudAnalysis();
+}
+const now = Date.now();
+if (now - lastBeepTime > 800) {
+lastBeepTime = now;
+playBeep('obstacle');
+}
 }
 function handleClearPath() {
-  currentMode = "clear";
-  lastObstacleName = "";
-  lastObstacleSpokenText = "";
-  statusEl.innerText = getT('clearPath');
-  startClearTone();
-  const now = Date.now();
-  // Aap ka rakha hua 4 second wala rule waisa hi hai
-  if (now - lastClearSpeakTime > 4000) {
-    lastClearSpeakTime = now;
-    speakClearForce();
-  }
-  if (totalWalkedMeters - lastAnnouncedWalkedMeters >= 50 && now - lastWalkAnnounceTime > 10000) {
-    lastAnnouncedWalkedMeters = totalWalkedMeters;
-    lastWalkAnnounceTime = now;
-    speak(getT('walkedWord') + " " + Math.round(totalWalkedMeters) + " " + getT('walkedWord2'), false);
-  }
+currentMode = "clear";
+lastObstacleName = "";
+lastObstacleSpokenText = "";
+statusEl.innerText = getT('clearPath');
+startClearTone();
+const now = Date.now();
+if (now - lastClearSpeakTime > 4000) {
+lastClearSpeakTime = now;
+speakClearForce();
+}
+if (totalWalkedMeters - lastAnnouncedWalkedMeters >= 50 && now - lastWalkAnnounceTime > 10000) {
+lastAnnouncedWalkedMeters = totalWalkedMeters;
+lastWalkAnnounceTime = now;
+speak(getT('walkedWord') + " " + Math.round(totalWalkedMeters) + " " + getT('walkedWord2'), false);
+}
+}
+async function triggerGeminiCloudAnalysis() {
+if (isGeminiRunning) return;
+const now = Date.now();
+if (now - lastGeminiCallTime < 4000) return;
+if (!video || !video.videoWidth) return;
+isGeminiRunning = true;
+lastGeminiCallTime = now;
+try {
+const tempCanvas = document.createElement('canvas');
+tempCanvas.width = 320;
+tempCanvas.height = 240;
+const tCtx = tempCanvas.getContext('2d');
+tCtx.drawImage(video, 0, 0, 320, 240);
+const base64Data = tempCanvas.toDataURL('image/jpeg', 0.6).split(',')[1];
+statusEl.innerText = getT('aiAnalyzing');
+const response = await fetch([https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$](https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$){GEMINI_API_KEY}, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({
+contents: [{
+parts: [
+{ text: "Describe what exact obstacle or danger is directly in front in short sentence using the selected language or Urdu/English." },
+{ inline_data: { mime_type: "image/jpeg", data: base64Data } }
+]
+}]
+})
+});
+const data = await response.json();
+if (data && data.candidates && data.candidates[0].content.parts[0].text) {
+const aiText = data.candidates[0].content.parts[0].text.trim();
+statusEl.innerText = aiText;
+speak(aiText, true);
+}
+} catch (err) {
+console.error("Gemini AI error:", err);
+} finally {
+isGeminiRunning = false;
+}
 }
 async function waitForMediapipe() {
-  if (window.FilesetResolver && window.ObjectDetector) return true;
-  return new Promise(function(resolve) {
-    let done = false;
-    const t = setTimeout(function() { if (!done) { done = true; resolve(false); } }, 15000);
-    window.addEventListener('mediapipe-loaded', function() { if (!done) { done = true; clearTimeout(t); resolve(true); } }, { once: true });
-  });
+if (window.FilesetResolver && window.ObjectDetector) return true;
+return new Promise(function(resolve) {
+let done = false;
+const t = setTimeout(function() { if (!done) { done = true; resolve(false); } }, 15000);
+window.addEventListener('mediapipe-loaded', function() { if (!done) { done = true; clearTimeout(t); resolve(true); } }, { once: true });
+});
 }
 async function initDetector() {
-  if (objectDetector) return true;
-  if (isDetectorLoading) return false;
-  isDetectorLoading = true;
-  try {
-    statusEl.innerText = getT('loading');
-    const ok = await waitForMediapipe();
-    if (!ok) { throw new Error('mediapipe timeout'); }
-    const vision = await window.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm");
-    const detectorPromise = window.ObjectDetector.createFromOptions(vision, { baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite", delegate: "CPU" }, scoreThreshold: 0.42, runningMode: "VIDEO" });
-    const timeoutPromise = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('model timeout')); }, 15000); });
-    objectDetector = await Promise.race([detectorPromise, timeoutPromise]);
-    isDetectorLoading = false;
-    return true;
-  } catch (err) {
-    console.error(err);
-    isDetectorLoading = false;
-    objectDetector = null;
-    if (isLive) { statusEl.innerText = getT('netError'); speak(getT('netError'), false); }
-    return false;
-  }
+if (objectDetector) return true;
+if (isDetectorLoading) return false;
+isDetectorLoading = true;
+try {
+statusEl.innerText = getT('loading');
+const ok = await waitForMediapipe();
+if (!ok) throw new Error('mediapipe timeout');
+const vision = await window.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm");
+const detectorPromise = window.ObjectDetector.createFromOptions(vision, {
+baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite", delegate: "CPU" },
+scoreThreshold: 0.42,
+runningMode: "VIDEO"
+});
+const timeoutPromise = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('model timeout')); }, 15000); });
+objectDetector = await Promise.race([detectorPromise, timeoutPromise]);
+isDetectorLoading = false;
+return true;
+} catch (err) {
+console.error(err);
+isDetectorLoading = false;
+objectDetector = null;
+if (isLive) {
+statusEl.innerText = getT('netError');
+speak(getT('netError'), false);
+}
+return false;
+}
 }
 async function startCamera() {
-  try {
-    if (isLive || stream) return;
-    statusEl.innerText = getT('loading');
-    startBtn.innerText = 'PLEASE WAIT...';
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { statusEl.innerText = getT('camError'); speak(getT('camError'), false); startBtn.innerText = 'START'; return; }
-    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
-    video.srcObject = stream;
-    startGPS();
-    startWatchdog();
-    video.onloadedmetadata = async () => {
-      try { await video.play(); } catch(e) {}
-      isLive = true; statusEl.innerText = getT('started'); speak(getT('started'), false);
-      startBtn.style.display = 'none'; stopBtn.style.display = 'block';
-      window.requestAnimationFrame(predictWebcam);
-      const ok = await initDetector();
-      if (!ok && isLive) { statusEl.innerText = getT('netError'); }
-    };
-  } catch (err) {
-    console.error(err);
-    startBtn.innerText = 'START';
-    statusEl.innerText = getT('camError'); speak(getT('camError'), false);
-    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-  }
+try {
+if (isLive || stream) return;
+statusEl.innerText = getT('loading');
+startBtn.innerText = 'PLEASE WAIT...';
+if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+statusEl.innerText = getT('camError');
+speak(getT('camError'), false);
+startBtn.innerText = 'START';
+return;
 }
-// FIX: Watchdog - agar system atak jaye to khud se dobara chal pare ga
+stream = await navigator.mediaDevices.getUserMedia({
+video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } },
+audio: false
+});
+video.srcObject = stream;
+startGPS();
+startWatchdog();
+video.onloadedmetadata = async () => {
+try { await video.play(); } catch(e) {}
+isLive = true;
+statusEl.innerText = getT('started');
+speak(getT('started'), false);
+startBtn.style.display = 'none';
+stopBtn.style.display = 'block';
+askAiBtn.style.display = 'block';
+window.requestAnimationFrame(predictWebcam);
+const ok = await initDetector();
+if (!ok && isLive) {
+statusEl.innerText = getT('netError');
+}
+};
+} catch (err) {
+console.error(err);
+startBtn.innerText = 'START';
+statusEl.innerText = getT('camError');
+speak(getT('camError'), false);
+if (stream) {
+stream.getTracks().forEach(t => t.stop());
+stream = null;
+}
+}
+}
 function startWatchdog() {
-  if (watchdogTimer) clearInterval(watchdogTimer);
-  watchdogTimer = setInterval(function(){
-    if (!isLive) return;
-    const now = Date.now();
-    // Agar 3 second se frame hi nahi aaya to loop dobara chalao
-    if (lastFrameTime && (now - lastFrameTime > 3000)) {
-      lastFrameTime = now;
-      window.requestAnimationFrame(predictWebcam);
-    }
-    // Agar bolna atak gaya ho to us ko kholo
-    if (isSpeakingObstacle && (now - lastSpeakTime > 5000)) {
-      try { window.speechSynthesis.cancel(); } catch(e){}
-      isSpeakingObstacle = false;
-    }
-  }, 2000);
+if (watchdogTimer) clearInterval(watchdogTimer);
+watchdogTimer = setInterval(function(){
+if (!isLive) return;
+const now = Date.now();
+if (lastFrameTime && (now - lastFrameTime > 3000)) {
+lastFrameTime = now;
+window.requestAnimationFrame(predictWebcam);
+}
+if (isSpeakingObstacle && (now - lastSpeakTime > 5000)) {
+try { window.speechSynthesis.cancel(); } catch(e){}
+isSpeakingObstacle = false;
+}
+}, 2000);
 }
 let lastVideoTime = -1;
 async function predictWebcam() {
-  if (!isLive) return;
-  lastFrameTime = Date.now();
-  if (!objectDetector) {
-    if (isLive) { window.requestAnimationFrame(predictWebcam); }
-    return;
-  }
-  if (video.currentTime !== lastVideoTime && video.readyState >= 2) {
-    lastVideoTime = video.currentTime; frameCount++;
-    try {
-      const startTimeMs = performance.now();
-      const detections = objectDetector.detectForVideo(video, startTimeMs);
-      const hasObjectDetected = detections && detections.detections && detections.detections.length > 0;
-      if (!hasObjectDetected) {
-        wallConfirmCount = wallConfirmCount;
-        // Pehle garha check karo
-        if (isPotholeBlocked()) {
-          handleObstacle(getT('potholeWord'));
-        } else if (isWallDoorStairsBlocked()) {
-          obstacleConfirmCount = 0;
-          alertWallDoorStairs();
-        } else {
-          handleClearPath();
-        }
-      } else {
-        wallConfirmCount = 0;
-        let closest = detections.detections[0]; let maxArea = 0;
-        for (let det of detections.detections) { const area = det.boundingBox.width * det.boundingBox.height; if (area > maxArea) { maxArea = area; closest = det; } }
-        const confidence = Math.round(closest.categories[0].score * 100);
-        if (confidence >= REQUIRED_CONFIDENCE) {
-          const videoWidth = video.videoWidth || 640;
-          const videoArea = videoWidth * (video.videoHeight || 480);
-          const sizeRatio = maxArea / videoArea;
-          const cxRatio = (closest.boundingBox.originX + closest.boundingBox.width / 2) / videoWidth;
-          const sideWord = getSideWord(cxRatio);
-          // FIX: Side wali cheez tabhi bolegi jab qareeb ho, warna ignore
-          const isSide = sideWord !== getT('frontWord');
-          if (isSide && sizeRatio < SIDE_CLOSE_SIZE_RATIO) {
-            handleClearPath();
-          } else if (sizeRatio >= OBSTACLE_SIZE_RATIO) {
-            obstacleConfirmCount++;
-            // FIX: Sirf 2 bar dekh kar foran bolay ga, 1 second ke andar
-            if (obstacleConfirmCount >= OBSTACLE_CONFIRM_NEEDED) {
-              const dist = getDistanceMeters(sizeRatio);
-              const fullObstacleText = getObstacleText(sideWord, dist);
-              handleObstacle(fullObstacleText);
-            }
-          } else { handleClearPath(); }
-        } else { handleClearPath(); }
-      }
-    } catch (e) { console.error(e); }
-  }
-  if (isLive) { window.requestAnimationFrame(predictWebcam); }
+if (!isLive) return;
+lastFrameTime = Date.now();
+if (frameCount % 3 !== 0) {
+frameCount++;
+if (isLive) window.requestAnimationFrame(predictWebcam);
+return;
+}
+if (!objectDetector) {
+if (isLive) { window.requestAnimationFrame(predictWebcam); }
+return;
+}
+if (video.currentTime !== lastVideoTime && video.readyState >= 2) {
+lastVideoTime = video.currentTime;
+frameCount++;
+try {
+const startTimeMs = performance.now();
+const detections = objectDetector.detectForVideo(video, startTimeMs);
+const hasObjectDetected = detections && detections.detections && detections.detections.length > 0;
+if (!hasObjectDetected) {
+if (isPotholeBlocked()) {
+handleObstacle(getT('potholeWord'));
+} else if (isWallDoorStairsBlocked()) {
+obstacleConfirmCount = 0;
+alertWallDoorStairs();
+} else {
+handleClearPath();
+}
+} else {
+wallConfirmCount = 0;
+let closest = detections.detections[0];
+let maxArea = 0;
+for (let det of detections.detections) {
+const area = det.boundingBox.width * det.boundingBox.height;
+if (area > maxArea) {
+maxArea = area;
+closest = det;
+}
+}
+const confidence = Math.round(closest.categories[0].score * 100);
+if (confidence >= REQUIRED_CONFIDENCE) {
+const videoWidth = video.videoWidth || 640;
+const videoArea = videoWidth * (video.videoHeight || 480);
+const sizeRatio = maxArea / videoArea;
+const cxRatio = (closest.boundingBox.originX + closest.boundingBox.width / 2) / videoWidth;
+const sideWord = getSideWord(cxRatio);
+const isSide = sideWord !== getT('frontWord');
+if (isSide && sizeRatio < SIDE_CLOSE_SIZE_RATIO) {
+handleClearPath();
+} else if (sizeRatio >= OBSTACLE_SIZE_RATIO) {
+obstacleConfirmCount++;
+if (obstacleConfirmCount >= OBSTACLE_CONFIRM_NEEDED) {
+const dist = getDistanceMeters(sizeRatio);
+const fullObstacleText = getObstacleText(sideWord, dist);
+handleObstacle(fullObstacleText);
+}
+} else {
+handleClearPath();
+}
+} else {
+handleClearPath();
+}
+}
+} catch (e) {
+console.error(e);
+}
+}
+if (isLive) { window.requestAnimationFrame(predictWebcam); }
 }
 function stopCamera() {
-  if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); }
-  if ('vibrate' in navigator) { try { navigator.vibrate(0); } catch(e){} }
-  isLive = false;
-  if (watchdogTimer) { clearInterval(watchdogTimer); watchdogTimer = null; }
-  stopClearTone();
-  if (gpsWatchId) { try { navigator.geolocation.clearWatch(gpsWatchId); } catch(e){} gpsWatchId = null; }
-  if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
-  video.srcObject = null; statusEl.innerText = "STATUS: OFF"; startBtn.style.display = 'block'; startBtn.innerText = 'START'; stopBtn.style.display = 'none';
-  isSpeakingObstacle = false; currentMode = "clear"; lastObstacleName = ""; obstacleConfirmCount = 0; wallConfirmCount = 0; isDetectorLoading = false;
-  totalWalkedMeters = 0; lastAnnouncedWalkedMeters = 0;
+if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); }
+if ('vibrate' in navigator) { try { navigator.vibrate(0); } catch(e){} }
+isLive = false;
+if (watchdogTimer) { clearInterval(watchdogTimer); watchdogTimer = null; }
+stopClearTone();
+if (gpsWatchId) { try { navigator.geolocation.clearWatch(gpsWatchId); } catch(e){} gpsWatchId = null; }
+if (stream) { stream.getTracks().forEach(track => track.stop()); stream = null; }
+video.srcObject = null;
+statusEl.innerText = "STATUS: OFF";
+startBtn.style.display = 'block';
+startBtn.innerText = 'START';
+stopBtn.style.display = 'none';
+askAiBtn.style.display = 'none';
+isSpeakingObstacle = false;
+currentMode = "clear";
+lastObstacleName = "";
+obstacleConfirmCount = 0;
+wallConfirmCount = 0;
+isDetectorLoading = false;
+totalWalkedMeters = 0;
+lastAnnouncedWalkedMeters = 0;
 }
-// FIX: Ye hissa pehle missing tha - ab START / STOP / MAPS sab ka connection laga hua hai
 langSel.addEventListener('change', () => { lightVibration(); });
 langSel.addEventListener('click', () => { lightVibration(); });
 destinationInput.addEventListener('focus', () => { lightVibration(); });
 destinationInput.addEventListener('click', () => { lightVibration(); });
-startBtn.addEventListener('click', async () => { lightVibration(); await startCamera(); });
+startBtn.addEventListener('click', async () => {
+lightVibration();
+if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+if (audioCtx.state === 'suspended') audioCtx.resume();
+await startCamera();
+});
 stopBtn.addEventListener('click', () => { lightVibration(); stopCamera(); });
-openMapsBtn.addEventListener('click', () => { lightVibration(); const dest = destinationInput.value.trim(); if (dest) { window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dest)}`, '_blank'); } else { window.open(`https://www.google.com/maps`, '_blank'); } });
+askAiBtn.addEventListener('click', () => { lightVibration(); triggerGeminiCloudAnalysis(); });
+openMapsBtn.addEventListener('click', () => {
+lightVibration();
+const dest = destinationInput.value.trim();
+if (dest) {
+window.open([https://www.google.com/maps/search/?api=1&query=$](https://www.google.com/maps/search/?api=1&query=$){encodeURIComponent(dest)}, '_blank');
+} else {
+window.open([https://www.google.com/maps](https://www.google.com/maps), '_blank');
+}
+});
+settingsNavBtn.addEventListener('click', () => { lightVibration(); homeView.classList.remove('active'); settingsView.classList.add('active'); });
+backToHomeBtn.addEventListener('click', () => { lightVibration(); settingsView.classList.remove('active'); homeView.classList.add('active'); });
+aboutNavBtn.addEventListener('click', () => { lightVibration(); settingsView.classList.remove('active'); aboutView.classList.add('active'); });
+backFromAboutBtn.addEventListener('click', () => { lightVibration(); aboutView.classList.remove('active'); settingsView.classList.add('active'); });
+requestPermsBtn.addEventListener('click', async () => {
+lightVibration();
+try {
+const s = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+s.getTracks().forEach(t => t.stop());
+if ('geolocation' in navigator) {
+navigator.geolocation.getCurrentPosition(() => {}, () => {});
+}
+if ('vibrate' in navigator) {
+navigator.vibrate(100);
+}
+alert("Permissions granted successfully!");
+} catch (e) {
+alert("Permission denied or error occurred.");
+}
+});
 waBtn.addEventListener('click', () => { lightVibration(); });
 </script>
 </body>
