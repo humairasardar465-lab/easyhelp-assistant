@@ -2,483 +2,352 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
 <link rel="manifest" href="manifest.json">
-<title>Your Eyes Smart Cane | Humaira Sardar</title>
+<title>Smart Cane</title>
 <script type="module">
 import {FilesetResolver,ObjectDetector} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/+esm";
 window.FilesetResolver=FilesetResolver;window.ObjectDetector=ObjectDetector;
 window.dispatchEvent(new Event('mediapipe-loaded'));
 </script>
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:Arial,sans-serif;background:#0a0f1e;color:#fff;margin:0;padding:16px;touch-action:manipulation}
-.container{max-width:620px;margin:auto;background:#111827;padding:22px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.5)}
-h2{text-align:center;color:#00ffcc;margin:0;letter-spacing:1px;font-size:24px}
-.sub{text-align:center;font-size:12px;color:#94a3b8;margin:6px 0 14px}
-label{display:block;color:#00ffcc;font-size:13px;font-weight:700;margin:14px 0 6px}
-select,input{width:100%;padding:12px;border-radius:10px;border:1px solid #374151;background:#1f2937;color:#fff;font-size:15px;outline:none}
-video{width:100%;height:280px;border-radius:12px;background:#000;object-fit:cover;margin-bottom:12px;border:3px solid #00ffcc}
-button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer;margin-top:10px;font-weight:700;width:100%}
-button:active{opacity:.8}
-.main{background:#00ffcc;color:#000}.bai{background:#a855f7;color:#fff}.map{background:#0284c7;color:#fff}.stop{background:#ef4444;color:#fff}.sec{background:#374151;color:#fff}
-.wa{background:#25d366;color:#fff;text-decoration:none;display:block;text-align:center;padding:14px;font-size:16px;border-radius:10px;margin-top:10px;font-weight:700}
-#status{text-align:center;margin:12px 0;font-weight:700;font-size:15px;color:#38bdf8}
-#info{text-align:center;font-size:14px;color:#e2e8f0;min-height:18px}
-.view{display:none}.view.active{display:block}
-p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
+html,body{height:100%;margin:0;background:#000;color:#fff;font-family:Arial,sans-serif}
+body{display:flex;flex-direction:column;gap:8px;padding:10px;box-sizing:border-box;touch-action:manipulation}
+h1{margin:0;text-align:center;color:#00ffcc;font-size:24px;letter-spacing:1px}
+select{width:100%;padding:10px;border-radius:10px;border:1px solid #374151;background:#111827;color:#fff;font-size:15px}
+#status{text-align:center;font-size:17px;font-weight:700;color:#38bdf8;min-height:48px;display:flex;align-items:center;justify-content:center}
+video{width:96px;height:72px;object-fit:cover;align-self:center;border-radius:8px}
+body.saver video{width:32px;height:24px}
+.btns{flex:1;display:flex;flex-direction:column;gap:8px}
+button{flex:1;border:0;border-radius:16px;font-size:24px;font-weight:700;color:#fff}
+button:active{filter:brightness(1.4)}
+#ok{background:#16a34a}#cancel{background:#dc2626}#back{background:#2563eb}
+#note{font-size:12px;color:#94a3b8;text-align:center}
 </style>
 </head>
 <body>
-<div class="container">
-
-<div id="homeView" class="view active">
-  <h2>SMART CANE</h2>
-  <div class="sub">Your Eyes Smart Cane created by Humaira Sardar</div>
-  <label for="voiceLanguage">SELECT LANGUAGE</label>
-  <select id="voiceLanguage"></select>
-  <video id="webcam" autoplay playsinline muted aria-label="Camera view"></video>
-  <div id="status">STATUS: OFF</div>
-  <div id="info"></div>
-  <button id="startBtn" class="main">START</button>
-  <button id="askAiBtn" class="bai">Ask the Smart Cane</button>
-  <button id="stopBtn" class="stop" style="display:none">STOP</button>
-  <button id="settingsNavBtn" class="sec">SETTINGS</button>
-</div>
-
-<div id="settingsView" class="view">
-  <h2>SETTINGS &amp; OPTIONS</h2>
-  <div class="sub">Manage Navigation &amp; Information</div>
-  <label for="destinationInput">DESTINATION</label>
-  <input type="text" id="destinationInput" placeholder="Place or address">
-  <button id="openMapsBtn" class="map">OPEN MAPS (WALKING)</button>
-  <label for="apiKeyInput">API KEY</label>
-  <input type="password" id="apiKeyInput" placeholder="Paste API key here" autocomplete="off">
-  <button id="saveKeyBtn" class="sec">SAVE KEY</button>
-  <a id="waBtn" href="https://wa.me/923030133274" target="_blank" rel="noopener noreferrer" class="wa">CONTACT WHATSAPP</a>
-  <button id="aboutNavBtn" class="sec">ABOUT APP</button>
-  <button id="backToHomeBtn" class="sec">BACK TO HOME</button>
-</div>
-
-<div id="aboutView" class="view">
-  <h2>ABOUT APP</h2>
-  <div class="sub">Your Eyes Smart Cane v2.2</div>
-  <p class="txt">An assistive app for visually impaired people. It uses the camera to recognise common obstacles (people, vehicles, furniture, animals) and tells their side and approximate distance. Created by Humaira Sardar, Okara City, Pakistan.</p>
-  <p class="txt"><b>Important:</b> this app does not replace a white cane or a guide. It cannot detect stairs, pits, walls, glass or poles, and distances are only estimates. The "Ask the Smart Cane" button sends one camera photo to an online AI service.</p>
-  <button id="backFromAboutBtn" class="sec">BACK</button>
-</div>
-
-</div>
+<h1>Smart Cane</h1>
+<select id="lang" aria-label="Language"></select>
+<div id="status"></div>
+<video id="cam" autoplay playsinline muted aria-hidden="true"></video>
+<div class="btns"><button id="ok"></button><button id="cancel"></button><button id="back"></button></div>
+<div id="note"></div>
 
 <script>
 /* ===== CONFIG ===== */
-const AI_API_KEY="";   // optional: put the API key here for everybody, or use SETTINGS > API KEY on each phone
-const AI_MODEL="gemini-flash-latest";
 const WASM="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm";
 const MODEL="https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite";
-// Offline use: download both files, host them yourself, point WASM and MODEL to them and cache with a service worker.
-const BASE={en:0,ur:1,hi:2,ar:3,pa:4,ps:5};   // languages with built-in translations; all others are translated once by the AI and saved on the phone
-const LANGS=`en-US|English (United States)|
-en-GB|English (United Kingdom)|
-en-AU|English (Australia)|
-en-CA|English (Canada)|
-en-IN|English (India)|
-ur-PK|Urdu (Pakistan)|اردو
-ur-IN|Urdu (India)|اردو
-hi-IN|Hindi (India)|हिन्दी
-ar-SA|Arabic (Saudi Arabia)|العربية
-ar-EG|Arabic (Egypt)|العربية
-pa-IN|Punjabi (India)|ਪੰਜਾਬੀ
-ps-PK|Pashto (Pakistan)|پښتو
-sd-PK|Sindhi (Pakistan)|سنڌي
-fa-IR|Persian (Iran)|فارسی
-fa-AF|Dari (Afghanistan)|دری
-bn-BD|Bengali (Bangladesh)|বাংলা
-bn-IN|Bengali (India)|বাংলা
-tr-TR|Turkish (Turkey)|Türkçe
-zh-CN|Chinese (China)|中文
-zh-TW|Chinese (Taiwan)|中文
-zh-HK|Chinese (Hong Kong)|中文
-es-ES|Spanish (Spain)|Español
-es-MX|Spanish (Mexico)|Español
-es-US|Spanish (United States)|Español
-fr-FR|French (France)|Français
-fr-CA|French (Canada)|Français
-de-DE|German (Germany)|Deutsch
-ja-JP|Japanese (Japan)|日本語
-ko-KR|Korean (South Korea)|한국어
-ru-RU|Russian (Russia)|Русский
-it-IT|Italian (Italy)|Italiano
-id-ID|Indonesian (Indonesia)|Bahasa Indonesia
-vi-VN|Vietnamese (Vietnam)|Tiếng Việt
-th-TH|Thai (Thailand)|ไทย
-nl-NL|Dutch (Netherlands)|Nederlands
-pl-PL|Polish (Poland)|Polski
-uk-UA|Ukrainian (Ukraine)|Українська
-el-GR|Greek (Greece)|Ελληνικά
-he-IL|Hebrew (Israel)|עברית
-sv-SE|Swedish (Sweden)|Svenska
-nb-NO|Norwegian (Norway)|Norsk
-fi-FI|Finnish (Finland)|Suomi
-da-DK|Danish (Denmark)|Dansk
-cs-CZ|Czech (Czech Republic)|Čeština
-hu-HU|Hungarian (Hungary)|Magyar
-ro-RO|Romanian (Romania)|Română
-ms-MY|Malay (Malaysia)|Bahasa Melayu
-fil-PH|Filipino (Philippines)|Filipino
-sw-KE|Swahili (Kenya)|Kiswahili
-sw-TZ|Swahili (Tanzania)|Kiswahili
-af-ZA|Afrikaans (South Africa)|Afrikaans
-sq-AL|Albanian (Albania)|Shqip
-am-ET|Amharic (Ethiopia)|አማርኛ
-hy-AM|Armenian (Armenia)|Հայերեն
-az-AZ|Azerbaijani (Azerbaijan)|Azərbaycan dili
-eu-ES|Basque (Spain)|Euskara
-be-BY|Belarusian (Belarus)|Беларуская
-bs-BA|Bosnian (Bosnia and Herzegovina)|Bosanski
-bg-BG|Bulgarian (Bulgaria)|Български
-ca-ES|Catalan (Spain)|Català
-hr-HR|Croatian (Croatia)|Hrvatski
-et-EE|Estonian (Estonia)|Eesti
-gl-ES|Galician (Spain)|Galego
-ka-GE|Georgian (Georgia)|ქართული
-gu-IN|Gujarati (India)|ગુજરાતી
-is-IS|Icelandic (Iceland)|Íslenska
-ga-IE|Irish (Ireland)|Gaeilge
-jv-ID|Javanese (Indonesia)|Basa Jawa
-kn-IN|Kannada (India)|ಕನ್ನಡ
-kk-KZ|Kazakh (Kazakhstan)|Қазақ тілі
-km-KH|Khmer (Cambodia)|ខ្មែរ
-ky-KG|Kyrgyz (Kyrgyzstan)|Кыргызча
-lo-LA|Lao (Laos)|ລາວ
-lv-LV|Latvian (Latvia)|Latviešu
-lt-LT|Lithuanian (Lithuania)|Lietuvių
-mk-MK|Macedonian (North Macedonia)|Македонски
-mg-MG|Malagasy (Madagascar)|Malagasy
-ml-IN|Malayalam (India)|മലയാളം
-mt-MT|Maltese (Malta)|Malti
-mi-NZ|Maori (New Zealand)|Māori
-mr-IN|Marathi (India)|मराठी
-mn-MN|Mongolian (Mongolia)|Монгол
-ne-NP|Nepali (Nepal)|नेपाली
-pt-BR|Portuguese (Brazil)|Português
-pt-PT|Portuguese (Portugal)|Português
-qu-PE|Quechua (Peru)|Runa Simi
-sm-WS|Samoan (Samoa)|Gagana Samoa
-sr-RS|Serbian (Serbia)|Српски
-sn-ZW|Shona (Zimbabwe)|chiShona
-si-LK|Sinhala (Sri Lanka)|සිංහල
-sk-SK|Slovak (Slovakia)|Slovenčina
-sl-SI|Slovenian (Slovenia)|Slovenščina
-so-SO|Somali (Somalia)|Soomaaliga
-su-ID|Sundanese (Indonesia)|Basa Sunda
-tg-TJ|Tajik (Tajikistan)|Тоҷикӣ
-ta-IN|Tamil (India)|தமிழ்
-ta-LK|Tamil (Sri Lanka)|தமிழ்
-te-IN|Telugu (India)|తెలుగు
-uz-UZ|Uzbek (Uzbekistan)|Oʻzbekcha
-cy-GB|Welsh (United Kingdom)|Cymraeg
-yi|Yiddish|ייִדיש
-yo-NG|Yoruba (Nigeria)|Yorùbá
-zu-ZA|Zulu (South Africa)|isiZulu`.split('\n').map(x=>{const a=x.split('|');return{code:a[0],name:a[1],native:a[2]||''}});
-
-/* ===== TEXT: [en, ur, hi, ar, pa, ps] ===== */
-const T={
-loading:['Sensor turning on. Please wait.','سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔','सेंसर चालू हो रहा है। कृपया प्रतीक्षा करें।','جارٍ تشغيل المستشعر. الرجاء الانتظار.','ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਉਡੀਕ ਕਰੋ।','سنسور روان دی. مهرباني وکړئ انتظار وکړئ.'],
-started:['Smart Cane is on. Camera active.','اسمارٹ کین آن ہے۔ کیمرہ ایکٹو ہے۔','स्मार्ट केन चालू है। कैमरा सक्रिय है।','العصا الذكية تعمل. الكاميرا نشطة.','ਸਮਾਰਟ ਕੇਨ ਚਾਲੂ ਹੈ। ਕੈਮਰਾ ਚਾਲੂ ਹੈ।','سمارټ کین روان دی. کامره فعاله ده.'],
-alert:['Alert','الرٹ','अलर्ट','تنبيه','ਅਲਰਟ','خبردار'],
-clear:['No obstacle detected. Move carefully.','کوئی رکاوٹ نظر نہیں آ رہی، احتیاط سے چلیں۔','कोई बाधा नहीं दिख रही, सावधानी से चलें।','لا توجد عوائق ظاهرة، تقدم بحذر.','ਕੋਈ ਰੁਕਾਵਟ ਨਹੀਂ ਦਿਸ ਰਹੀ, ਧਿਆਨ ਨਾਲ ਚੱਲੋ।','هېڅ خنډ نه ښکاري، په احتیاط حرکت وکړئ.'],
-camErr:['Camera permission denied. Please allow camera access in browser settings.','کیمرہ کی اجازت نہیں ملی۔ براہ کرم براؤزر کی سیٹنگز میں کیمرہ کی اجازت دیں۔','कैमरा अनुमति नहीं मिली। कृपया ब्राउज़र सेटिंग्स में कैमरा अनुमति दें।','تم رفض إذن الكاميرا. يرجى السماح بالكاميرا من إعدادات المتصفح.','ਕੈਮਰੇ ਦੀ ਇਜਾਜ਼ਤ ਨਹੀਂ ਮਿਲੀ। ਕਿਰਪਾ ਕਰਕੇ ਬ੍ਰਾਊਜ਼ਰ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਇਜਾਜ਼ਤ ਦਿਓ।','د کامرې اجازه ونه ملاو شوه. مهرباني وکړئ د براوزر په ترتیباتو کې اجازه ورکړئ.'],
-modelErr:['Detection did not load. Do not rely on the camera.','ڈیٹیکشن لوڈ نہیں ہوئی۔ کیمرے پر بھروسا نہ کریں۔','डिटेक्शन लोड नहीं हुआ। कैमरे पर भरोसा न करें।','لم يتم تحميل الكشف. لا تعتمد على الكاميرا.','ਡਿਟੈਕਸ਼ਨ ਲੋਡ ਨਹੀਂ ਹੋਈ। ਕੈਮਰੇ ਉੱਤੇ ਭਰੋਸਾ ਨਾ ਕਰੋ।','کشف نه شو لوډ کېدای. په کامره باور مه کوئ.'],
-front:['front','سامنے','सामने','أمامك','ਸਾਹਮਣੇ','مخکې'],
-left:['left','بائیں','बाएं','يسارك','ਖੱਬੇ','کیڼ'],
-right:['right','دائیں','दाएं','يمينك','ਸੱਜੇ','ښي'],
-obstacle:['obstacle','رکاوٹ','बाधा','عائق','ਰੁਕਾਵਟ','خنډ'],
-about:['about','تقریباً','लगभग','حوالي','ਲਗਭਗ','شاوخوا'],
-m:['meters','میٹر','मीटर','متر','ਮੀਟਰ','متره'],
-near:['very close','بہت قریب','बहुत पास','قريب جداً','ਬਹੁਤ ਨੇੜੇ','ډېر نږدې'],
-walked:['You have walked','آپ','आप','لقد مشيت','ਤੁਸੀਂ','تاسو'],
-walked2:['meters','میٹر چل چکے ہیں','मीटर चल चुके हैं','متراً','ਮੀਟਰ ਚੱਲ ਚੁੱਕੇ ਹੋ','متره تللي یاست'],
-dark:['Too dark, the camera cannot see.','اندھیرا ہے، کیمرہ نہیں دیکھ سکتا۔','अंधेरा है, कैमरा नहीं देख सकता।','المكان مظلم، الكاميرا لا ترى.','ਹਨੇਰਾ ਹੈ, ਕੈਮਰਾ ਨਹੀਂ ਦੇਖ ਸਕਦਾ।','تیاره ده، کامره نه ګوري.'],
-ai:['Sending a photo to AI...','تصویر اے آئی کو بھیجی جا رہی ہے...','तस्वीर एआई को भेजी जा रही है...','جارٍ إرسال صورة إلى الذكاء الاصطناعي...','ਤਸਵੀਰ ਏਆਈ ਨੂੰ ਭੇਜੀ ਜਾ ਰਹੀ ਹੈ...','انځور AI ته لېږل کېږي...'],
-aiErr:['AI response problem. Try again.','اے آئی جواب میں مسئلہ۔ دوبارہ کوشش کریں۔','एआई में समस्या। फिर कोशिश करें।','مشكلة في الذكاء الاصطناعي. حاول مرة أخرى.','ਏਆਈ ਵਿੱਚ ਸਮੱਸਿਆ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।','د AI ستونزه. بیا هڅه وکړئ.'],
-aiOff:['AI is not set up.','اے آئی سیٹ اپ نہیں ہے۔','एआई सेट नहीं है।','الذكاء الاصطناعي غير مُعدّ.','ਏਆਈ ਸੈੱਟ ਨਹੀਂ ਹੈ।','AI تنظیم شوی نه دی.'],
-camFirst:['Please start the camera first.','براہ کرم پہلے کیمرہ آن کریں۔','कृपया पहले कैमरा चालू करें।','الرجاء تشغيل الكاميرا أولاً.','ਕਿਰਪਾ ਕਰਕੇ ਪਹਿਲਾਂ ਕੈਮਰਾ ਚਾਲੂ ਕਰੋ।','مهرباني وکړئ لومړی کامره چالان کړئ.'],
-camHttps:['Camera needs a secure link. Open this app from an https address.','کیمرے کے لیے محفوظ لنک چاہیے۔ اس ایپ کو https ایڈریس سے کھولیں۔','कैमरे के लिए सुरक्षित लिंक चाहिए। इस ऐप को https पते से खोलें।','الكاميرا تحتاج رابطاً آمناً. افتح هذا التطبيق من عنوان https.','ਕੈਮਰੇ ਲਈ ਸੁਰੱਖਿਅਤ ਲਿੰਕ ਚਾਹੀਦਾ ਹੈ। ਇਸ ਐਪ ਨੂੰ https ਪਤੇ ਤੋਂ ਖੋਲ੍ਹੋ।','کامرې ته خوندي لینک پکار دی. دا اپ د https پتې څخه پرانیزئ.'],
-camBusy:['Camera not found or busy. Close other apps that use the camera.','کیمرہ نہیں ملا یا مصروف ہے۔ کیمرہ استعمال کرنے والی دوسری ایپس بند کریں۔','कैमरा नहीं मिला या व्यस्त है। कैमरा इस्तेमाल करने वाले दूसरे ऐप बंद करें।','الكاميرا غير موجودة أو مشغولة. أغلق التطبيقات الأخرى التي تستخدم الكاميرا.','ਕੈਮਰਾ ਨਹੀਂ ਮਿਲਿਆ ਜਾਂ ਰੁੱਝਿਆ ਹੈ। ਕੈਮਰਾ ਵਰਤਣ ਵਾਲੀਆਂ ਹੋਰ ਐਪਾਂ ਬੰਦ ਕਰੋ।','کامره ونه موندل شوه یا بوخت ده. نور هغه اپونه چې کامره کاروي بند کړئ.']
+const RANGE=2.25;   // metres: obstacles farther than this are ignored (close-range priority)
+// [code, label, text pack]. Packs: 0=English 1=Urdu 2=Hindi 3=Arabic. Every language listed here is fully translated.
+const LANGS=[['en-US','English (United States)',0],['en-GB','English (United Kingdom)',0],['en-AU','English (Australia)',0],['en-IN','English (India)',0],['ur-PK','Urdu (Pakistan) - اردو',1],['ur-IN','Urdu (India) - اردو',1],['hi-IN','Hindi (India) - हिन्दी',2],['ar-SA','Arabic (Saudi Arabia) - العربية',3],['ar-EG','Arabic (Egypt) - العربية',3]];
+/* ===== TEXT: [English, Urdu, Hindi, Arabic] ===== */
+const S={
+ok:['OK / Confirm','ٹھیک ہے / تصدیق','ठीक है / पुष्टि','موافق / تأكيد'],
+cancel:['Cancel / Stop','منسوخ / روکیں','रद्द करें / रोकें','إلغاء / إيقاف'],
+back:['Back / Retry','واپس / دوبارہ','वापस / दोबारा','رجوع / إعادة'],
+hello:['Smart Cane is ready. Press OK to begin.','اسمارٹ کین تیار ہے۔ شروع کرنے کے لیے ٹھیک ہے دبائیں۔','स्मार्ट केन तैयार है। शुरू करने के लिए ठीक है दबाएँ।','العصا الذكية جاهزة. اضغط موافق للبدء.'],
+sayStart:['Say your starting point.','اپنی شروعات کی جگہ بتائیں۔','अपनी शुरुआत की जगह बताएँ।','قل نقطة البداية.'],
+walk:['Start walking. I am counting your steps.','چلنا شروع کریں۔ میں آپ کے قدم گن رہا ہوں۔','चलना शुरू करें। मैं आपके कदम गिन रहा हूँ।','ابدأ المشي. أنا أعدّ خطواتك.'],
+stopQ:['Do you want to stop here? OK for yes, Cancel for no.','کیا آپ یہاں رکنا چاہتے ہیں؟ ہاں کے لیے ٹھیک ہے، نہیں کے لیے منسوخ دبائیں۔','क्या आप यहाँ रुकना चाहते हैं? हाँ के लिए ठीक है, नहीं के लिए रद्द दबाएँ।','هل تريد التوقف هنا؟ موافق للتأكيد، إلغاء للرفض.'],
+place:['What is this place?','یہ کون سی جگہ ہے؟','यह कौन सी जगह है?','ما اسم هذا المكان؟'],
+saved:['Saved {p}, {n} steps.','{p} محفوظ ہو گیا، {n} قدم۔','{p} सहेजा गया, {n} कदम।','تم حفظ {p}. عدد الخطوات {n}.'],
+more:['Keep walking to save the next place, or press Cancel to finish.','اگلی جگہ محفوظ کرنے کے لیے چلتے رہیں، یا ختم کرنے کے لیے منسوخ دبائیں۔','अगली जगह सहेजने के लिए चलते रहें, या खत्म करने के लिए रद्द दबाएँ।','واصل المشي لحفظ المكان التالي، أو اضغط إلغاء للإنهاء.'],
+done:['Stopped.','روک دیا گیا۔','रोक दिया गया।','تم الإيقاف.'],
+dest:['Where do you want to go? Say the place name, or press OK to save a new path.','آپ کہاں جانا چاہتے ہیں؟ جگہ کا نام بتائیں، یا نیا راستہ محفوظ کرنے کے لیے ٹھیک ہے دبائیں۔','आप कहाँ जाना चाहते हैं? जगह का नाम बताएँ, या नया रास्ता सहेजने के लिए ठीक है दबाएँ।','إلى أين تريد الذهاب؟ قل اسم المكان، أو اضغط موافق لحفظ مسار جديد.'],
+nf:['I did not catch that, or the place is not saved. Press Back to retry.','میں سمجھ نہیں سکا، یا یہ جگہ محفوظ نہیں ہے۔ دوبارہ کے لیے واپس دبائیں۔','मैं समझ नहीं पाया, या यह जगह सहेजी नहीं है। दोबारा के लिए वापस दबाएँ।','لم أفهم، أو أن المكان غير محفوظ. اضغط رجوع للمحاولة مرة أخرى.'],
+go:['Going to {p}. Walk {n} steps, about {m} meters.','{p} کی طرف۔ {n} قدم چلیں، تقریباً {m} میٹر۔','{p} की ओर। {n} कदम चलें, लगभग {m} मीटर।','الذهاب إلى {p}. عدد الخطوات {n}، حوالي {m} متر.'],
+turn:['In {n} steps, turn {d}.','{n} قدم بعد {d} مڑیں۔','{n} कदम बाद {d} मुड़ें।','بعد {n} من الخطوات، انعطف {d}.'],
+turnNow:['Turn {d} now.','اب {d} مڑیں۔','अब {d} मुड़ें।','انعطف {d} الآن.'],
+L:['left','بائیں','बाएँ','يسارًا'],
+R:['right','دائیں','दाएँ','يمينًا'],
+F:['front','سامنے','सामने','أمامك'],
+arr:['You have arrived at {p}.','آپ {p} پر پہنچ گئے ہیں۔','आप {p} पर पहुँच गए हैं।','لقد وصلت إلى {p}.'],
+pass:['You may have passed {p}. Press Back to repeat, or Cancel to stop.','ہو سکتا ہے آپ {p} سے آگے نکل گئے ہوں۔ دہرانے کے لیے واپس، روکنے کے لیے منسوخ دبائیں۔','हो सकता है आप {p} से आगे निकल गए हों। दोहराने के लिए वापस, रोकने के लिए रद्द दबाएँ।','ربما تجاوزت {p}. اضغط رجوع للتكرار، أو إلغاء للإيقاف.'],
+perm:['Please allow camera, microphone and location in browser settings.','براہ کرم براؤزر کی سیٹنگز میں کیمرہ، مائیکروفون اور لوکیشن کی اجازت دیں۔','कृपया ब्राउज़र सेटिंग्स में कैमरा, माइक्रोफ़ोन और लोकेशन की अनुमति दें।','يرجى السماح بالكاميرا والميكروفون والموقع من إعدادات المتصفح.'],
+sOn:['Battery saver on.','بیٹری سیور آن۔','बैटरी सेवर चालू।','وضع توفير البطارية قيد التشغيل.'],
+sOff:['Battery saver off.','بیٹری سیور بند۔','बैटरी सेवर बंद।','تم إيقاف توفير البطارية.'],
+low:['Battery low.','بیٹری کم ہے۔','बैटरी कम है।','البطارية منخفضة.'],
+det:['Obstacle detection is not working. Walk carefully.','رکاوٹ کی شناخت کام نہیں کر رہی۔ احتیاط سے چلیں۔','बाधा की पहचान काम नहीं कर रही। सावधानी से चलें।','كشف العوائق لا يعمل. امش بحذر.'],
+note:['Assistive aid only. Does not replace a white cane.','صرف مددگار آلہ ہے، سفید چھڑی کا متبادل نہیں۔','केवल सहायक उपकरण है, सफेद छड़ी का विकल्प नहीं।','أداة مساعدة فقط، لا تغني عن العصا البيضاء.'],
+ob:['{o}, {d}, about {m} meters','{o}، {d}، تقریباً {m} میٹر','{o}, {d}, लगभग {m} मीटर','{o}، {d}، حوالي {m} متر'],
+obNear:['{o}, {d}, very close. Stop.','{o}، {d}، بہت قریب۔ رک جائیں۔','{o}, {d}, बहुत पास। रुकें।','{o}، {d}، قريب جدًا. توقف.'],
+clear:['No obstacle detected.','کوئی رکاوٹ نظر نہیں آ رہی۔','कोई बाधा नहीं दिख रही।','لا توجد عوائق مكتشفة.'],
+noSens:['Motion sensor is not available.','موشن سینسر دستیاب نہیں ہے۔','मोशन सेंसर उपलब्ध नहीं है।','مستشعر الحركة غير متوفر.'],
+noStt:['Voice input is not supported in this browser.','اس براؤزر میں آواز سے ان پٹ دستیاب نہیں ہے۔','इस ब्राउज़र में आवाज़ इनपुट उपलब्ध नहीं है।','الإدخال الصوتي غير مدعوم في هذا المتصفح.'],
+https:['Open this app from an https address.','اس ایپ کو https ایڈریس سے کھولیں۔','इस ऐप को https पते से खोलें।','افتح هذا التطبيق من عنوان https.']
 };
-/* Objects the app will name: [real height in metres, en, ur, hi, ar, pa, ps]. Anything else is announced only as "obstacle". */
-const N={
-person:[1.7,'person','شخص','व्यक्ति','شخص','ਵਿਅਕਤੀ','سړی'],
-bicycle:[1,'bicycle','سائیکل','साइकिल','دراجة','ਸਾਈਕਲ','بایسکل'],
-car:[1.5,'car','گاڑی','गाड़ी','سيارة','ਗੱਡੀ','موټر'],
-motorcycle:[1.2,'motorcycle','موٹر سائیکل','मोटरसाइकिल','دراجة نارية','ਮੋਟਰਸਾਈਕਲ','موټرسایکل'],
-bus:[3,'bus','بس','बस','حافلة','ਬੱਸ','بس'],
-truck:[3,'truck','ٹرک','ट्रक','شاحنة','ਟਰੱਕ','ټرک'],
-bench:[.8,'bench','بینچ','बेंच','مقعد','ਬੈਂਚ','بنچ'],
-chair:[.9,'chair','کرسی','कुर्सी','كرسي','ਕੁਰਸੀ','کرسۍ'],
-couch:[.9,'sofa','صوفہ','सोफ़ा','أريكة','ਸੋਫ਼ਾ','صوفه'],
-bed:[.6,'bed','بستر','बिस्तर','سرير','ਬਿਸਤਰਾ','بستره'],
-'dining table':[.75,'table','میز','मेज़','طاولة','ਮੇਜ਼','میز'],
-'potted plant':[.5,'plant pot','گملا','गमला','أصيص نبات','ਗਮਲਾ','ګلدان'],
-dog:[.5,'dog','کتا','कुत्ता','كلب','ਕੁੱਤਾ','سپی'],
-cat:[.3,'cat','بلی','बिल्ली','قطة','ਬਿੱਲੀ','پیشو'],
-cow:[1.4,'cow','گائے','गाय','بقرة','ਗਾਂ','غوا'],
-horse:[1.6,'horse','گھوڑا','घोड़ा','حصان','ਘੋੜਾ','آس'],
-sheep:[.8,'sheep','بھیڑ','भेड़','خروف','ਭੇਡ','پسه'],
-'fire hydrant':[.7,'fire hydrant','فائر ہائیڈرنٹ','फायर हाइड्रेंट','صنبور حريق','ਫਾਇਰ ਹਾਈਡਰੈਂਟ','د اور وژنې هایډرنټ']
-};
+const NAMES=[['person','شخص','व्यक्ति','شخص'],['chair','کرسی','कुर्सी','كرسي'],['sofa','صوفہ','सोफ़ा','أريكة'],['bed','بستر','बिस्तर','سرير'],['table','میز','मेज़','طاولة'],['plant pot','گملا','गमला','أصيص نبات'],['dog','کتا','कुत्ता','كلب'],['cat','بلی','बिल्ली','قطة'],['bicycle','سائیکل','साइकिल','دراجة'],['car','گاڑی','गाड़ी','سيارة'],['motorcycle','موٹر سائیکل','मोटरसाइकिल','دراجة نارية'],['large vehicle','بڑی گاڑی','बड़ी गाड़ी','مركبة كبيرة']];
+// model class -> [real height in metres, index in NAMES]. Only these classes are announced.
+const OBJ={person:[1.7,0],chair:[.9,1],couch:[.85,2],bed:[.55,3],'dining table':[.75,4],'potted plant':[.5,5],dog:[.5,6],cat:[.3,7],bicycle:[1,8],car:[1.5,9],motorcycle:[1.2,10],bus:[3,11],truck:[2.8,11]};
 
 /* ===== STATE ===== */
-const $=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const video=$('webcam'),st=$('status'),info=$('info'),sel=$('voiceLanguage'),startBtn=$('startBtn'),stopBtn=$('stopBtn');
-let stream=null,live=false,det=null,ds='idle',eff=0,voice=null,audio=null,wake=null,raf=0,tone=null,gpsId=null,anchor=null,aiBusy=false;
-let hist=[],mode='clear',lastKey='',lastDist=99,lastProc=0,lastT=-1,lastAlert=0,lastBeep=0,lastClear=0,lastErr=0,lastDark=0,lastDk=0,isDark=false,walked=0,announced=0;
-const cv=document.createElement('canvas');cv.width=16;cv.height=12;
-const g=cv.getContext('2d',{willReadFrequently:true});
-let tr=null,trP=null,curCode='en-US',curName='English';
-const t=k=>(tr&&tr.u[k])||T[k][eff];
-const setSt=s=>{if(st.textContent!==s)st.textContent=s};
+const $=id=>document.getElementById(id);
+const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const stEl=$('status'),video=$('cam'),sel=$('lang');
+let code=ls.get('sc_lang')||'en-US',L=LANGS.find(l=>l[0]===code)||LANGS[0];code=L[0];
+let voice=null,noVoice=false,saver=false,state='idle',SID=0,retry=null,lastInstr='',greeted=false,forceTeach=false,permP=null,permOk=true;
+let steps=0,segStart=0,lastStepT=0,lastAsk=-1,stopAt=0,from='',turns=[],legs=[],li=0,legStart=0,idleTimer=0,motionOk=false;
+let g=9.8,lp=0,p1=0,p2=0,acc=0,lastMT=0;
+let stream=null,det=null,camOn=false,lastProc=0,hist=[],cur=null,sawAt=0,wake=null,rec=null,ac=null,gid=null,gp=null,gs=0;
+let STRIDE=+ls.get('sc_stride')||.65;   // metres per step; refined automatically outdoors with GPS
+let DB;try{DB=JSON.parse(ls.get('sc_db'))}catch(e){}
+if(!DB||!Array.isArray(DB.edges)||!Array.isArray(DB.places))DB={places:[],edges:[]};
+const save=()=>ls.set('sc_db',JSON.stringify(DB));
+const IOS=/iP(hone|ad|od)/.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const E=()=>noVoice?LANGS[0]:L;
+const t=(k,v)=>S[k][E()[2]].replace(/\{(\w+)\}/g,(_,x)=>v[x]);
+const nm=i=>NAMES[i][E()[2]];
 const vib=p=>{try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}};
 
-/* ===== LANGUAGE + VOICE: use the selected language only if the phone has a voice for it, else English ===== */
-const trJobs={};
-function buildLangs(){sel.innerHTML=LANGS.map((l,i)=>`<option value="${i}">${l.name}${l.native?' - '+l.native:''}</option>`).join('')}
+/* ===== VOICE: prefers Google (Speech Services) voices, local first for the lowest delay ===== */
 function pickVoice(){
-  const vs='speechSynthesis' in window?speechSynthesis.getVoices():[],L=LANGS[+sel.value],pre=L.code.split('-')[0];
-  voice=null;tr=null;trP=null;eff=0;curCode='en-US';curName='English';info.textContent='';
-  const v=vs.find(x=>x.lang.replace('_','-')===L.code)||vs.find(x=>x.lang.split(/[-_]/)[0]===pre);
-  if(v||!vs.length){                       // voice exists (or voices are not loaded yet)
-    voice=v||null;curCode=L.code;curName=L.name;
-    if(pre in BASE)eff=BASE[pre];
-    else trP=loadTr(L.code,L.name).then(r=>{if(LANGS[+sel.value].code!==L.code)return;if(r)tr=r;else{voice=vs.find(x=>x.lang.split(/[-_]/)[0]==='en')||null;curCode='en-US';curName='English';info.textContent='Could not translate to '+L.name+'. Add the API key in SETTINGS. Using English.'}});
-  }else{
-    voice=vs.find(x=>x.lang.split(/[-_]/)[0]==='en')||null;
-    info.textContent='No voice for '+L.name+' on this phone. Using English.';
-  }
+  const vs=speechSynthesis.getVoices(),pre=code.split('-')[0];
+  const sc=v=>{const l=v.lang.replace('_','-');return(l===code?4:l.split('-')[0]===pre?2:0)+(/google|-x-/i.test(v.name+' '+v.voiceURI)?2:0)+(v.localService?1:0)};
+  const c=vs.map(v=>[sc(v),v]).filter(a=>a[0]>=2).sort((a,b)=>b[0]-a[0]);
+  voice=c.length?c[0][1]:null;noVoice=vs.length>0&&!voice;render();
 }
-function say(text,urgent){
-  if(!('speechSynthesis' in window)||!text)return;
-  if(urgent)speechSynthesis.cancel();else if(speechSynthesis.speaking)return;
-  const u=new SpeechSynthesisUtterance(text);
-  u.lang=voice?voice.lang:curCode;if(voice)u.voice=voice;u.rate=1.05;
-  speechSynthesis.speak(u);
+const q=[];
+function speak(s){const u=new SpeechSynthesisUtterance(s);u.lang=voice?voice.lang:(noVoice?'en-US':code);if(voice)u.voice=voice;u.rate=1.05;speechSynthesis.speak(u)}
+function say(s,urgent,instr){
+  if(!s)return;stEl.textContent=s;if(instr)lastInstr=s;
+  if(urgent){speechSynthesis.cancel();q.length=0;speak(s)}else q.push(s);
+}
+setInterval(()=>{if(q.length&&!speechSynthesis.speaking&&!speechSynthesis.pending)speak(q.shift())},120);
+const idle=()=>new Promise(r=>{let n=0;const i=setInterval(()=>{if((!speechSynthesis.speaking&&!q.length)||++n>100){clearInterval(i);r()}},100)});
+function beep(f,d){
+  try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();
+    const o=ac.createOscillator(),gn=ac.createGain(),n=ac.currentTime;d=d||.06;o.frequency.value=f;o.connect(gn);gn.connect(ac.destination);
+    gn.gain.setValueAtTime(.2,n);gn.gain.linearRampToValueAtTime(0,n+d);o.start(n);o.stop(n+d)}catch(e){}
 }
 
-/* ===== SOUND ===== */
-function beep(k){
-  try{
-    audio=audio||new(window.AudioContext||window.webkitAudioContext)();
-    if(audio.state==='suspended')audio.resume();
-    const o=audio.createOscillator(),gn=audio.createGain(),n=audio.currentTime;
-    o.connect(gn);gn.connect(audio.destination);
-    if(k==='c'){o.frequency.value=659.25;gn.gain.setValueAtTime(.08,n);gn.gain.linearRampToValueAtTime(0,n+.35);o.start(n);o.stop(n+.35)}
-    else{o.frequency.setValueAtTime(220,n);o.frequency.setValueAtTime(180,n+.1);gn.gain.setValueAtTime(.3,n);gn.gain.linearRampToValueAtTime(0,n+.22);o.start(n);o.stop(n+.22)}
-  }catch(e){}
+/* ===== VOICE INPUT ===== */
+function listen(){
+  return new Promise(async res=>{
+    const R=window.SpeechRecognition||window.webkitSpeechRecognition;
+    if(!R){say(t('noStt'),true);return res('')}
+    await idle();
+    const r=rec=new R();r.lang=code;r.interimResults=false;r.maxAlternatives=1;let out='';
+    r.onresult=e=>{out=e.results[0][0].transcript.trim()};
+    r.onerror=()=>{};r.onend=()=>{rec=null;res(out)};
+    beep(880,.08);
+    try{r.start()}catch(e){return res('')}
+    setTimeout(()=>{try{r.stop()}catch(e){}},8000);
+  });
 }
-const startTone=()=>{if(!tone)tone=setInterval(()=>{if(live&&mode==='clear'&&ds==='ready')beep('c')},1000)};
-const stopTone=()=>{clearInterval(tone);tone=null};
+async function ask(key,id){say(t(key),true,true);await idle();return id!==SID?null:listen()}
 
-/* ===== DETECTOR ===== */
+/* ===== SAVED PLACES: fuzzy match + shortest route ===== */
+const norm=s=>s.toLowerCase().replace(/[\s.,!?;:'"()\-،۔]+/g,'');
+const lev=(a,b)=>{const d=[...Array(b.length+1).keys()];for(let i=1;i<=a.length;i++){let p=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const x=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,p+(a[i-1]===b[j-1]?0:1));p=x}}return d[b.length]};
+function find(name){
+  const n=norm(name);let best=null,bd=99;
+  for(const p of DB.places){const d=lev(n,norm(p));if(d<bd){bd=d;best=p}}
+  return best&&bd<=Math.floor(norm(best).length*.3)?best:null;
+}
+function route(a,b){   // legs [{to,n,t:[[stepIndex,'L'|'R']]}] ; an edge walked backwards is mirrored
+  const adj=Object.create(null),prev=Object.create(null),qu=[a];prev[a]=null;
+  const add=(x,l)=>(adj[x]=adj[x]||[]).push(l);
+  for(const e of DB.edges){add(e.a,{to:e.b,n:e.n,t:e.t});add(e.b,{to:e.a,n:e.n,t:e.t.map(([k,d])=>[e.n-k,d==='L'?'R':'L']).reverse()})}
+  while(qu.length){const u=qu.shift();if(u===b)break;for(const l of adj[u]||[])if(!(l.to in prev)){prev[l.to]={from:u,l};qu.push(l.to)}}
+  if(!(b in prev)||a===b)return null;
+  const out=[];for(let x=b;prev[x];x=prev[x].from)out.unshift({to:x,n:prev[x].l.n,t:prev[x].l.t});
+  return out;
+}
+
+/* ===== CAMERA + OBSTACLES (close range only, announced once, no repetition) ===== */
 async function loadDet(){
-  if(det)return true;
-  try{
-    if(!(window.FilesetResolver&&window.ObjectDetector))
-      await new Promise((ok,no)=>{const h=setTimeout(no,15000);addEventListener('mediapipe-loaded',()=>{clearTimeout(h);ok()},{once:true})});
-    const v=await FilesetResolver.forVisionTasks(WASM);
-    det=await Promise.race([
-      ObjectDetector.createFromOptions(v,{baseOptions:{modelAssetPath:MODEL,delegate:'CPU'},scoreThreshold:.5,runningMode:'VIDEO'}),
-      new Promise((_,no)=>setTimeout(no,20000))
-    ]);
-    return true;
-  }catch(e){console.error('Detector load failed',e);det=null;return false}
+  if(!window.ObjectDetector)await new Promise((ok,no)=>{const h=setTimeout(no,15000);addEventListener('mediapipe-loaded',()=>{clearTimeout(h);ok()},{once:true})});
+  const v=await FilesetResolver.forVisionTasks(WASM);
+  for(const d of['GPU','CPU'])try{return await ObjectDetector.createFromOptions(v,{baseOptions:{modelAssetPath:MODEL,delegate:d},scoreThreshold:.5,maxResults:5,runningMode:'VIDEO'})}catch(e){}
+  throw new Error('detector');
 }
-
-/* ===== MAIN LOOP (one loop only, ~8 checks per second) ===== */
-function loop(){
-  if(!live)return;
-  raf=requestAnimationFrame(loop);
-  const n=performance.now();
-  if(n-lastProc<120||video.readyState<2||video.currentTime===lastT)return;
-  lastProc=n;lastT=video.currentTime;
-  try{step(n)}catch(e){console.error(e)}
-}
-function step(n){
-  if(ds==='loading'){setSt(t('loading'));return}
-  if(ds!=='ready'){setSt(t('modelErr'));if(n-lastErr>8000){lastErr=n;say(t('modelErr'),false)}return}
-  if(n-lastDk>1000){
-    lastDk=n;g.drawImage(video,0,0,16,12);
-    const d=g.getImageData(0,0,16,12).data;let s=0;
-    for(let i=0;i<d.length;i+=4)s+=d[i]+d[i+1]+d[i+2];
-    isDark=s/(d.length*.75)<25;
-  }
-  if(isDark){mode='dark';stopTone();setSt(t('dark'));if(n-lastDark>10000){lastDark=n;say(t('dark'),true)}return}
-  const W=video.videoWidth,H=video.videoHeight;
-  let cand=null,best=0;
-  for(const d of det.detectForVideo(video,n).detections){
-    const b=d.boundingBox,a=b.width*b.height/(W*H),c=d.categories[0];
-    if(a<.03||a<=best)continue;
-    best=a;
-    const o=N[c.categoryName],cx=(b.originX+b.width/2)/W;
-    let m=o?o[0]*.77*Math.max(W,H)/b.height:.45/Math.sqrt(a);   // distance estimate from real object height
-    m=Math.round(Math.min(Math.max(m,.5),6)*2)/2;
-    cand={name:c.categoryName,score:c.score,side:cx<.4?1:cx>.6?2:0,dist:m};
-  }
-  hist.push(cand);if(hist.length>8)hist.shift();
-  const rec=hist.slice(-5).filter(Boolean);
-  if(rec.length>=3){                       // obstacle seen in at least 3 of the last 5 checks
-    const cnt={};rec.forEach(c=>cnt[c.name]=(cnt[c.name]||0)+1);
-    const top=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a])[0],same=rec.filter(c=>c.name===top);
-    const avg=same.reduce((s,c)=>s+c.score,0)/same.length,o=N[top],lb=o&&(tr?tr.o[top]:o[1+eff]);
-    const known=lb&&same.length>=3&&avg>=.6;   // name it only if stable and confident, else just "obstacle"
-    const dist=Math.round(same.reduce((s,c)=>s+c.dist,0)/same.length*2)/2;
-    alertObs(known?lb:t('obstacle'),same[same.length-1].side,dist,known?top:'?',n);
-  }else if(hist.length===8&&hist.every(x=>!x))clearPath(n);   // "clear" only after 8 empty checks in a row
-}
-function alertObs(label,side,dist,key,n){
-  mode='obs';stopTone();
-  const sd=t(['front','left','right'][side]);
-  const msg=tr&&tr.u.msg?(dist<=.5?tr.u.msgNear:tr.u.msg).replace('{side}',sd).replace('{d}',dist).replace('{obj}',label):`${t('alert')}, ${sd}, ${dist<=.5?t('near'):`${t('about')} ${dist} ${t('m')}`}, ${label}`;
-  setSt(msg);
-  if(key+side!==lastKey||n-lastAlert>6000||lastDist-dist>=1){lastKey=key+side;lastAlert=n;lastDist=dist;vib([200,100,200]);say(msg,true)}
-  if(n-lastBeep>1000){lastBeep=n;beep('o')}
-}
-function clearPath(n){
-  const first=mode!=='clear';
-  if(first){mode='clear';lastKey='';lastDist=99;lastClear=0}
-  setSt(t('clear'));startTone();
-  if(n-lastClear>10000){lastClear=n;say(t('clear'),first)}
-  else if(walked-announced>=50&&!('speechSynthesis' in window&&speechSynthesis.speaking)){announced=walked;say(tr&&tr.u.walkedN?tr.u.walkedN.replace('{n}',Math.round(walked)):`${t('walked')} ${Math.round(walked)} ${t('walked2')}`,false)}
-}
-
-/* ===== GPS (distance walked) ===== */
-const hav=(a,b)=>{const r=Math.PI/180,x=(b[0]-a[0])*r,y=(b[1]-a[1])*r,s=Math.sin(x/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(y/2)**2;return 12742000*Math.atan2(Math.sqrt(s),Math.sqrt(1-s))};
-function startGPS(){
-  if(!('geolocation' in navigator))return;
-  anchor=null;
-  gpsId=navigator.geolocation.watchPosition(p=>{
-    const c=p.coords;if(c.accuracy>20)return;
-    const a=[c.latitude,c.longitude];
-    if(!anchor){anchor=a;return}
-    const d=hav(anchor,a);
-    if(d>50){anchor=a;return}                       // GPS jump: ignore
-    if(d>=Math.max(3,c.accuracy*.7)){walked+=d;anchor=a}   // slow walking still adds up
-  },e=>console.warn('GPS:',e.message),{enableHighAccuracy:true,maximumAge:1000,timeout:10000});
-}
-
-/* ===== SCREEN LOCK / START / STOP ===== */
-async function lockScreen(){
-  try{if('wakeLock' in navigator&&!wake){wake=await navigator.wakeLock.request('screen');wake.addEventListener('release',()=>{wake=null})}}catch(e){}
-}
-const CAMWHY={
-  Insecure:'The camera works only on a secure page. Open this app from its https:// website address, not as a saved file or an http:// link.',
-  NotAllowedError:'Camera is blocked. Tap the icon left of the address bar > Permissions > Camera > Allow, then reload. Also check phone Settings > Apps > your browser > Permissions > Camera.',
-  NotFoundError:'No camera was found on this device.',
-  NotReadableError:'The camera is being used by another app. Close it and try again.'};
-CAMWHY.SecurityError=CAMWHY.NotAllowedError;CAMWHY.AbortError=CAMWHY.NotReadableError;
-async function openCam(){
-  if(!window.isSecureContext||!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia))throw {name:'Insecure'};
-  try{return await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:640},height:{ideal:480}},audio:false})}
-  catch(e){if(e.name==='NotAllowedError'||e.name==='SecurityError')throw e;return await navigator.mediaDevices.getUserMedia({video:true,audio:false})}
-}
-async function start(){
-  if(live||stream||startBtn.disabled)return;
-  startBtn.disabled=true;setSt(t('loading'));startBtn.textContent='PLEASE WAIT...';
-  try{stream=await openCam()}
-  catch(e){
-    stream=null;startBtn.disabled=false;startBtn.textContent='START';
-    const k=e.name==='Insecure'?'camHttps':(e.name==='NotAllowedError'||e.name==='SecurityError')?'camErr':'camBusy';
-    setSt(t(k));say(t(k),true);
-    info.textContent=(CAMWHY[e.name]||('Camera error: '+e.name))+(window.top!==window.self?' This page is inside a frame: the frame needs allow="camera; geolocation".':'');
-    return;
-  }
+async function camStart(){
+  if(camOn)return true;
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:saver?320:480},height:{ideal:saver?240:360},frameRate:{ideal:saver?10:30}},audio:false})}
+  catch(e){stream=null;say(t(window.isSecureContext?'perm':'https'),true);return false}
   video.srcObject=stream;try{await video.play()}catch(e){}
-  live=true;ds=det?'ready':'loading';
-  startBtn.style.display='none';stopBtn.style.display='block';
-  if(trP)await trP;
-  say(t('started'),true);startGPS();lockScreen();cancelAnimationFrame(raf);loop();
-  for(let i=0;!det&&live&&i<3;i++){
-    if(await loadDet())break;
-    if(!live)return;
-    ds='failed';say(t('modelErr'),true);await sleep(8000);
-    if(!live)return;ds='loading';
+  camOn=true;nextFrame();
+  if(!det){try{det=await loadDet()}catch(e){say(t('det'),true)}}
+  return true;
+}
+function camStop(){camOn=false;if(stream){stream.getTracks().forEach(x=>x.stop());stream=null}video.srcObject=null;cur=null;hist=[]}
+const nextFrame=()=>{if(camOn)video.requestVideoFrameCallback?video.requestVideoFrameCallback(onFrame):requestAnimationFrame(onFrame)};
+function onFrame(){
+  nextFrame();
+  const n=performance.now();
+  if(!det||video.readyState<2||n-lastProc<(saver?(n-lastStepT>3000?1000:200):0))return;
+  lastProc=n;
+  const W=video.videoWidth,H=video.videoHeight;let best=null;
+  for(const d of det.detectForVideo(video,n).detections){
+    const c=d.categories[0],o=OBJ[c.categoryName];if(!o)continue;
+    const b=d.boundingBox;let m=o[0]*.77*Math.max(W,H)/b.height;          // distance from the object's real height
+    if(b.originY<2||b.originY+b.height>H-2)m=Math.min(m,1);               // cut by the frame edge: closer than it looks
+    if(m>RANGE)continue;
+    const near=m<.5,cx=(b.originX+b.width/2)/W,side=cx<.4?'L':cx>.6?'R':'F';
+    m=Math.max(.5,Math.round(m*2)/2);
+    if(!best||m<best.m)best={m,near,side,o:o[1],key:c.categoryName+side};
   }
-  if(live)ds=det?'ready':'failed';
+  hist.push(best?best.key:0);if(hist.length>3)hist.shift();
+  if(best&&hist.filter(k=>k===best.key).length>=2){                       // seen in 2 of the last 3 frames
+    sawAt=n;
+    if(!cur||cur.key!==best.key||best.m<=cur.m-.5){cur={key:best.key,m:best.m};alertObs(best)}
+    else if(best.m>cur.m)cur.m=best.m;
+  }else if(cur&&n-sawAt>700){cur=null;say(t('clear'),false)}                // "clear" once, after an obstacle
 }
-function stop(){
-  live=false;ds='idle';cancelAnimationFrame(raf);stopTone();
-  if('speechSynthesis' in window)speechSynthesis.cancel();
-  vib(0);
-  if(gpsId!==null){navigator.geolocation.clearWatch(gpsId);gpsId=null}
-  if(stream){stream.getTracks().forEach(x=>x.stop());stream=null}
-  if(wake){wake.release();wake=null}
-  video.srcObject=null;st.textContent='STATUS: OFF';info.textContent='';
-  startBtn.style.display='block';startBtn.disabled=false;startBtn.textContent='START';stopBtn.style.display='none';
-  hist=[];mode='clear';lastKey='';lastDist=99;lastT=-1;walked=0;announced=0;anchor=null;isDark=false;
+function alertObs(b){
+  say(t(b.near?'obNear':'ob',{o:nm(b.o),d:t(b.side),m:b.m}),true);
+  beep(b.m<=1?990:660);vib(b.m<=1?[100,50,100]:60);
 }
 
-/* ===== AI ===== */
-const PERSONA='You are Smart Cane, the assistant inside the Smart Cane app for blind and visually impaired people. Introduce yourself only as "Smart Cane". You may say that you are an AI assistant, but never mention any AI company, AI model or product name. If asked who or what you are, or who made you, say you are Smart Cane. Keep answers short and clear.';
-const getKey=()=>{if(AI_API_KEY)return AI_API_KEY;try{return localStorage.getItem('sc_key')||''}catch(e){return ''}};
-async function callAI(prompt,img,json){
-  const key=getKey();if(!key)throw new Error('no key');
-  const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),20000);
-  try{
-    const parts=[{text:prompt}];if(img)parts.push({inline_data:{mime_type:'image/jpeg',data:img}});
-    const body={systemInstruction:{parts:[{text:PERSONA}]},contents:[{parts}]};
-    if(json)body.generationConfig={responseMimeType:'application/json'};
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent`,{method:'POST',signal:ctl.signal,headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify(body)});
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    const j=await r.json();
-    const txt=(j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join(' ').trim();
-    if(!txt)throw new Error('empty answer');
-    return txt;
-  }finally{clearTimeout(to)}
+/* ===== STEPS + TURNS (IMU, no GPS map) ===== */
+function onMotion(e){
+  const a=e.accelerationIncludingGravity,r=e.rotationRate;if(!a||a.x==null)return;
+  const n=performance.now(),dt=Math.min(n-lastMT,100)/1000;if(!lastMT)g=Math.hypot(a.x,a.y,a.z)||9.8;lastMT=n;motionOk=true;
+  const mag=Math.hypot(a.x,a.y,a.z)||1;
+  g+=(mag-g)*.02;p2=p1;p1=lp;lp+=(mag-g-lp)*.3;
+  if(p1>1.2&&p1>p2&&p1>=lp&&n-lastStepT>300){steps++;lastStepT=n;onStep()}
+  if(r&&r.alpha!=null){
+    const w=(r.beta*a.x+r.gamma*a.y+r.alpha*a.z)/mag*(IOS?-1:1);          // deg/s about the vertical axis, + = left
+    acc+=w*dt;if(Math.abs(w)<8)acc*=.97;
+    if(Math.abs(acc)>=60){
+      if(state==='teach'||state==='confirmStop'){const d=acc>0?'L':'R',at=steps-segStart,l=turns[turns.length-1];if(!(l&&l[1]===d&&at-l[0]<=2))turns.push([at,d])}
+      acc=0;
+    }
+  }
 }
-function loadTr(code,name){return trJobs[code]||(trJobs[code]=doTr(code,name).finally(()=>{delete trJobs[code]}))}
-async function doTr(code,name){
-  try{const c=JSON.parse(localStorage.getItem('sc_tr_'+code));if(c&&c.u&&c.o)return c}catch(e){}
-  if(!getKey())return null;
-  try{
-    const src={u:{},o:{}};
-    for(const k in T)src.u[k]=T[k][0];
-    for(const k in N)src.o[k]=N[k][1];
-    src.u.msg='Alert, {side}, about {d} meters, {obj}';src.u.msgNear='Alert, {side}, very close, {obj}';src.u.walkedN='You have walked {n} meters';
-    const j=JSON.parse(await callAI('Translate every value of this JSON into '+name+'. The texts are spoken aloud by a navigation aid for blind people, so use short, natural, grammatically correct phrases. Keep every key, the JSON structure and the {placeholders} unchanged. Return only the JSON.\n'+JSON.stringify(src),null,true));
-    if(!j.o)j.o={};
-    if(!Object.keys(T).every(k=>typeof j.u?.[k]==='string'))return null;
-    try{localStorage.setItem('sc_tr_'+code,JSON.stringify(j))}catch(e){}
-    return j;
-  }catch(e){console.warn('Translation failed',e);return null}
+function motionOn(){motionOk=false;lastMT=0;addEventListener('devicemotion',onMotion);setTimeout(()=>{if(!motionOk&&state!=='idle')say(t('noSens'),true)},2500)}
+const motionOff=()=>removeEventListener('devicemotion',onMotion);
+const hav=(a,b)=>{const r=Math.PI/180,x=(b[0]-a[0])*r,y=(b[1]-a[1])*r,s=Math.sin(x/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(y/2)**2;return 12742000*Math.atan2(Math.sqrt(s),Math.sqrt(1-s))};
+function geoOn(){   // outdoors only: refines the step length from GPS
+  if(!navigator.geolocation||saver||gid!==null)return;gp=null;
+  gid=navigator.geolocation.watchPosition(p=>{
+    const c=p.coords;if(c.accuracy>12)return;const a=[c.latitude,c.longitude];
+    if(!gp){gp=a;gs=steps;return}
+    const d=hav(gp,a),n=steps-gs;
+    if(d>=30&&n>=20){const s=d/n;if(s>.4&&s<1.1){STRIDE=+(STRIDE*.7+s*.3).toFixed(3);ls.set('sc_stride',STRIDE)}gp=a;gs=steps}
+  },()=>{},{enableHighAccuracy:false,maximumAge:5000});
 }
-async function askAI(){
-  if(aiBusy)return;
-  if(!live||!video.videoWidth){setSt(t('camFirst'));say(t('camFirst'),true);return}
-  if(!getKey()){info.textContent=t('aiOff');say(t('aiOff'),true);return}
-  aiBusy=true;info.textContent=t('ai');say(t('ai'),true);
-  try{
-    const W=512,H=Math.round(W*video.videoHeight/video.videoWidth),c=document.createElement('canvas');
-    c.width=W;c.height=H;c.getContext('2d').drawImage(video,0,0,W,H);
-    const img=c.toDataURL('image/jpeg',.7).split(',')[1];
-    const txt=await callAI('In ONE short sentence in '+curName+', say what is directly ahead of the blind person (obstacle, wall, door, stairs, vehicle, person, drop or hole, darkness), on which side, and roughly how far. Mention only what is clearly visible. If you are not sure, say that you are not sure. No technical terms.',img,false);
-    info.textContent=txt;say(txt,true);
-  }catch(e){console.error('AI error',e);info.textContent=t('aiErr');say(t('aiErr'),true)}
-  finally{aiBusy=false}
+const geoOff=()=>{if(gid!==null){navigator.geolocation.clearWatch(gid);gid=null}};
+async function lock(on){try{if(on&&!wake&&navigator.wakeLock){wake=await navigator.wakeLock.request('screen');wake.onrelease=()=>{wake=null}}else if(!on&&wake){await wake.release();wake=null}}catch(e){}}
+
+/* ===== BATTERY SAVER (automatic) ===== */
+function setSaver(on,why){
+  if(on===saver)return;saver=on;document.body.classList.toggle('saver',on);
+  if(why)say(t('low')+' '+t(on?'sOn':'sOff'),false);else say(t(on?'sOn':'sOff'),false);
+  const tr=stream&&stream.getVideoTracks()[0];
+  if(tr)tr.applyConstraints({width:{ideal:on?320:480},height:{ideal:on?240:360},frameRate:{ideal:on?10:30}}).catch(()=>{});
+  if(on)geoOff();else if(state==='teach'||state==='nav')geoOn();
+}
+if(navigator.getBattery)navigator.getBattery().then(b=>{const f=()=>setSaver(!b.charging&&b.level<=.2,true);b.onlevelchange=f;b.onchargingchange=f;f()}).catch(()=>{});
+
+/* ===== FLOWS: record a path (voice tags) and guide along it ===== */
+async function motionPerm(){const D=window.DeviceMotionEvent;if(D&&typeof D.requestPermission==='function'){try{return await D.requestPermission()==='granted'}catch(e){return false}}return true}
+async function begin(){
+  const id=++SID;state='askStart';retry=begin;
+  if(!await motionPerm()){say(t('noSens'),true);state='idle';return}
+  const name=await ask('sayStart',id);if(id!==SID)return;
+  state='idle';if(!name){say(t('nf'),true,true);return}
+  const start=find(name)||name;
+  if(DB.edges.some(e=>e.a===start||e.b===start))return destFlow(start,id);
+  retry=null;return teach(start,id);
+}
+async function destFlow(start,id){
+  id=id||++SID;state='askDest';retry=()=>destFlow(start);forceTeach=false;
+  const name=await ask('dest',id);if(id!==SID)return;
+  if(forceTeach){retry=null;return teach(start,id)}
+  state='idle';const dst=name&&find(name),legsX=dst&&route(start,dst);
+  if(!legsX){say(t('nf'),true,true);return}
+  retry=null;return nav(legsX,id);
+}
+async function activate(id){await camStart();if(id!==SID)return false;lock(true);motionOn();geoOn();return true}
+async function teach(start,id){
+  state='teach';from=start;if(!DB.places.includes(start))DB.places.push(start);save();
+  steps=0;segStart=0;turns=[];lastAsk=-1;
+  if(!await activate(id))return;
+  say(t('walk'),true,true);clearInterval(idleTimer);idleTimer=setInterval(teachTick,500);
+}
+function teachTick(){
+  const n=performance.now();
+  if(state==='teach'&&steps-segStart>=3&&steps>lastAsk&&n-lastStepT>3000){state='confirmStop';lastAsk=steps;stopAt=steps;say(t('stopQ'),true,true)}
+  else if(state==='confirmStop'&&steps-stopAt>=2)state='teach';            // kept walking = "no"
+}
+async function nameHere(){
+  const id=++SID;state='askName';retry=nameHere;
+  const name=await ask('place',id);if(id!==SID)return;
+  if(!name){say(t('nf'),true,true);return}
+  const p=find(name)||name,n=steps-segStart;
+  if(p===from){say(t('nf'),true,true);return}
+  DB.edges=DB.edges.filter(e=>!(e.a===from&&e.b===p));DB.edges.push({a:from,b:p,n,t:turns});
+  if(!DB.places.includes(p))DB.places.push(p);save();
+  say(t('saved',{p,n})+' '+t('more'),true,true);
+  from=p;segStart=steps;turns=[];lastAsk=steps;state='teach';retry=null;
+}
+async function nav(legsX,id){
+  state='nav';legs=legsX.map(l=>({to:l.to,n:l.n,passed:0,t:l.t.map(([at,d])=>({at,d,s:0}))}));li=0;steps=0;legStart=0;
+  if(!await activate(id))return;
+  announceLeg();
+}
+const announceLeg=()=>{const l=legs[li];say(t('go',{p:l.to,n:l.n,m:Math.round(l.n*STRIDE)}),true,true)};
+function onStep(){
+  if(state!=='nav')return;
+  const l=legs[li],c=steps-legStart;
+  for(const x of l.t){
+    if(x.s<1&&x.at-c>0&&x.at-c<=4){x.s=1;say(t('turn',{n:x.at-c,d:t(x.d)}),false,true)}
+    if(x.s<2&&c>=x.at){x.s=2;say(t('turnNow',{d:t(x.d)}),true,true)}
+  }
+  if(c>=l.n){
+    say(t('arr',{p:l.to}),true,true);
+    if(li<legs.length-1){li++;legStart=steps;announceLeg()}else setTimeout(()=>stopAll(false),4000);
+  }else if(c>l.n+Math.max(6,l.n*.3)&&!l.passed){l.passed=1;say(t('pass',{p:l.to}),true,true)}
+}
+function stopAll(talk){
+  SID++;state='idle';retry=null;clearInterval(idleTimer);
+  try{rec&&rec.abort()}catch(e){}
+  speechSynthesis.cancel();q.length=0;camStop();motionOff();geoOff();lock(false);acc=0;
+  if(talk)say(t('done'),true);
 }
 
-/* ===== UI ===== */
-const show=v=>['homeView','settingsView','aboutView'].forEach(i=>$(i).classList.toggle('active',i===v));
-const on=(id,f)=>$(id).addEventListener('click',()=>{vib(15);f()});
-on('startBtn',async()=>{try{audio=audio||new(window.AudioContext||window.webkitAudioContext)();audio.resume()}catch(e){}await start()});
-on('stopBtn',stop);on('askAiBtn',askAI);
-on('saveKeyBtn',()=>{const v=$('apiKeyInput').value.trim(),b=$('saveKeyBtn');try{localStorage.setItem('sc_key',v)}catch(e){}$('apiKeyInput').value='';b.textContent=v?'SAVED':'REMOVED';setTimeout(()=>{b.textContent='SAVE KEY'},2000);pickVoice()});
-on('settingsNavBtn',()=>show('settingsView'));on('backToHomeBtn',()=>show('homeView'));
-on('aboutNavBtn',()=>show('aboutView'));on('backFromAboutBtn',()=>show('settingsView'));
-on('openMapsBtn',()=>{const d=$('destinationInput').value.trim();window.open(d?`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(d)}&travelmode=walking`:'https://www.google.com/maps','_blank')});
-sel.addEventListener('change',()=>{vib(15);try{localStorage.setItem('sc_lang',LANGS[+sel.value].code)}catch(e){}pickVoice()});
-if('speechSynthesis' in window)speechSynthesis.onvoiceschanged=pickVoice;
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&live){cancelAnimationFrame(raf);loop();lockScreen()}});
-buildLangs();try{const i=LANGS.findIndex(l=>l.code===localStorage.getItem('sc_lang'));if(i>0)sel.value=i}catch(e){}pickVoice();
+/* ===== PERMISSIONS (asked at startup) ===== */
+async function perms(){
+  let ok=true;
+  try{const s=await navigator.mediaDevices.getUserMedia({video:true,audio:true});s.getTracks().forEach(x=>x.stop())}catch(e){ok=false}
+  await new Promise(r=>navigator.geolocation?navigator.geolocation.getCurrentPosition(r,()=>{ok=false;r()},{timeout:8000,maximumAge:6e5}):r());
+  try{if(navigator.storage&&navigator.storage.persist)await navigator.storage.persist()}catch(e){}
+  return ok;
+}
+
+/* ===== UI: three buttons only ===== */
+function render(){
+  const e=E();$('ok').textContent=t('ok');$('cancel').textContent=t('cancel');$('back').textContent=t('back');
+  $('note').textContent=t('note');document.documentElement.dir=(e[2]===1||e[2]===3)?'rtl':'ltr';
+  if(noVoice)stEl.textContent='No installed voice for this language - using English. Install it: Settings > System > Languages & input > Text-to-speech output > Speech Services by Google.';
+}
+$('ok').onclick=async()=>{
+  vib(30);
+  if(permP){permOk=await permP;permP=null;if(!permOk){say(t('perm'),true);return}}
+  if(state==='idle')begin();
+  else if(state==='confirmStop')nameHere();
+  else if(state==='askDest'){forceTeach=true;try{rec&&rec.stop()}catch(e){}}
+};
+$('cancel').onclick=()=>{vib(30);if(state==='confirmStop'){state='teach';stopAt=steps}else stopAll(true)};
+$('back').onclick=async()=>{
+  vib(30);
+  if(camOn&&!det){try{det=await loadDet()}catch(e){}}
+  if(retry)retry();else if(lastInstr)say(lastInstr,true);
+};
+document.addEventListener('keydown',e=>{   // optional external buttons (Bluetooth clicker / keyboard)
+  if(e.target.tagName==='SELECT')return;
+  const k={Enter:'ok',Escape:'cancel',Backspace:'back'}[e.key];if(k){e.preventDefault();$(k).click()}
+});
+document.addEventListener('pointerdown',e=>{if(!greeted){greeted=true;if(e.target.id!=='ok')say(t('hello'),true,true)}},true);
+sel.innerHTML=LANGS.map((l,i)=>`<option value="${i}">${l[1]}</option>`).join('');
+sel.value=LANGS.indexOf(L);
+sel.onchange=()=>{L=LANGS[+sel.value];code=L[0];ls.set('sc_lang',code);noVoice=false;pickVoice();say(t('hello'),true,true)};   // choice is remembered
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&camOn){lock(true);nextFrame()}});
+speechSynthesis.onvoiceschanged=pickVoice;
+pickVoice();stEl.textContent=t('hello');lastInstr=t('hello');
+permP=perms();
 </script>
 </body>
 </html>
