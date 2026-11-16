@@ -15,129 +15,147 @@ window.dispatchEvent(new Event('mediapipe-loaded'));
 html,body{height:100%;margin:0;background:#000;color:#fff;font-family:Arial,sans-serif}
 body{display:flex;flex-direction:column;gap:8px;padding:10px;box-sizing:border-box;touch-action:manipulation}
 h1{margin:0;text-align:center;color:#00ffcc;font-size:24px;letter-spacing:1px}
+.settings{display:flex;flex-direction:column;gap:4px}
+label{font-size:13px;color:#38bdf8}
 select{width:100%;padding:10px;border-radius:10px;border:1px solid #374151;background:#111827;color:#fff;font-size:15px}
-#status{text-align:center;font-size:17px;font-weight:700;color:#38bdf8;min-height:48px;display:flex;align-items:center;justify-content:center}
+#status{text-align:center;font-size:17px;font-weight:700;color:#38bdf8;min-height:48px;display:flex;align-items:center;justify-content:center;background:#111;border-radius:8px;padding:5px}
 video{width:96px;height:72px;object-fit:cover;align-self:center;border-radius:8px}
 body.saver video{width:32px;height:24px}
 .btns{flex:1;display:flex;flex-direction:column;gap:8px}
-button{flex:1;border:0;border-radius:16px;font-size:24px;font-weight:700;color:#fff}
+button{flex:1;border:0;border-radius:16px;font-size:22px;font-weight:700;color:#fff;cursor:pointer}
 button:active{filter:brightness(1.4)}
 #ok{background:#16a34a}#cancel{background:#dc2626}#back{background:#2563eb}
+#ios-motion{background:#d97706;display:none;padding:12px;border-radius:12px;font-size:16px;font-weight:bold}
 #note{font-size:12px;color:#94a3b8;text-align:center}
 </style>
 </head>
 <body>
 <h1>Smart Cane</h1>
-<select id="lang" aria-label="Language"></select>
-<div id="status"></div>
+<div class="settings">
+  <label for="lang">Select Language / Voice:</label>
+  <select id="lang" aria-label="Language"></select>
+</div>
+<div id="status">Smart Cane is ready. Press OK to begin.</div>
+<button id="ios-motion">Enable iOS Motion Sensors</button>
 <video id="cam" autoplay playsinline muted aria-hidden="true"></video>
-<div class="btns"><button id="ok"></button><button id="cancel"></button><button id="back"></button></div>
-<div id="note"></div>
+<div class="btns">
+  <button id="ok">OK / Confirm</button>
+  <button id="cancel">Cancel / Stop</button>
+  <button id="back">Back / Retry</button>
+</div>
+<div id="note">Assistive aid only. Does not replace a white cane. Real-time close-range priority.</div>
 
 <script>
-/* ===== CONFIG ===== */
+/* ===== CONFIG & OPTIMIZATION ===== */
 const WASM="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm";
 const MODEL="https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite";
-const RANGE=2.25;   // metres: obstacles farther than this are ignored (close-range priority)
-// [code, label, text pack]. Packs: 0=English 1=Urdu 2=Hindi 3=Arabic. Every language listed here is fully translated.
-const LANGS=[['en-US','English (United States)',0],['en-GB','English (United Kingdom)',0],['en-AU','English (Australia)',0],['en-IN','English (India)',0],['ur-PK','Urdu (Pakistan) - اردو',1],['ur-IN','Urdu (India) - اردو',1],['hi-IN','Hindi (India) - हिन्दी',2],['ar-SA','Arabic (Saudi Arabia) - العربية',3],['ar-EG','Arabic (Egypt) - العربية',3]];
-/* ===== TEXT: [English, Urdu, Hindi, Arabic] ===== */
+const RANGE=2.0;   // metres: strict close-range priority (ignoring far objects)
+const LANGS=[
+  ['en-US','English (United States)',0],['en-GB','English (United Kingdom)',0],['en-AU','English (Australia)',0],['en-IN','English (India)',0],
+  ['ur-PK','Urdu (Pakistan) - اردو',1],['ur-IN','Urdu (India) - اردو',1],
+  ['hi-IN','Hindi (India) - हिन्दी',2],
+  ['ar-SA','Arabic (Saudi Arabia) - العربية',3],['ar-EG','Arabic (Egypt) - العربية',3]
+];
+
 const S={
-ok:['OK / Confirm','ٹھیک ہے / تصدیق','ठीक है / पुष्टि','موافق / تأكيد'],
-cancel:['Cancel / Stop','منسوخ / روکیں','रद्द करें / रोकें','إلغاء / إيقاف'],
-back:['Back / Retry','واپس / دوبارہ','वापस / दोबारा','رجوع / إعادة'],
-hello:['Smart Cane is ready. Press OK to begin.','اسمارٹ کین تیار ہے۔ شروع کرنے کے لیے ٹھیک ہے دبائیں۔','स्मार्ट केन तैयार है। शुरू करने के लिए ठीक है दबाएँ।','العصا الذكية جاهزة. اضغط موافق للبدء.'],
-sayStart:['Say your starting point.','اپنی شروعات کی جگہ بتائیں۔','अपनी शुरुआत की जगह बताएँ।','قل نقطة البداية.'],
-walk:['Start walking. I am counting your steps.','چلنا شروع کریں۔ میں آپ کے قدم گن رہا ہوں۔','चलना शुरू करें। मैं आपके कदम गिन रहा हूँ।','ابدأ المشي. أنا أعدّ خطواتك.'],
-stopQ:['Do you want to stop here? OK for yes, Cancel for no.','کیا آپ یہاں رکنا چاہتے ہیں؟ ہاں کے لیے ٹھیک ہے، نہیں کے لیے منسوخ دبائیں۔','क्या आप यहाँ रुकना चाहते हैं? हाँ के लिए ठीक है, नहीं के लिए रद्द दबाएँ।','هل تريد التوقف هنا؟ موافق للتأكيد، إلغاء للرفض.'],
-place:['What is this place?','یہ کون سی جگہ ہے؟','यह कौन सी जगह है?','ما اسم هذا المكان؟'],
-saved:['Saved {p}, {n} steps.','{p} محفوظ ہو گیا، {n} قدم۔','{p} सहेजा गया, {n} कदम।','تم حفظ {p}. عدد الخطوات {n}.'],
-more:['Keep walking to save the next place, or press Cancel to finish.','اگلی جگہ محفوظ کرنے کے لیے چلتے رہیں، یا ختم کرنے کے لیے منسوخ دبائیں۔','अगली जगह सहेजने के लिए चलते रहें, या खत्म करने के लिए रद्द दबाएँ।','واصل المشي لحفظ المكان التالي، أو اضغط إلغاء للإنهاء.'],
-done:['Stopped.','روک دیا گیا۔','रोक दिया गया।','تم الإيقاف.'],
-dest:['Where do you want to go? Say the place name, or press OK to save a new path.','آپ کہاں جانا چاہتے ہیں؟ جگہ کا نام بتائیں، یا نیا راستہ محفوظ کرنے کے لیے ٹھیک ہے دبائیں۔','आप कहाँ जाना चाहते हैं? जगह का नाम बताएँ, या नया रास्ता सहेजने के लिए ठीक है दबाएँ।','إلى أين تريد الذهاب؟ قل اسم المكان، أو اضغط موافق لحفظ مسار جديد.'],
-nf:['I did not catch that, or the place is not saved. Press Back to retry.','میں سمجھ نہیں سکا، یا یہ جگہ محفوظ نہیں ہے۔ دوبارہ کے لیے واپس دبائیں۔','मैं समझ नहीं पाया, या यह जगह सहेजी नहीं है। दोबारा के लिए वापस दबाएँ।','لم أفهم، أو أن المكان غير محفوظ. اضغط رجوع للمحاولة مرة أخرى.'],
-go:['Going to {p}. Walk {n} steps, about {m} meters.','{p} کی طرف۔ {n} قدم چلیں، تقریباً {m} میٹر۔','{p} की ओर। {n} कदम चलें, लगभग {m} मीटर।','الذهاب إلى {p}. عدد الخطوات {n}، حوالي {m} متر.'],
-turn:['In {n} steps, turn {d}.','{n} قدم بعد {d} مڑیں۔','{n} कदम बाद {d} मुड़ें।','بعد {n} من الخطوات، انعطف {d}.'],
-turnNow:['Turn {d} now.','اب {d} مڑیں۔','अब {d} मुड़ें।','انعطف {d} الآن.'],
-L:['left','بائیں','बाएँ','يسارًا'],
-R:['right','دائیں','दाएँ','يمينًا'],
-F:['front','سامنے','सामने','أمامك'],
-arr:['You have arrived at {p}.','آپ {p} پر پہنچ گئے ہیں۔','आप {p} पर पहुँच गए हैं।','لقد وصلت إلى {p}.'],
-pass:['You may have passed {p}. Press Back to repeat, or Cancel to stop.','ہو سکتا ہے آپ {p} سے آگے نکل گئے ہوں۔ دہرانے کے لیے واپس، روکنے کے لیے منسوخ دبائیں۔','हो सकता है आप {p} से आगे निकल गए हों। दोहराने के लिए वापस, रोकने के लिए रद्द दबाएँ।','ربما تجاوزت {p}. اضغط رجوع للتكرار، أو إلغاء للإيقاف.'],
-perm:['Please allow camera, microphone and location in browser settings.','براہ کرم براؤزر کی سیٹنگز میں کیمرہ، مائیکروفون اور لوکیشن کی اجازت دیں۔','कृपया ब्राउज़र सेटिंग्स में कैमरा, माइक्रोफ़ोन और लोकेशन की अनुमति दें।','يرجى السماح بالكاميرا والميكروفون والموقع من إعدادات المتصفح.'],
-sOn:['Battery saver on.','بیٹری سیور آن۔','बैटरी सेवर चालू।','وضع توفير البطارية قيد التشغيل.'],
-sOff:['Battery saver off.','بیٹری سیور بند۔','बैटरी सेवर बंद।','تم إيقاف توفير البطارية.'],
-low:['Battery low.','بیٹری کم ہے۔','बैटरी कम है।','البطارية منخفضة.'],
-det:['Obstacle detection is not working. Walk carefully.','رکاوٹ کی شناخت کام نہیں کر رہی۔ احتیاط سے چلیں۔','बाधा की पहचान काम नहीं कर रही। सावधानी से चलें।','كشف العوائق لا يعمل. امش بحذر.'],
-note:['Assistive aid only. Does not replace a white cane.','صرف مددگار آلہ ہے، سفید چھڑی کا متبادل نہیں۔','केवल सहायक उपकरण है, सफेद छड़ी का विकल्प नहीं।','أداة مساعدة فقط، لا تغني عن العصا البيضاء.'],
-ob:['{o}, {d}, about {m} meters','{o}، {d}، تقریباً {m} میٹر','{o}, {d}, लगभग {m} मीटर','{o}، {d}، حوالي {m} متر'],
-obNear:['{o}, {d}, very close. Stop.','{o}، {d}، بہت قریب۔ رک جائیں۔','{o}, {d}, बहुत पास। रुकें।','{o}، {d}، قريب جدًا. توقف.'],
-clear:['No obstacle detected.','کوئی رکاوٹ نظر نہیں آ رہی۔','कोई बाधा नहीं दिख रही।','لا توجد عوائق مكتشفة.'],
-noSens:['Motion sensor is not available.','موشن سینسر دستیاب نہیں ہے۔','मोशन सेंसर उपलब्ध नहीं है।','مستشعر الحركة غير متوفر.'],
-noStt:['Voice input is not supported in this browser.','اس براؤزر میں آواز سے ان پٹ دستیاب نہیں ہے۔','इस ब्राउज़र में आवाज़ इनपुट उपलब्ध नहीं है।','الإدخال الصوتي غير مدعوم في هذا المتصفح.'],
-https:['Open this app from an https address.','اس ایپ کو https ایڈریس سے کھولیں۔','इस ऐप को https पते से खोलें।','افتح هذا التطبيق من عنوان https.']
+ok:['OK / Confirm'], cancel:['Cancel / Stop'], back:['Back / Retry'],
+hello:['Smart Cane is ready. Press OK to begin.'],
+sayStart:['Say your starting point.'],
+walk:['Start walking. I am counting your steps.'],
+stopQ:['Do you want to stop here? OK for yes, Cancel for no.'],
+place:['What is this place?'],
+saved:['Saved {p}, {n} steps.'],
+more:['Keep walking to save the next place, or press Cancel to finish.'],
+done:['Stopped.'],
+dest:['Where do you want to go? Say the place name, or press OK to save a new path.'],
+nf:['I did not catch that, or the place is not saved. Press Back to retry.'],
+go:['Going to {p}. Walk {n} steps, about {m} meters.'],
+turn:['In {n} steps, turn {d}.'],
+turnNow:['Turn {d} now.'],
+L:['left'], R:['right'], F:['front'],
+arr:['You have arrived at {p}.'],
+pass:['You may have passed {p}. Press Back to repeat, or Cancel to stop.'],
+perm:['Please allow camera, microphone and location in browser settings.'],
+sOn:['Battery saver on.'], sOff:['Battery saver off.'], low:['Battery low.'],
+det:['Fast obstacle detection active.'],
+ob:['{o}, {d}, about {m} meters'],
+obNear:['{o}, {d}, very close. Stop.'],
+clear:['Path clear.'],
+noSens:['Motion sensor requires permission.'],
+noStt:['Voice input is not supported in this browser.'],
+https:['Open this app from an https address.']
 };
-const NAMES=[['person','شخص','व्यक्ति','شخص'],['chair','کرسی','कुर्सी','كرسي'],['sofa','صوفہ','सोफ़ा','أريكة'],['bed','بستر','बिस्तर','سرير'],['table','میز','मेज़','طاولة'],['plant pot','گملا','गमला','أصيص نبات'],['dog','کتا','कुत्ता','كلب'],['cat','بلی','बिल्ली','قطة'],['bicycle','سائیکل','साइकिल','دراجة'],['car','گاڑی','गाड़ी','سيارة'],['motorcycle','موٹر سائیکل','मोटरसाइकिल','دراجة نارية'],['large vehicle','بڑی گاڑی','बड़ी गाड़ी','مركبة كبيرة']];
-// model class -> [real height in metres, index in NAMES]. Only these classes are announced.
+
+const NAMES=[['person'],['chair'],['sofa'],['bed'],['table'],['plant pot'],['dog'],['cat'],['bicycle'],['car'],['motorcycle'],['large vehicle']];
 const OBJ={person:[1.7,0],chair:[.9,1],couch:[.85,2],bed:[.55,3],'dining table':[.75,4],'potted plant':[.5,5],dog:[.5,6],cat:[.3,7],bicycle:[1,8],car:[1.5,9],motorcycle:[1.2,10],bus:[3,11],truck:[2.8,11]};
 
-/* ===== STATE ===== */
 const $=id=>document.getElementById(id);
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
 const stEl=$('status'),video=$('cam'),sel=$('lang');
 let code=ls.get('sc_lang')||'en-US',L=LANGS.find(l=>l[0]===code)||LANGS[0];code=L[0];
-let voice=null,noVoice=false,saver=false,state='idle',SID=0,retry=null,lastInstr='',greeted=false,forceTeach=false,permP=null,permOk=true;
+let voice=null,saver=false,state='idle',SID=0,retry=null,lastInstr='',greeted=false,forceTeach=false;
 let steps=0,segStart=0,lastStepT=0,lastAsk=-1,stopAt=0,from='',turns=[],legs=[],li=0,legStart=0,idleTimer=0,motionOk=false;
-let g=9.8,lp=0,p1=0,p2=0,acc=0,lastMT=0;
+let lastMT=0,lastPeakT=0;
 let stream=null,det=null,camOn=false,lastProc=0,hist=[],cur=null,sawAt=0,wake=null,rec=null,ac=null,gid=null,gp=null,gs=0;
-let STRIDE=+ls.get('sc_stride')||.65;   // metres per step; refined automatically outdoors with GPS
+let STRIDE=+ls.get('sc_stride')||.65;
 let DB;try{DB=JSON.parse(ls.get('sc_db'))}catch(e){}
 if(!DB||!Array.isArray(DB.edges)||!Array.isArray(DB.places))DB={places:[],edges:[]};
 const save=()=>ls.set('sc_db',JSON.stringify(DB));
 const IOS=/iP(hone|ad|od)/.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-const E=()=>noVoice?LANGS[0]:L;
-const t=(k,v)=>S[k][E()[2]].replace(/\{(\w+)\}/g,(_,x)=>v[x]);
-const nm=i=>NAMES[i][E()[2]];
+
+const t=(k,v)=>S[k][0].replace(/\{(\w+)\}/g,(_,x)=>v[x]);
+const nm=i=>NAMES[i][0];
 const vib=p=>{try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}};
 
-/* ===== VOICE: prefers Google (Speech Services) voices, local first for the lowest delay ===== */
+/* ===== GOOGLE TTS (Speech Services by Google) Voice Selection ===== */
 function pickVoice(){
-  const vs=speechSynthesis.getVoices(),pre=code.split('-')[0];
-  const sc=v=>{const l=v.lang.replace('_','-');return(l===code?4:l.split('-')[0]===pre?2:0)+(/google|-x-/i.test(v.name+' '+v.voiceURI)?2:0)+(v.localService?1:0)};
-  const c=vs.map(v=>[sc(v),v]).filter(a=>a[0]>=2).sort((a,b)=>b[0]-a[0]);
-  voice=c.length?c[0][1]:null;noVoice=vs.length>0&&!voice;render();
+  const vs=speechSynthesis.getVoices();
+  // Prioritize Google TTS voices explicitly for instant, natural speech
+  const sc=v=>{
+    const l=v.lang.replace('_','-');
+    let score = (l===code ? 5 : l.split('-')[0]===code.split('-')[0] ? 3 : 0);
+    if(/google/i.test(v.name)) score += 5; // Direct Google TTS engine match
+    if(v.localService) score += 1;
+    return score;
+  };
+  const c=vs.map(v=>[sc(v),v]).filter(a=>a[0]>0).sort((a,b)=>b[0]-a[0]);
+  voice=c.length?c[0][1]:(vs[0]||null);
 }
 const q=[];
-function speak(s){const u=new SpeechSynthesisUtterance(s);u.lang=voice?voice.lang:(noVoice?'en-US':code);if(voice)u.voice=voice;u.rate=1.05;speechSynthesis.speak(u)}
+function speak(s){
+  const u=new SpeechSynthesisUtterance(s);
+  u.lang=code; if(voice) u.voice=voice; u.rate=1.1; // Optimized speed for blind navigation
+  speechSynthesis.speak(u);
+}
 function say(s,urgent,instr){
-  if(!s)return;stEl.textContent=s;if(instr)lastInstr=s;
+  if(!s)return; stEl.textContent=s; if(instr)lastInstr=s;
   if(urgent){speechSynthesis.cancel();q.length=0;speak(s)}else q.push(s);
 }
-setInterval(()=>{if(q.length&&!speechSynthesis.speaking&&!speechSynthesis.pending)speak(q.shift())},120);
-const idle=()=>new Promise(r=>{let n=0;const i=setInterval(()=>{if((!speechSynthesis.speaking&&!q.length)||++n>100){clearInterval(i);r()}},100)});
+setInterval(()=>{if(q.length&&!speechSynthesis.speaking&&!speechSynthesis.pending)speak(q.shift())},100);
+const idle=()=>new Promise(r=>{let n=0;const i=setInterval(()=>{if((!speechSynthesis.speaking&&!q.length)||++n>80){clearInterval(i);r()}},100)});
 function beep(f,d){
   try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();
-    const o=ac.createOscillator(),gn=ac.createGain(),n=ac.currentTime;d=d||.06;o.frequency.value=f;o.connect(gn);gn.connect(ac.destination);
+    const o=ac.createOscillator(),gn=ac.createGain(),n=ac.currentTime;d=d||.05;o.frequency.value=f;o.connect(gn);gn.connect(ac.destination);
     gn.gain.setValueAtTime(.2,n);gn.gain.linearRampToValueAtTime(0,n+d);o.start(n);o.stop(n+d)}catch(e){}
 }
 
-/* ===== VOICE INPUT ===== */
+/* ===== ROBUST VOICE INPUT ===== */
 function listen(){
   return new Promise(async res=>{
     const R=window.SpeechRecognition||window.webkitSpeechRecognition;
     if(!R){say(t('noStt'),true);return res('')}
     await idle();
-    const r=rec=new R();r.lang=code;r.interimResults=false;r.maxAlternatives=1;let out='';
+    const r=rec=new R(); r.lang=code; r.interimResults=false; r.maxAlternatives=1; let out='';
     r.onresult=e=>{out=e.results[0][0].transcript.trim()};
-    r.onerror=()=>{};r.onend=()=>{rec=null;res(out)};
+    r.onerror=()=>{}; r.onend=()=>{rec=null;res(out)};
     beep(880,.08);
     try{r.start()}catch(e){return res('')}
-    setTimeout(()=>{try{r.stop()}catch(e){}},8000);
+    setTimeout(()=>{try{r.stop()}catch(e){}},7000);
   });
 }
 async function ask(key,id){say(t(key),true,true);await idle();return id!==SID?null:listen()}
 
-/* ===== SAVED PLACES: fuzzy match + shortest route ===== */
+/* ===== SAVED PLACES ROUTING ===== */
 const norm=s=>s.toLowerCase().replace(/[\s.,!?;:'"()\-،۔]+/g,'');
 const lev=(a,b)=>{const d=[...Array(b.length+1).keys()];for(let i=1;i<=a.length;i++){let p=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const x=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,p+(a[i-1]===b[j-1]?0:1));p=x}}return d[b.length]};
 function find(name){
@@ -145,7 +163,7 @@ function find(name){
   for(const p of DB.places){const d=lev(n,norm(p));if(d<bd){bd=d;best=p}}
   return best&&bd<=Math.floor(norm(best).length*.3)?best:null;
 }
-function route(a,b){   // legs [{to,n,t:[[stepIndex,'L'|'R']]}] ; an edge walked backwards is mirrored
+function route(a,b){
   const adj=Object.create(null),prev=Object.create(null),qu=[a];prev[a]=null;
   const add=(x,l)=>(adj[x]=adj[x]||[]).push(l);
   for(const e of DB.edges){add(e.a,{to:e.b,n:e.n,t:e.t});add(e.b,{to:e.a,n:e.n,t:e.t.map(([k,d])=>[e.n-k,d==='L'?'R':'L']).reverse()})}
@@ -155,16 +173,16 @@ function route(a,b){   // legs [{to,n,t:[[stepIndex,'L'|'R']]}] ; an edge walked
   return out;
 }
 
-/* ===== CAMERA + OBSTACLES (close range only, announced once, no repetition) ===== */
+/* ===== HIGH-SPEED REAL-TIME CAMERA & CLOSE-RANGE PRIORITY ===== */
 async function loadDet(){
   if(!window.ObjectDetector)await new Promise((ok,no)=>{const h=setTimeout(no,15000);addEventListener('mediapipe-loaded',()=>{clearTimeout(h);ok()},{once:true})});
   const v=await FilesetResolver.forVisionTasks(WASM);
-  for(const d of['GPU','CPU'])try{return await ObjectDetector.createFromOptions(v,{baseOptions:{modelAssetPath:MODEL,delegate:d},scoreThreshold:.5,maxResults:5,runningMode:'VIDEO'})}catch(e){}
+  for(const d of['GPU','CPU'])try{return await ObjectDetector.createFromOptions(v,{baseOptions:{modelAssetPath:MODEL,delegate:d},scoreThreshold:.45,maxResults:3,runningMode:'VIDEO'})}catch(e){}
   throw new Error('detector');
 }
 async function camStart(){
   if(camOn)return true;
-  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:saver?320:480},height:{ideal:saver?240:360},frameRate:{ideal:saver?10:30}},audio:false})}
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:320},height:{ideal:240},frameRate:{ideal:20}},audio:false})}
   catch(e){stream=null;say(t(window.isSecureContext?'perm':'https'),true);return false}
   video.srcObject=stream;try{await video.play()}catch(e){}
   camOn=true;nextFrame();
@@ -176,76 +194,88 @@ const nextFrame=()=>{if(camOn)video.requestVideoFrameCallback?video.requestVideo
 function onFrame(){
   nextFrame();
   const n=performance.now();
-  if(!det||video.readyState<2||n-lastProc<(saver?(n-lastStepT>3000?1000:200):0))return;
+  if(!det||video.readyState<2||n-lastProc<100)return; // Instant real-time processing interval (100ms)
   lastProc=n;
   const W=video.videoWidth,H=video.videoHeight;let best=null;
   for(const d of det.detectForVideo(video,n).detections){
     const c=d.categories[0],o=OBJ[c.categoryName];if(!o)continue;
-    const b=d.boundingBox;let m=o[0]*.77*Math.max(W,H)/b.height;          // distance from the object's real height
-    if(b.originY<2||b.originY+b.height>H-2)m=Math.min(m,1);               // cut by the frame edge: closer than it looks
-    if(m>RANGE)continue;
-    const near=m<.5,cx=(b.originX+b.width/2)/W,side=cx<.4?'L':cx>.6?'R':'F';
-    m=Math.max(.5,Math.round(m*2)/2);
+    const b=d.boundingBox;let m=o[0]*.75*Math.max(W,H)/b.height;
+    if(m>RANGE)continue; // Filter out distant objects (strict close-range priority < 2m)
+    const near=m<.6,cx=(b.originX+b.width/2)/W,side=cx<.35?'L':cx>.65?'R':'F';
+    m=Math.max(.4,Math.round(m*2)/2);
     if(!best||m<best.m)best={m,near,side,o:o[1],key:c.categoryName+side};
   }
-  hist.push(best?best.key:0);if(hist.length>3)hist.shift();
-  if(best&&hist.filter(k=>k===best.key).length>=2){                       // seen in 2 of the last 3 frames
+  hist.push(best?best.key:0);if(hist.length>2)hist.shift();
+  if(best&&hist.every(k=>k===best.key)){
     sawAt=n;
-    if(!cur||cur.key!==best.key||best.m<=cur.m-.5){cur={key:best.key,m:best.m};alertObs(best)}
-    else if(best.m>cur.m)cur.m=best.m;
-  }else if(cur&&n-sawAt>700){cur=null;say(t('clear'),false)}                // "clear" once, after an obstacle
+    if(!cur||cur.key!==best.key||best.m<=cur.m-.4){cur={key:best.key,m:best.m};alertObs(best)}
+  }else if(cur&&n-sawAt>500){cur=null;say(t('clear'),false)}
 }
 function alertObs(b){
   say(t(b.near?'obNear':'ob',{o:nm(b.o),d:t(b.side),m:b.m}),true);
-  beep(b.m<=1?990:660);vib(b.m<=1?[100,50,100]:60);
+  beep(b.m<=1?990:660); vib(b.m<=1?[100,40,100]:50);
 }
 
-/* ===== STEPS + TURNS (IMU, no GPS map) ===== */
+/* ===== IMPROVED ACCURATE STEP COUNTER & iOS PERMISSION ===== */
 function onMotion(e){
   const a=e.accelerationIncludingGravity,r=e.rotationRate;if(!a||a.x==null)return;
-  const n=performance.now(),dt=Math.min(n-lastMT,100)/1000;if(!lastMT)g=Math.hypot(a.x,a.y,a.z)||9.8;lastMT=n;motionOk=true;
-  const mag=Math.hypot(a.x,a.y,a.z)||1;
-  g+=(mag-g)*.02;p2=p1;p1=lp;lp+=(mag-g-lp)*.3;
-  if(p1>1.2&&p1>p2&&p1>=lp&&n-lastStepT>300){steps++;lastStepT=n;onStep()}
+  const n=performance.now(); motionOk=true;
+  const mag=Math.hypot(a.x,a.y,a.z);
+  // Filtered peak detection to avoid false steps from casual shaking
+  if(mag>12.2&&n-lastPeakT>350){
+    lastPeakT=n; steps++; onStep();
+  }
   if(r&&r.alpha!=null){
-    const w=(r.beta*a.x+r.gamma*a.y+r.alpha*a.z)/mag*(IOS?-1:1);          // deg/s about the vertical axis, + = left
-    acc+=w*dt;if(Math.abs(w)<8)acc*=.97;
-    if(Math.abs(acc)>=60){
-      if(state==='teach'||state==='confirmStop'){const d=acc>0?'L':'R',at=steps-segStart,l=turns[turns.length-1];if(!(l&&l[1]===d&&at-l[0]<=2))turns.push([at,d])}
-      acc=0;
+    const w=r.beta*(IOS?-1:1);
+    if(Math.abs(w)>40&&(state==='teach'||state==='confirmStop')){
+      const d=w>0?'L':'R',at=steps-segStart,l=turns[turns.length-1];
+      if(!(l&&l[1]===d&&at-l[0]<=3))turns.push([at,d]);
     }
   }
 }
-function motionOn(){motionOk=false;lastMT=0;addEventListener('devicemotion',onMotion);setTimeout(()=>{if(!motionOk&&state!=='idle')say(t('noSens'),true)},2500)}
+async function motionOn(){
+  motionOk=false;
+  if(IOS&&typeof DeviceMotionEvent.requestPermission==='function'){
+    $('ios-motion').style.display='block';
+    return;
+  }
+  addEventListener('devicemotion',onMotion);
+}
+$('ios-motion').onclick=async()=>{
+  try{
+    const res=await DeviceMotionEvent.requestPermission();
+    if(res==='granted'){
+      $('ios-motion').style.display='none';
+      addEventListener('devicemotion',onMotion);
+      say("Motion sensors enabled.",true);
+    }
+  }catch(e){}
+};
 const motionOff=()=>removeEventListener('devicemotion',onMotion);
 const hav=(a,b)=>{const r=Math.PI/180,x=(b[0]-a[0])*r,y=(b[1]-a[1])*r,s=Math.sin(x/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(y/2)**2;return 12742000*Math.atan2(Math.sqrt(s),Math.sqrt(1-s))};
-function geoOn(){   // outdoors only: refines the step length from GPS
+function geoOn(){
   if(!navigator.geolocation||saver||gid!==null)return;gp=null;
   gid=navigator.geolocation.watchPosition(p=>{
-    const c=p.coords;if(c.accuracy>12)return;const a=[c.latitude,c.longitude];
+    const c=p.coords;if(c.accuracy>15)return;const a=[c.latitude,c.longitude];
     if(!gp){gp=a;gs=steps;return}
     const d=hav(gp,a),n=steps-gs;
-    if(d>=30&&n>=20){const s=d/n;if(s>.4&&s<1.1){STRIDE=+(STRIDE*.7+s*.3).toFixed(3);ls.set('sc_stride',STRIDE)}gp=a;gs=steps}
+    if(d>=25&&n>=15){const s=d/n;if(s>.4&&s<1.1){STRIDE=+(STRIDE*.7+s*.3).toFixed(3);ls.set('sc_stride',STRIDE)}gp=a;gs=steps}
   },()=>{},{enableHighAccuracy:false,maximumAge:5000});
 }
 const geoOff=()=>{if(gid!==null){navigator.geolocation.clearWatch(gid);gid=null}};
 async function lock(on){try{if(on&&!wake&&navigator.wakeLock){wake=await navigator.wakeLock.request('screen');wake.onrelease=()=>{wake=null}}else if(!on&&wake){await wake.release();wake=null}}catch(e){}}
 
-/* ===== BATTERY SAVER (automatic) ===== */
+/* ===== BATTERY SAVER MODE ===== */
 function setSaver(on,why){
   if(on===saver)return;saver=on;document.body.classList.toggle('saver',on);
   if(why)say(t('low')+' '+t(on?'sOn':'sOff'),false);else say(t(on?'sOn':'sOff'),false);
-  const tr=stream&&stream.getVideoTracks()[0];
-  if(tr)tr.applyConstraints({width:{ideal:on?320:480},height:{ideal:on?240:360},frameRate:{ideal:on?10:30}}).catch(()=>{});
   if(on)geoOff();else if(state==='teach'||state==='nav')geoOn();
 }
 if(navigator.getBattery)navigator.getBattery().then(b=>{const f=()=>setSaver(!b.charging&&b.level<=.2,true);b.onlevelchange=f;b.onchargingchange=f;f()}).catch(()=>{});
 
-/* ===== FLOWS: record a path (voice tags) and guide along it ===== */
-async function motionPerm(){const D=window.DeviceMotionEvent;if(D&&typeof D.requestPermission==='function'){try{return await D.requestPermission()==='granted'}catch(e){return false}}return true}
+/* ===== CORE NAVIGATION FLOWS ===== */
 async function begin(){
   const id=++SID;state='askStart';retry=begin;
-  if(!await motionPerm()){say(t('noSens'),true);state='idle';return}
   const name=await ask('sayStart',id);if(id!==SID)return;
   state='idle';if(!name){say(t('nf'),true,true);return}
   const start=find(name)||name;
@@ -269,8 +299,8 @@ async function teach(start,id){
 }
 function teachTick(){
   const n=performance.now();
-  if(state==='teach'&&steps-segStart>=3&&steps>lastAsk&&n-lastStepT>3000){state='confirmStop';lastAsk=steps;stopAt=steps;say(t('stopQ'),true,true)}
-  else if(state==='confirmStop'&&steps-stopAt>=2)state='teach';            // kept walking = "no"
+  if(state==='teach'&&steps-segStart>=4&&steps>lastAsk&&n-lastStepT>3500){state='confirmStop';lastAsk=steps;stopAt=steps;say(t('stopQ'),true,true)}
+  else if(state==='confirmStop'&&steps-stopAt>=2)state='teach';
 }
 async function nameHere(){
   const id=++SID;state='askName';retry=nameHere;
@@ -290,6 +320,7 @@ async function nav(legsX,id){
 }
 const announceLeg=()=>{const l=legs[li];say(t('go',{p:l.to,n:l.n,m:Math.round(l.n*STRIDE)}),true,true)};
 function onStep(){
+  lastStepT=performance.now();
   if(state!=='nav')return;
   const l=legs[li],c=steps-legStart;
   for(const x of l.t){
@@ -304,28 +335,24 @@ function onStep(){
 function stopAll(talk){
   SID++;state='idle';retry=null;clearInterval(idleTimer);
   try{rec&&rec.abort()}catch(e){}
-  speechSynthesis.cancel();q.length=0;camStop();motionOff();geoOff();lock(false);acc=0;
+  speechSynthesis.cancel();q.length=0;camStop();motionOff();geoOff();lock(false);
   if(talk)say(t('done'),true);
 }
 
-/* ===== PERMISSIONS (asked at startup) ===== */
+/* ===== STARTUP PERMISSIONS ===== */
 async function perms(){
-  let ok=true;
-  try{const s=await navigator.mediaDevices.getUserMedia({video:true,audio:true});s.getTracks().forEach(x=>x.stop())}catch(e){ok=false}
-  await new Promise(r=>navigator.geolocation?navigator.geolocation.getCurrentPosition(r,()=>{ok=false;r()},{timeout:8000,maximumAge:6e5}):r());
+  try{const s=await navigator.mediaDevices.getUserMedia({video:true,audio:true});s.getTracks().forEach(x=>x.stop())}catch(e){}
+  await new Promise(r=>navigator.geolocation?navigator.geolocation.getCurrentPosition(r,()=>{r()},{timeout:6000,maximumAge:6e5}):r());
   try{if(navigator.storage&&navigator.storage.persist)await navigator.storage.persist()}catch(e){}
-  return ok;
 }
 
-/* ===== UI: three buttons only ===== */
+/* ===== UI & CONTROLS ===== */
 function render(){
-  const e=E();$('ok').textContent=t('ok');$('cancel').textContent=t('cancel');$('back').textContent=t('back');
-  $('note').textContent=t('note');document.documentElement.dir=(e[2]===1||e[2]===3)?'rtl':'ltr';
-  if(noVoice)stEl.textContent='No installed voice for this language - using English. Install it: Settings > System > Languages & input > Text-to-speech output > Speech Services by Google.';
+  $('ok').textContent=t('ok');$('cancel').textContent=t('cancel');$('back').textContent=t('back');
+  $('note').textContent='Assistive aid only. Real-time close-range priority.';
 }
 $('ok').onclick=async()=>{
   vib(30);
-  if(permP){permOk=await permP;permP=null;if(!permOk){say(t('perm'),true);return}}
   if(state==='idle')begin();
   else if(state==='confirmStop')nameHere();
   else if(state==='askDest'){forceTeach=true;try{rec&&rec.stop()}catch(e){}}
@@ -336,18 +363,21 @@ $('back').onclick=async()=>{
   if(camOn&&!det){try{det=await loadDet()}catch(e){}}
   if(retry)retry();else if(lastInstr)say(lastInstr,true);
 };
-document.addEventListener('keydown',e=>{   // optional external buttons (Bluetooth clicker / keyboard)
+document.addEventListener('keydown',e=>{
   if(e.target.tagName==='SELECT')return;
   const k={Enter:'ok',Escape:'cancel',Backspace:'back'}[e.key];if(k){e.preventDefault();$(k).click()}
 });
-document.addEventListener('pointerdown',e=>{if(!greeted){greeted=true;if(e.target.id!=='ok')say(t('hello'),true,true)}},true);
+
 sel.innerHTML=LANGS.map((l,i)=>`<option value="${i}">${l[1]}</option>`).join('');
 sel.value=LANGS.indexOf(L);
-sel.onchange=()=>{L=LANGS[+sel.value];code=L[0];ls.set('sc_lang',code);noVoice=false;pickVoice();say(t('hello'),true,true)};   // choice is remembered
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&camOn){lock(true);nextFrame()}});
+sel.onchange=()=>{
+  L=LANGS[+sel.value]; code=L[0]; ls.set('sc_lang',code);
+  pickVoice(); say(t('hello'),true,true);
+};
+
 speechSynthesis.onvoiceschanged=pickVoice;
-pickVoice();stEl.textContent=t('hello');lastInstr=t('hello');
-permP=perms();
+pickVoice(); stEl.textContent=t('hello'); lastInstr=t('hello');
+perms();
 </script>
 </body>
 </html>
