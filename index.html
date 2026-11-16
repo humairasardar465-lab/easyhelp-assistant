@@ -4,7 +4,7 @@
 <link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Your Eyes Smart Cane - Humaira Sardar</title>
+<title>Your Eyes Smart Cane - Amazon Collection | Humaira Sardar</title>
 <script type="module">
   import { FilesetResolver, ObjectDetector } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/+esm";
   window.FilesetResolver = FilesetResolver;
@@ -40,7 +40,7 @@ button:active{opacity:0.8;}
 
   <div id="homeView" class="view-section active">
     <h2>SMART CANE</h2>
-    <div class="sub">Your Eyes Smart Cane created by Humaira Sardar</div>
+    <div class="sub">Your Eyes Smart Cane - Amazon Collection created by Humaira Sardar</div>
     
     <label for="voiceLanguage">SELECT LANGUAGE</label>
     <select id="voiceLanguage">
@@ -151,7 +151,7 @@ button:active{opacity:0.8;}
 
   <div id="settingsView" class="view-section">
     <h2>SETTINGS & OPTIONS</h2>
-    <div class="sub">Manage Navigation & Information</div>
+    <div class="sub">Manage Navigation & Information - Amazon Collection</div>
     
     <label for="destinationInput">DESTINATION</label>
     <input type="text" id="destinationInput" placeholder="">
@@ -165,9 +165,9 @@ button:active{opacity:0.8;}
 
   <div id="aboutView" class="view-section">
     <h2>ABOUT APP</h2>
-    <div class="sub">Your Eyes Smart Cane v2.0</div>
+    <div class="sub">Your Eyes Smart Cane v2.0 - Amazon Collection</div>
     <p style="font-size:14px; line-height:1.6; color:#94a3b8;">
-      This application is specially designed to assist visually impaired individuals in real-time obstacle detection, navigation, and environmental awareness. Created by Humaira Sardar from Okara City, Pakistan.
+      This application is specially designed to assist visually impaired individuals in real-time obstacle detection, navigation, and environmental awareness. Created by Humaira Sardar from Okara City, Pakistan under Amazon Collection.
     </p>
     <button id="backFromAboutBtn" class="btn-secondary">BACK</button>
   </div>
@@ -206,8 +206,8 @@ let analysisCanvas = null;
 let lastFrameTime = 0;
 let watchdogTimer = null;
 let isGeminiRunning = false;
-let lastObstacleSpokenTime = 0;
 
+let REQUIRED_CONFIDENCE = 0.50; // Balanced threshold (50%)
 let clearToneTimer = null;
 let totalWalkedMeters = 0;
 let lastGpsLat = 0, lastGpsLng = 0, hasLastGps = false, currentLat = 0, currentLng = 0;
@@ -219,7 +219,7 @@ const translations = {
   'ur-PK': { loading: 'سنسور آن ہو رہا ہے۔ براہ کرم انتظار کریں۔', started: 'اسمارٹ کین آن ہے۔ کیمرہ اور سنسور ایکٹو ہیں۔', stopClose: 'الرٹ ہو جاؤ', clearPath: 'رستہ صاف ہے، آگے بڑھیں۔', camError: 'کیمرہ کی پرمیشن نہیں ملی۔ براہ کرم براؤزر یا فون کی سیٹنگز میں جا کر کیمرہ کی اجازت ان ایبل کریں۔', netError: 'انٹرنیٹ یا ماڈل لوڈنگ کا مسئلہ', meterWord: 'میٹر', frontWord: 'سامنے', leftWord: 'بائیں', rightWord: 'دائیں', obstacleWord: 'رکاوٹ', walkedWord: 'آپ', walkedWord2: 'میٹر چل چکے ہیں', potholeWord: 'نیچے گڑھا یا ڈھلوان ہے، احتیاط کریں', darkWord: 'اندھیرا یا سایہ محسوس ہو رہا ہے، احتیاط کریں', aiAnalyzing: 'منظر کا تجزیہ کیا جا رہا ہے...', aiError: 'اے آئی رسپانس میں مسئلہ', camNotStarted: 'براہ کرم پہلے کیمرہ آن کریں' },
   'hi-IN': { loading: 'सेंसर चालू हो रहा है।', started: 'स्मार्ट केन चालू है।', stopClose: 'अलर्ट', clearPath: 'रास्ता साफ है, आगे बढ़ें।', camError: 'कैमरा अनुमति दें', netError: 'इंटरनेट या मॉडल समस्या', meterWord: 'मीटर', frontWord: 'सामने', leftWord: 'बाएं', rightWord: 'दाएं', obstacleWord: 'बाधा', walkedWord: 'आप', walkedWord2: 'मीटर चल चुके हैं', potholeWord: 'नीचे गड्ढा है, सावधान रहें', darkWord: 'अंधेरा या छाया है, सावधान रहें', aiAnalyzing: 'विश्लेषण कर रहा है...', aiError: 'एआई समस्या', camNotStarted: 'कृपया पहले कैमरा चालू करें' },
   'ar-SA': { loading: 'جاري تشغيل المستشعر.', started: 'العصا الذكية تعمل.', stopClose: 'تنبيه', clearPath: 'الطريق خالٍ، تقدم.', camError: 'السماح بالكاميرا', netError: 'مشكلة في الإنترنت أو النموذج', meterWord: 'متر', frontWord: 'أمام', leftWord: 'يسار', rightWord: 'يمين', obstacleWord: 'عائق', walkedWord: 'لقد مشيت', walkedWord2: 'متر', potholeWord: 'حفرة بالأسفل، انتبه', darkWord: 'ظلام أو ظل، انتبه', aiAnalyzing: 'جاري تحليل المشهد...', aiError: 'مشكلة في الذكاء الاصطناعي', camNotStarted: 'الرجاء تشغيل الكاميرا أولاً' },
-  'pa-IN': { loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ہے۔', started: 'ਸਮਾਰਟ ਕੇਨ ਚਾਲੂ ਹੈ।', stopClose: 'ਅਲਰਟ', clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਅੱਗੇ ਵਧੋ।', camError: 'ਕੈਮਰਾ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ', netError: 'ਇੰਟਰਨੈੱਟ ਜਾਂ ਮਾਡਲ ਦੀ ਸਮੱਸਿਆ', meterWord: 'ਮੀਟਰ', frontWord: 'ਸਾਹਮਣੇ', leftWord: 'ਖੱਬੇ', rightWord: 'ਸੱਜੇ', obstacleWord: 'ਰੁਕਾਵਟ', walkedWord: 'ਤੁਸੀਂ', walkedWord2: 'ਮੀਟਰ ਚੱਲ ਚੁੱਕੇ ਹੋ', potholeWord: 'ਹੇਠਾਂ ਟੋਆ ਹੈ, ਸਾਵਧਾਨ ਰਹੋ', darkWord: 'ਹਨੇਰਾ ਜਾਂ ਪਰਛਾਵਾਂ ਹੈ, ਸਾਵਧਾਨ ਰਹੋ', aiAnalyzing: 'ਜਾਂਚ ਕਰ ਰਿਹਾ ਹੈ...', aiError: 'ਏਆਈ ਸਮੱਸਿਆ', camNotStarted: 'ਕਿਰਪਾ ਕਰਕੇ ਪਹਿਲਾਂ ਕੈਮਰਾ ਚਾਲੂ ਕਰੋ' },
+  'pa-IN': { loading: 'ਸੈਂਸਰ ਚਾਲੂ ਹੋ ਰਿਹਾ ہے۔', started: 'ਸਮਾਰਟ ਕੇਨ ਚਾਲੂ ਹੈ।', stopClose: 'ਅਲਰਟ', clearPath: 'ਰਸਤਾ ਸਾਫ਼ ਹੈ, ਅੱਗੇ ਵਧੋ।', camError: 'ਕੈਮਰਾ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ', netError: 'ਇੰਟਰਨੈੱਟ ਜਾਂ ਮਾਡਲ ਦੀ ਸਮੱਸਿਆ', meterWord: 'ਮੀਟਰ', frontWord: 'ਸਾਹਮਣੇ', leftWord: 'ਖੱਬੇ', rightWord: 'ਸੱਜੇ', obstacleWord: 'ਰੁਕاوਟ', walkedWord: 'ਤੁਸੀਂ', walkedWord2: 'ਮੀਟਰ ਚੱਲ ਚੁੱਕੇ ਹੋ', potholeWord: 'ਹੇਠਾਂ ਟੋਆ ਹੈ, ਸਾਵਧਾਨ ਰਹੋ', darkWord: 'ਹਨੇਰਾ ਜਾਂ ਪਰਛਾਵਾਂ ਹੈ, ਸਾਵਧਾਨ ਰਹੋ', aiAnalyzing: 'ਜਾਂਚ ਕਰ ਰਿਹਾ ਹੈ...', aiError: 'ਏਆਈ ਸਮੱਸਿਆ', camNotStarted: 'ਕਿਰਪਾ ਕਰਕੇ ਪਹਿਲਾਂ ਕੈਮਰਾ ਚਾਲੂ ਕਰੋ' },
   'ps-PK': { loading: 'سنسور روان دی. مهرباني وکئ انتظار وکئ.', started: 'سمارټ کین روان دی.', stopClose: 'خبردار', clearPath: 'لار سمه ده، مخکې لاړ شئ.', camError: 'د کامرې اجازه ورکړئ', netError: 'د انټرنیټ ستونزه', meterWord: 'متره', frontWord: 'مخکې', leftWord: 'کیڼ', rightWord: 'ښي', obstacleWord: 'خنډ', walkedWord: 'تاسو', walkedWord2: 'متره تللي یاست', potholeWord: 'لاندې ګړنګ دی، احتیاط وکړئ', darkWord: 'تاریاته یا سیوری دی، احتیاط وکړئ', aiAnalyzing: 'منظر ارزونه...', aiError: 'د اے آئی ستونزه', camNotStarted: 'مهرباني وکئ لومړی کامره چالان کړئ' }
 };
 
@@ -352,7 +352,6 @@ function speak(text, isObstacle = false) {
   if (!text) return;
   if (!('speechSynthesis' in window)) return;
   if (isObstacle) {
-    try { window.speechSynthesis.cancel(); } catch(e){}
     isSpeakingObstacle = true;
   } else {
     if (isSpeakingObstacle) return;
@@ -374,7 +373,6 @@ function speak(text, isObstacle = false) {
 }
 
 function speakClearForce() {
-  try { window.speechSynthesis.cancel(); } catch(e){}
   isSpeakingObstacle = false;
   lastSpoken = "";
   lastSpeakTime = 0;
@@ -557,7 +555,7 @@ async function initDetector() {
     const vision = await window.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm");
     const detectorPromise = window.ObjectDetector.createFromOptions(vision, {
       baseOptions: { modelAssetPath: "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite", delegate: "CPU" },
-      scoreThreshold: 0.01,
+      scoreThreshold: REQUIRED_CONFIDENCE,
       runningMode: "VIDEO"
     });
     const timeoutPromise = new Promise(function(_, reject) { setTimeout(function() { reject(new Error('model timeout')); }, 15000); });
@@ -682,7 +680,6 @@ function startWatchdog() {
       window.requestAnimationFrame(predictWebcam);
     }
     if (isSpeakingObstacle && (now - lastSpeakTime > 5000)) {
-      try { window.speechSynthesis.cancel(); } catch(e){}
       isSpeakingObstacle = false;
     }
   }, 2000);
@@ -721,7 +718,7 @@ async function predictWebcam() {
           const videoWidth = video.videoWidth || 640;
           const videoArea = videoWidth * (video.videoHeight || 480);
           const sizeRatio = maxArea / videoArea;
-          if (sizeRatio >= 0.015) {
+          if (sizeRatio >= 0.02) {
             const cxRatio = (closest.boundingBox.originX + closest.boundingBox.width / 2) / videoWidth;
             const sideWord = getSideWord(cxRatio);
             const dist = getDistanceMeters(sizeRatio);
