@@ -34,7 +34,7 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 
 <div id="homeView" class="view active">
   <h2>SMART CANE</h2>
-  <div class="sub">Your Eyes Smart Cane - created by Humaira Sardar</div>
+  <div class="sub">Your Eyes Smart Cane created by Humaira Sardar</div>
   <label for="voiceLanguage">SELECT LANGUAGE</label>
   <select id="voiceLanguage"></select>
   <video id="webcam" autoplay playsinline muted aria-label="Camera view"></video>
@@ -62,7 +62,7 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 
 <div id="aboutView" class="view">
   <h2>ABOUT APP</h2>
-  <div class="sub">Your Eyes Smart Cane v2.1</div>
+  <div class="sub">Your Eyes Smart Cane v2.2</div>
   <p class="txt">An assistive app for visually impaired people. It uses the camera to recognise common obstacles (people, vehicles, furniture, animals) and tells their side and approximate distance. Created by Humaira Sardar, Okara City, Pakistan.</p>
   <p class="txt"><b>Important:</b> this app does not replace a white cane or a guide. It cannot detect stairs, pits, walls, glass or poles, and distances are only estimates. The "Ask the Smart Cane" button sends one camera photo to an online AI service.</p>
   <button id="backFromAboutBtn" class="sec">BACK</button>
@@ -203,7 +203,9 @@ dark:['Too dark, the camera cannot see.','اندھیرا ہے، کیمرہ نہ�
 ai:['Sending a photo to AI...','تصویر اے آئی کو بھیجی جا رہی ہے...','तस्वीर एआई को भेजी जा रही है...','جارٍ إرسال صورة إلى الذكاء الاصطناعي...','ਤਸਵੀਰ ਏਆਈ ਨੂੰ ਭੇਜੀ ਜਾ ਰਹੀ ਹੈ...','انځور AI ته لېږل کېږي...'],
 aiErr:['AI response problem. Try again.','اے آئی جواب میں مسئلہ۔ دوبارہ کوشش کریں۔','एआई में समस्या। फिर कोशिश करें।','مشكلة في الذكاء الاصطناعي. حاول مرة أخرى.','ਏਆਈ ਵਿੱਚ ਸਮੱਸਿਆ। ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।','د AI ستونزه. بیا هڅه وکړئ.'],
 aiOff:['AI is not set up.','اے آئی سیٹ اپ نہیں ہے۔','एआई सेट नहीं है।','الذكاء الاصطناعي غير مُعدّ.','ਏਆਈ ਸੈੱਟ ਨਹੀਂ ਹੈ।','AI تنظیم شوی نه دی.'],
-camFirst:['Please start the camera first.','براہ کرم پہلے کیمرہ آن کریں۔','कृपया पहले कैमरा चालू करें।','الرجاء تشغيل الكاميرا أولاً.','ਕਿਰਪਾ ਕਰਕੇ ਪਹਿਲਾਂ ਕੈਮਰਾ ਚਾਲੂ ਕਰੋ।','مهرباني وکړئ لومړی کامره چالان کړئ.']
+camFirst:['Please start the camera first.','براہ کرم پہلے کیمرہ آن کریں۔','कृपया पहले कैमरा चालू करें।','الرجاء تشغيل الكاميرا أولاً.','ਕਿਰਪਾ ਕਰਕੇ ਪਹਿਲਾਂ ਕੈਮਰਾ ਚਾਲੂ ਕਰੋ।','مهرباني وکړئ لومړی کامره چالان کړئ.'],
+camHttps:['Camera needs a secure link. Open this app from an https address.','کیمرے کے لیے محفوظ لنک چاہیے۔ اس ایپ کو https ایڈریس سے کھولیں۔','कैमरे के लिए सुरक्षित लिंक चाहिए। इस ऐप को https पते से खोलें।','الكاميرا تحتاج رابطاً آمناً. افتح هذا التطبيق من عنوان https.','ਕੈਮਰੇ ਲਈ ਸੁਰੱਖਿਅਤ ਲਿੰਕ ਚਾਹੀਦਾ ਹੈ। ਇਸ ਐਪ ਨੂੰ https ਪਤੇ ਤੋਂ ਖੋਲ੍ਹੋ।','کامرې ته خوندي لینک پکار دی. دا اپ د https پتې څخه پرانیزئ.'],
+camBusy:['Camera not found or busy. Close other apps that use the camera.','کیمرہ نہیں ملا یا مصروف ہے۔ کیمرہ استعمال کرنے والی دوسری ایپس بند کریں۔','कैमरा नहीं मिला या व्यस्त है। कैमरा इस्तेमाल करने वाले दूसरे ऐप बंद करें।','الكاميرا غير موجودة أو مشغولة. أغلق التطبيقات الأخرى التي تستخدم الكاميرا.','ਕੈਮਰਾ ਨਹੀਂ ਮਿਲਿਆ ਜਾਂ ਰੁੱਝਿਆ ਹੈ। ਕੈਮਰਾ ਵਰਤਣ ਵਾਲੀਆਂ ਹੋਰ ਐਪਾਂ ਬੰਦ ਕਰੋ।','کامره ونه موندل شوه یا بوخت ده. نور هغه اپونه چې کامره کاروي بند کړئ.']
 };
 /* Objects the app will name: [real height in metres, en, ur, hi, ar, pa, ps]. Anything else is announced only as "obstacle". */
 const N={
@@ -249,7 +251,7 @@ function pickVoice(){
   if(v||!vs.length){                       // voice exists (or voices are not loaded yet)
     voice=v||null;curCode=L.code;curName=L.name;
     if(pre in BASE)eff=BASE[pre];
-    else trP=loadTr(L.code,L.name).then(r=>{if(r&&LANGS[+sel.value].code===L.code)tr=r});
+    else trP=loadTr(L.code,L.name).then(r=>{if(LANGS[+sel.value].code!==L.code)return;if(r)tr=r;else{voice=vs.find(x=>x.lang.split(/[-_]/)[0]==='en')||null;curCode='en-US';curName='English';info.textContent='Could not translate to '+L.name+'. Add the API key in SETTINGS. Using English.'}});
   }else{
     voice=vs.find(x=>x.lang.split(/[-_]/)[0]==='en')||null;
     info.textContent='No voice for '+L.name+' on this phone. Using English.';
@@ -380,10 +382,16 @@ async function openCam(){
   catch(e){if(e.name==='NotAllowedError'||e.name==='SecurityError')throw e;return await navigator.mediaDevices.getUserMedia({video:true,audio:false})}
 }
 async function start(){
-  if(live||stream)return;
-  setSt(t('loading'));startBtn.textContent='PLEASE WAIT...';
+  if(live||stream||startBtn.disabled)return;
+  startBtn.disabled=true;setSt(t('loading'));startBtn.textContent='PLEASE WAIT...';
   try{stream=await openCam()}
-  catch(e){stream=null;startBtn.textContent='START';setSt(t('camErr'));say(t('camErr'),true);info.textContent=CAMWHY[e.name]||('Camera error: '+e.name);return}
+  catch(e){
+    stream=null;startBtn.disabled=false;startBtn.textContent='START';
+    const k=e.name==='Insecure'?'camHttps':(e.name==='NotAllowedError'||e.name==='SecurityError')?'camErr':'camBusy';
+    setSt(t(k));say(t(k),true);
+    info.textContent=(CAMWHY[e.name]||('Camera error: '+e.name))+(window.top!==window.self?' This page is inside a frame: the frame needs allow="camera; geolocation".':'');
+    return;
+  }
   video.srcObject=stream;try{await video.play()}catch(e){}
   live=true;ds=det?'ready':'loading';
   startBtn.style.display='none';stopBtn.style.display='block';
@@ -405,12 +413,12 @@ function stop(){
   if(stream){stream.getTracks().forEach(x=>x.stop());stream=null}
   if(wake){wake.release();wake=null}
   video.srcObject=null;st.textContent='STATUS: OFF';info.textContent='';
-  startBtn.style.display='block';startBtn.textContent='START';stopBtn.style.display='none';
+  startBtn.style.display='block';startBtn.disabled=false;startBtn.textContent='START';stopBtn.style.display='none';
   hist=[];mode='clear';lastKey='';lastDist=99;lastT=-1;walked=0;announced=0;anchor=null;isDark=false;
 }
 
 /* ===== AI ===== */
-const PERSONA='You are Smart Cane, the assistant inside the Smart Cane app for blind and visually impaired people. Introduce yourself only as "Smart Cane". Never mention any AI company, AI model or product name. If asked what you are or who made you, say you are Smart Cane. Keep answers short and clear.';
+const PERSONA='You are Smart Cane, the assistant inside the Smart Cane app for blind and visually impaired people. Introduce yourself only as "Smart Cane". You may say that you are an AI assistant, but never mention any AI company, AI model or product name. If asked who or what you are, or who made you, say you are Smart Cane. Keep answers short and clear.';
 const getKey=()=>{if(AI_API_KEY)return AI_API_KEY;try{return localStorage.getItem('sc_key')||''}catch(e){return ''}};
 async function callAI(prompt,img,json){
   const key=getKey();if(!key)throw new Error('no key');
@@ -467,10 +475,10 @@ on('saveKeyBtn',()=>{const v=$('apiKeyInput').value.trim(),b=$('saveKeyBtn');try
 on('settingsNavBtn',()=>show('settingsView'));on('backToHomeBtn',()=>show('homeView'));
 on('aboutNavBtn',()=>show('aboutView'));on('backFromAboutBtn',()=>show('settingsView'));
 on('openMapsBtn',()=>{const d=$('destinationInput').value.trim();window.open(d?`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(d)}&travelmode=walking`:'https://www.google.com/maps','_blank')});
-sel.addEventListener('change',()=>{vib(15);pickVoice()});
+sel.addEventListener('change',()=>{vib(15);try{localStorage.setItem('sc_lang',LANGS[+sel.value].code)}catch(e){}pickVoice()});
 if('speechSynthesis' in window)speechSynthesis.onvoiceschanged=pickVoice;
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&live){cancelAnimationFrame(raf);loop();lockScreen()}});
-buildLangs();pickVoice();
+buildLangs();try{const i=LANGS.findIndex(l=>l.code===localStorage.getItem('sc_lang'));if(i>0)sel.value=i}catch(e){}pickVoice();
 </script>
 </body>
 </html>
