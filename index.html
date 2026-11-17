@@ -9,6 +9,7 @@
 <script type="module">
 import {FilesetResolver,ObjectDetector} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/+esm";
 window.FilesetResolver=FilesetResolver;window.ObjectDetector=ObjectDetector;
+window.mediapipeLoaded = true;
 window.dispatchEvent(new Event('mediapipe-loaded'));
 </script>
 <style>
@@ -70,12 +71,12 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 
 <script>
 /* ===== CONFIG ===== */
-const AI_API_KEY="";   // optional: only used to translate the languages that have no built-in text (paste a key between the quotes)
+const AI_API_KEY="";   
 const AI_MODEL="gemini-flash-latest";
 const WASM="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm";
 const MODEL="https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite";
-const RANGE=2.25;   // metres: obstacles farther than this are ignored (close-range priority)
-const IDX={en:0,ur:1,hi:2,ar:3,'pa-IN':4,ps:5};   // built-in text packs: English, Urdu, Hindi, Arabic, Punjabi, Pashto
+const RANGE=2.25;   
+const IDX={en:0,ur:1,hi:2,ar:3,'pa-IN':4,ps:5};   
 const LANGS=`en-US|English (United States)|
 en-GB|English (United Kingdom)|
 en-AU|English (Australia)|
@@ -179,31 +180,32 @@ cy-GB|Welsh (United Kingdom)|Cymraeg
 yi|Yiddish|ייִדיש
 yo-NG|Yoruba (Nigeria)|Yorùbá
 zu-ZA|Zulu (South Africa)|isiZulu`.split('\n').map(r=>{const a=r.split('|');return[a[0],a[1],a[2]||'']});
-/* ===== TEXT: [English, Urdu, Hindi, Arabic, Punjabi, Pashto] ===== */
+
+/* ===== TEXT ===== */
 const S={
 ok:['OK / Confirm','ٹھیک ہے / تصدیق','ठीक है / पुष्टि','موافق / تأكيد','ਠੀਕ ਹੈ / ਪੁਸ਼ਟੀ','سم دی / تایید'],
 cancel:['Cancel / Stop','منسوخ / روکیں','रद्द करें / रोकें','إلغاء / إيقاف','ਰੱਦ ਕਰੋ / ਰੋਕੋ','لغوه / ودرول'],
-back:['Back / Retry','واپس / دوبارہ','वापस / दोबारा','رجوع / إعادة','ਵਾਪਸ / ਦੁਬਾਰਾ','شاته / بیا'],
+back:['Back / Retry','واپس / दोबारा','वापस / दोबारा','رجوع / إعادة','ਵਾਪਸ / ਦੁਬਾਰਾ','شاته / بیا'],
 start:['START','شروع کریں','शुरू करें','ابدأ','ਸ਼ੁਰੂ ਕਰੋ','پیل کړئ'],
 stop:['STOP','روکیں','रोकें','إيقاف','ਰੋਕੋ','ودرول'],
 settings:['SETTINGS','سیٹنگز','सेटिंग्स','الإعدادات','ਸੈਟਿੰਗਾਂ','ترتیبات'],
-about:['ABOUT APP','ایپ کے بارے میں','ऐप के बारे में','عن التطبيق','ਐਪ ਬਾਰੇ','د اپ په اړه'],
+about:['ABOUT APP','ایپ کے بارے میں','ऐप के बारे में','عن التطبيق','ਐਪ ਬारे','د اپ په اړه'],
 home:['BACK TO HOME','ہوم پر واپس','होम पर वापस','العودة للرئيسية','ਹੋਮ ਤੇ ਵਾਪਸ','کور ته ستنیدل'],
 wa:['CONTACT WHATSAPP','واٹس ایپ پر رابطہ کریں','व्हाट्सएप पर संपर्क करें','تواصل عبر واتساب','ਵਟਸਐਪ ਤੇ ਸੰਪਰਕ ਕਰੋ','په واټس اپ اړیکه'],
 lang:['SELECT LANGUAGE','زبان منتخب کریں','भाषा चुनें','اختر اللغة','ਭਾਸ਼ਾ ਚੁਣੋ','ژبه وټاکئ'],
-aboutTxt:['Smart Cane helps you walk with confidence. It spots nearby obstacles, tells their distance in meters, counts your steps and guides you to the places you save by voice.','اسمارٹ کین آپ کو اعتماد سے چلنے میں مدد دیتا ہے۔ یہ قریبی رکاوٹیں پہچانتا ہے، میٹروں میں فاصلہ بتاتا ہے، قدم گنتا ہے اور آواز سے محفوظ کی گئی جگہوں تک رہنمائی کرتا ہے۔','स्मार्ट केन आपको भरोसे के साथ चलने में मदद करता है। यह आस-पास की बाधाएँ पहचानता है, मीटर में दूरी बताता है, कदम गिनता है और आवाज़ से सहेजी गई जगहों तक रास्ता दिखाता है।','العصا الذكية تساعدك على المشي بثقة. تكتشف العوائق القريبة، وتخبرك بالمسافة بالأمتار، وتعدّ خطواتك، وترشدك إلى الأماكن التي تحفظها بصوتك.','ਸਮਾਰਟ ਕੇਨ ਤੁਹਾਨੂੰ ਭਰੋਸੇ ਨਾਲ ਤੁਰਨ ਵਿੱਚ ਮਦਦ ਕਰਦਾ ਹੈ। ਇਹ ਨੇੜੇ ਦੀਆਂ ਰੁਕਾਵਟਾਂ ਲੱਭਦਾ ਹੈ, ਮੀਟਰਾਂ ਵਿੱਚ ਦੂਰੀ ਦੱਸਦਾ ਹੈ, ਕਦਮ ਗਿਣਦਾ ਹੈ ਅਤੇ ਆਵਾਜ਼ ਨਾਲ ਸੰਭਾਲੀਆਂ ਥਾਵਾਂ ਤੱਕ ਰਾਹ ਦੱਸਦਾ ਹੈ।','سمارټ کین تاسو سره په ډاډ سره د تګ کې مرسته کوي. دا نږدې خنډونه موندي، فاصله په مترو کې وايي، ګامونه شمېري او د غږ په مرسته خوندي شویو ځایونو ته لارښوونه کوي.'],
+aboutTxt:['Smart Cane helps you walk with confidence. It spots nearby obstacles, tells their distance in meters, counts your steps and guides you to the places you save by voice.','اسمارٹ کین آپ کو اعتماد سے چلنے میں مدد دیتا ہے۔ یہ قریبی رکاوٹیں پہچانتا ہے، میٹروں میں فاصلہ بتاتا ہے، قدم گنتا ہے اور آواز سے محفوظ کی گئی جگہوں تک رہنمائی کرتا ہے۔','स्मार्ट केन आपको भरोसे के साथ चलने में मदद करता है। यह आस-पास की बाधाएँ पहचानता है, मीटर में दूरी बताता है, कदम गिनता है और आवाज़ से सहेजी गई जगहों तक रास्ता दिखाता है।','العصا الذكية تساعدك على المشي بثقة. تكتشف العوائق القريبة، وتخبرك بالمسافة بالأمتار، وتعدّ خطواتك، وترشدك إلى الأماكن التي تحفظها بصوتك.','ਸਮਾਰਟ ਕੇਨ ਤੁਹਾਨੂੰ ਭਰੋਸੇ ਨਾਲ ਤੁਰਨ ਵਿੱਚ ਮਦਦ ਕਰਦਾ ਹੈ। ਇਹ ਨੇੜੇ ਦੀਆਂ ਰੁਕਾਵਟਾਂ ਲੱਭਦਾ ਹੈ, ਮੀਟਰਾਂ ਵਿੱਚ ਦੂਰੀ ਦੱਸਦਾ ਹੈ, ਕਦਮ ਗਿਣਦਾ ਹੈ ਅਤੇ ਆਵਾਜ਼ ਨਾਲ ਸੰਭਾਲੀਆਂ ਥਾਵਾਂ ਤੱਕ ਰਾਹ ਦੱਸਦਾ ہے۔','سمارټ کین تاسو سره په ډاډ سره د تګ کې مرسته کوي. دا نږدې خنډونه موندي، فاصله په مترو کې وايي، ګامونه شمېري او د غږ په مرسته خوندي شویو ځایونو ته لارښوونه کوي.'],
 hello:['Smart Cane is ready. Press OK to begin.','اسمارٹ کین تیار ہے۔ شروع کرنے کے لیے ٹھیک ہے دبائیں۔','स्मार्ट केन तैयार है। शुरू करने के लिए ठीक है दबाएँ।','العصا الذكية جاهزة. اضغط موافق للبدء.','ਸਮਾਰਟ ਕੇਨ ਤਿਆਰ ਹੈ। ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਠੀਕ ਹੈ ਦਬਾਓ।','سمارټ کین چمتو دی. د پیل لپاره سم دی ووهئ.'],
 sayStart:['Say your starting point.','اپنی شروعات کی جگہ بتائیں۔','अपनी शुरुआत की जगह बताएँ।','قل نقطة البداية.','ਆਪਣੀ ਸ਼ੁਰੂਆਤ ਦੀ ਥਾਂ ਦੱਸੋ।','د پیل ځای ووایاست.'],
 startSaved:['Okay, I remembered {p} as your starting point.','ٹھیک ہے، میں نے {p} کو آپ کی شروعات کی جگہ کے طور پر یاد کر لیا۔','ठीक है, मैंने {p} को आपकी शुरुआत की जगह के रूप में याद कर लिया।','حسنًا، حفظت {p} كنقطة بداية لك.','ਠੀਕ ਹੈ, ਮੈਂ {p} ਨੂੰ ਤੁਹਾਡੀ ਸ਼ੁਰੂਆਤ ਦੀ ਥਾਂ ਵਜੋਂ ਯਾਦ ਕਰ ਲਿਆ।','ښه، ما {p} ستاسو د پیل ځای په توګه په یاد کړ.'],
 walk:['Start walking. I am counting your steps.','چلنا شروع کریں۔ میں آپ کے قدم گن رہا ہوں۔','चलना शुरू करें। मैं आपके कदम गिन रहा हूँ।','ابدأ المشي. أنا أعدّ خطواتك.','ਤੁਰਨਾ ਸ਼ੁਰੂ ਕਰੋ। ਮੈਂ ਤੁਹਾਡੇ ਕਦਮ ਗਿਣ ਰਿਹਾ ਹਾਂ।','ګام وهل پیل کړئ. زه ستاسو ګامونه شمېرم.'],
-stopQ:['Do you want to stop here? OK for yes, Cancel for no.','کیا آپ یہاں رکنا چاہتے ہیں؟ ہاں کے لیے ٹھیک ہے، نہیں کے لیے منسوخ دبائیں۔','क्या आप यहाँ रुकना चाहते हैं? हाँ के लिए ठीक है, नहीं के लिए रद्द दबाएँ।','هل تريد التوقف هنا؟ موافق للتأكيد، إلغاء للرفض.','ਕੀ ਤੁਸੀਂ ਇੱਥੇ ਰੁਕਣਾ ਚਾਹੁੰਦੇ ਹੋ? ਹਾਂ ਲਈ ਠੀਕ ਹੈ, ਨਾਂਹ ਲਈ ਰੱਦ ਕਰੋ ਦਬਾਓ।','ایا تاسو غواړئ دلته ودرېږئ؟ د هو لپاره سم دی، د نه لپاره لغوه ووهئ.'],
+stopQ:['Do you want to stop here? OK for yes, Cancel for no.','کیا آپ یہاں رکنا چاہتے ہیں؟ ہاں کے لیے ٹھیک ہے، نہیں کے لیے منسوخ دبائیں۔','क्या आप यहाँ रुकना चाहते हैं? हाँ के लिए ठीक है, नहीं के लिए रद्द दबाएँ।','هل تريد التوقف هنا؟ موافق للتأكيد، إلغاء للرفض.','ਕੀ ਤੁਸੀਂ ਇੱਥੇ ਰੁਕਣਾ ਚਾਹੁੰਦੇ ਹੋ? ਹਾਂ ਲਈ ਠੀਕ ਹੈ, ਨਾਂਹ ਲਈ ਰੱਦ ਕਰੋ ਦਬਾਓ።','ایا تاسو غواړئ دلته ودرېږئ؟ د هو لپاره سم دی، د نه لپاره لغوه ووهئ.'],
 place:['What is this place?','یہ کون سی جگہ ہے؟','यह कौन सी जगह है?','ما اسم هذا المكان؟','ਇਹ ਕਿਹੜੀ ਥਾਂ ਹੈ?','دا کوم ځای دی؟'],
 saved:['Saved {p}, {n} steps.','{p} محفوظ ہو گیا، {n} قدم۔','{p} सहेजा गया, {n} कदम।','تم حفظ {p}. عدد الخطوات {n}.','{p} ਸੰਭਾਲ ਲਿਆ, {n} ਕਦਮ।','{p} خوندي شو، {n} ګامونه.'],
 noSteps:['No steps counted yet. Please walk a little.','ابھی تک کوئی قدم نہیں گنا گیا۔ براہ کرم تھوڑا چلیں۔','अभी तक कोई कदम नहीं गिना गया। कृपया थोड़ा चलें।','لم تُحسب أي خطوات بعد. يرجى المشي قليلًا.','ਅਜੇ ਕੋਈ ਕਦਮ ਨਹੀਂ ਗਿਣਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਥੋੜ੍ਹਾ ਤੁਰੋ।','تر اوسه هېڅ ګام نه دی شمېرل شوی. مهرباني وکړئ لږ ګام ووهئ.'],
 more:['Keep walking to save the next place, or press Cancel to finish.','اگلی جگہ محفوظ کرنے کے لیے چلتے رہیں، یا ختم کرنے کے لیے منسوخ دبائیں۔','अगली जगह सहेजने के लिए चलते रहें, या खत्म करने के लिए रद्द दबाएँ।','واصل المشي لحفظ المكان التالي، أو اضغط إلغاء للإنهاء.','ਅਗਲੀ ਥਾਂ ਸੰਭਾਲਣ ਲਈ ਤੁਰਦੇ ਰਹੋ, ਜਾਂ ਮੁਕਾਉਣ ਲਈ ਰੱਦ ਕਰੋ ਦਬਾਓ।','د بل ځای د خوندي کولو لپاره روان اوسئ، یا د پای لپاره لغوه ووهئ.'],
 done:['Stopped.','روک دیا گیا۔','रोक दिया गया।','تم الإيقاف.','ਰੋਕ ਦਿੱਤਾ ਗਿਆ।','ودرول شو.'],
 dest:['Where do you want to go? Say the place name, or press OK to save a new path.','آپ کہاں جانا چاہتے ہیں؟ جگہ کا نام بتائیں، یا نیا راستہ محفوظ کرنے کے لیے ٹھیک ہے دبائیں۔','आप कहाँ जाना चाहते हैं? जगह का नाम बताएँ, या नया रास्ता सहेजने के लिए ठीक है दबाएँ।','إلى أين تريد الذهاب؟ قل اسم المكان، أو اضغط موافق لحفظ مسار جديد.','ਤੁਸੀਂ ਕਿੱਥੇ ਜਾਣਾ ਚਾਹੁੰਦੇ ਹੋ? ਥਾਂ ਦਾ ਨਾਂ ਦੱਸੋ, ਜਾਂ ਨਵਾਂ ਰਸਤਾ ਸੰਭਾਲਣ ਲਈ ਠੀਕ ਹੈ ਦਬਾਓ।','تاسو چېرته تلل غواړئ؟ د ځای نوم ووایاست، یا د نوې لارې د خوندي کولو لپاره سم دی ووهئ.'],
-nf:['I did not catch that, or the place is not saved. Press Back to retry.','میں سمجھ نہیں سکا، یا یہ جگہ محفوظ نہیں ہے۔ دوبارہ کے لیے واپس دبائیں۔','मैं समझ नहीं पाया, या यह जगह सहेजी नहीं है। दोबारा के लिए वापस दबाएँ।','لم أفهم، أو أن المكان غير محفوظ. اضغط رجوع للمحاولة مرة أخرى.','ਮੈਂ ਸਮਝ ਨਹੀਂ ਸਕਿਆ, ਜਾਂ ਇਹ ਥਾਂ ਸੰਭਾਲੀ ਨਹੀਂ ਹੋਈ। ਦੁਬਾਰਾ ਲਈ ਵਾਪਸ ਦਬਾਓ।','زه پوه نه شوم، یا دا ځای خوندي نه دی. د بیا هڅې لپاره شاته ووهئ.'],
+nf:['I did not catch that, or the place is not saved. Press Back to retry.','میں سمجھ نہیں سکا، یا یہ جگہ محفوظ نہیں ہے۔ دوبارہ کے لیے واپس دبائیں۔','मैं समझ नहीं पाया, या यह जगह सहेजी नहीं है। दोबारा के लिए वापस दबाएँ।','لم أفهم، أو أن المكان غير محفوظ. اضغط رجوع للمحاولة مرة أخرى.','ਮੈਂ ਸਮਝ ਨਹੀਂ ਸਕਿਆ, ਜਾਂ ਇਹ ਥਾਂ ਸੰਭਾਲੀ ਨਹੀਂ ਹੋਈ। ਦੁਬਾਰਾ ਲਈ ਵਾਪس ਦਬਾਓ।','زه پوه نه شوم، یا دا ځای خوندي نه دی. د بیا هڅې لپاره شاته ووهئ.'],
 go:['Going to {p}. Walk {n} steps, about {m} meters.','{p} کی طرف۔ {n} قدم چلیں، تقریباً {m} میٹر۔','{p} की ओर। {n} कदम चलें, लगभग {m} मीटर।','الذهاب إلى {p}. عدد الخطوات {n}، حوالي {m} متر.','{p} ਵੱਲ। {n} ਕਦਮ ਤੁਰੋ, ਲਗਭਗ {m} ਮੀਟਰ।','{p} ته. {n} ګامونه ووهئ، شاوخوا {m} متره.'],
 turn:['In {n} steps, turn {d}.','{n} قدم بعد {d} مڑیں۔','{n} कदम बाद {d} मुड़ें।','بعد {n} من الخطوات، انعطف {d}.','{n} ਕਦਮ ਬਾਅਦ {d} ਮੁੜੋ।','د {n} ګامونو وروسته {d} ته وګرځئ.'],
 turnNow:['Turn {d} now.','اب {d} مڑیں۔','अब {d} मुड़ें।','انعطف {d} الآن.','ਹੁਣ {d} ਮੁੜੋ।','اوس {d} ته وګرځئ.'],
@@ -212,21 +214,20 @@ R:['right','دائیں','दाएँ','يمينًا','ਸੱਜੇ','ښي'],
 F:['front','سامنے','सामने','أمامك','ਸਾਹਮਣੇ','مخکې'],
 arr:['You have arrived at {p}.','آپ {p} پر پہنچ گئے ہیں۔','आप {p} पर पहुँच गए हैं।','لقد وصلت إلى {p}.','ਤੁਸੀਂ {p} ਤੇ ਪਹੁੰਚ ਗਏ ਹੋ।','تاسو {p} ته ورسېدئ.'],
 pass:['You may have passed {p}. Press Back to repeat, or Cancel to stop.','ہو سکتا ہے آپ {p} سے آگے نکل گئے ہوں۔ دہرانے کے لیے واپس، روکنے کے لیے منسوخ دبائیں۔','हो सकता है आप {p} से आगे निकल गए हों। दोहराने के लिए वापस, रोकने के लिए रद्द दबाएँ।','ربما تجاوزت {p}. اضغط رجوع للتكرار، أو إلغاء للإيقاف.','ਹੋ ਸਕਦਾ ਹੈ ਤੁਸੀਂ {p} ਤੋਂ ਅੱਗੇ ਲੰਘ ਗਏ ਹੋ। ਦੁਹਰਾਉਣ ਲਈ ਵਾਪਸ, ਰੋਕਣ ਲਈ ਰੱਦ ਕਰੋ ਦਬਾਓ।','امکان لري تاسو له {p} څخه تير شوي یاست. د تکرار لپاره شاته، د درولو لپاره لغوه ووهئ.'],
-perm:['Please allow camera, microphone and location in browser settings.','براہ کرم براؤزر کی سیٹنگز میں کیمرہ، مائیکروفون اور لوکیشن کی اجازت دیں۔','कृपया ब्राउज़र सेटिंग्स में कैमरा, माइक्रोफ़ोन और लोकेशन की अनुमति दें।','يرجى السماح بالكاميرا والميكروفون والموقع من إعدادات المتصفح.','ਕਿਰਪਾ ਕਰਕੇ ਬ੍ਰਾਊਜ਼ਰ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਕੈਮਰਾ, ਮਾਈਕ੍ਰੋਫ਼ੋਨ ਅਤੇ ਲੋਕੇਸ਼ਨ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ।','مهرباني وکړئ د براوزر په ترتیباتو کې کامرې، مایکروفون او موقعیت ته اجازه ورکړئ.'],
-sOn:['Battery saver on.','بیٹری سیور آن۔','बैटरी सेवर चालू।','وضع توفير البطارية قيد التشغيل.','ਬੈਟਰੀ ਸੇਵਰ ਚਾਲੂ।','د بیټرۍ سیور فعال شو.'],
-sOff:['Battery saver off.','بیٹری سیور بند۔','बैटरी सेवर बंद।','تم إيقاف توفير البطارية.','ਬੈਟਰੀ ਸੇਵਰ ਬੰਦ।','د بیټرۍ سیور بند شو.'],
-low:['Battery low.','بیٹری کم ہے۔','बैटरी कम है।','البطارية منخفضة.','ਬੈਟਰੀ ਘੱਟ ਹੈ।','بیټرۍ کمه ده.'],
-det:['Obstacle detection is not working. Walk carefully.','رکاوٹ کی شناخت کام نہیں کر رہی۔ احتیاط سے چلیں۔','बाधा की पहचान काम नहीं कर रही। सावधानी से चलें।','كشف العوائق لا يعمل. امش بحذر.','ਰੁਕਾਵਟ ਦੀ ਪਛਾਣ ਕੰਮ ਨਹੀਂ ਕਰ ਰਹੀ। ਧਿਆਨ ਨਾਲ ਤੁਰੋ।','د خنډ پېژندنه کار نه کوي. په احتیاط روان شئ.'],
+perm:['Please allow camera, microphone and location in browser settings.','براہ کرم براؤزر کی سیٹنگز میں کیمرہ، مائیکروفون اور لوکیشن کی اجازت دیں۔','कृपया ब्राउज़र सेटिंग्स में कैमरा, माइक्रोफ़ोन और लोकेशन की अनुमति दें।','يرجى السماح بالكاميرا والميكروفون والموقع من إعدادات المتصفح.','ਕਿਰਪਾ ਕਰਕੇ ਬ੍ਰਾਊਜ਼ਰ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਕੈਮਰਾ, ਮਾਈਕ੍ਰੋਫ਼ੋਨ ਅਤੇ ਲੋਕੇਸ਼ਨ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ።','مهرباني وکړئ د براوزر په ترتیباتو کې کامرې، مایکروفون او موقعیت ته اجازه ورکړئ.'],
+sOn:['Battery saver on.','بیٹری سیور آن۔','बैटरी सेवर चालू।','وضع توفير البطارية قيد التشغيل.','ਬੈਟਰੀ ਸੇਵਰ ਚਾਲੂ۔','د بیټرۍ سیور فعال شو.'],
+sOff:['Battery saver off.','بیٹری سیور بند۔','बैटरी सेवर बंद।','تم إيقاف توفير البطارية.','ਬੈਟਰੀ ਸੇਵਰ ਬੰਦ۔','د بیټرۍ سیور بند شو.'],
+low:['Battery low.','بیٹری کم ہے۔','बैटरी कम है।','البطارية منخفضة.','ਬੈਟਰੀ ਘੱਟ ਹੈ።','بیټرۍ کمه ده.'],
+det:['Obstacle detection is not working. Walk carefully.','رکاوٹ کی شناخت کام نہیں کر رہی۔ احتیاط سے چلیں۔','बाधा की पहचान काम नहीं कर रही। सावधानी से चलें।','كشف العوائق لا يعمل. امش بحذر.','ਰੁਕاوਟ ਦੀ ਪਛਾਣ ਕੰਮ ਨਹੀਂ ਕਰ ਰਹੀ। ਧਿਆਨ ਨਾਲ ਤੁਰੋ।','د خنډ پېژندنه کار نه کوي. په احتیاط روان شئ.'],
 ob:['{o}, {d}, about {m} meters','{o}، {d}، تقریباً {m} میٹر','{o}, {d}, लगभग {m} मीटर','{o}، {d}، حوالي {m} متر','{o}, {d}, ਲਗਭਗ {m} ਮੀਟਰ','{o}، {d}، شاوخوا {m} متره'],
 obNear:['{o}, {d}, very close. Stop.','{o}، {d}، بہت قریب۔ رک جائیں۔','{o}, {d}, बहुत पास। रुकें।','{o}، {d}، قريب جدًا. توقف.','{o}, {d}, ਬਹੁਤ ਨੇੜੇ। ਰੁਕੋ।','{o}، {d}، ډېر نږدې. ودرېږئ.'],
 clear:['No obstacle detected.','کوئی رکاوٹ نظر نہیں آ رہی۔','कोई बाधा नहीं दिख रही।','لا توجد عوائق مكتشفة.','ਕੋਈ ਰੁਕਾਵਟ ਨਹੀਂ ਦਿਸ ਰਹੀ।','هېڅ خنډ نه ښکاري.'],
 noSens:['Motion sensor is not available.','موشن سینسر دستیاب نہیں ہے۔','मोशन सेंसर उपलब्ध नहीं है।','مستشعر الحركة غير متوفر.','ਮੋਸ਼ਨ ਸੈਂਸਰ ਉਪਲਬਧ ਨਹੀਂ ਹੈ।','د حرکت سنسر نشته.'],
 noStt:['Voice input is not supported in this browser.','اس براؤزر میں آواز سے ان پٹ دستیاب نہیں ہے۔','इस ब्राउज़र में आवाज़ इनपुट उपलब्ध नहीं है।','الإدخال الصوتي غير مدعوم في هذا المتصفح.','ਇਸ ਬ੍ਰਾਊਜ਼ਰ ਵਿੱਚ ਆਵਾਜ਼ ਇਨਪੁੱਟ ਉਪਲਬਧ ਨਹੀਂ ਹੈ।','په دې براوزر کې غږیز ان‌پټ نشته.'],
-net:['Voice input needs internet.','آواز سے ان پٹ کے لیے انٹرنیٹ چاہیے۔','आवाज़ इनपुट के लिए इंटरनेट चाहिए।','الإدخال الصوتي يحتاج إلى الإنترنت.','ਆਵਾਜ਼ ਇਨਪੁੱਟ ਲਈ ਇੰਟਰਨੈੱਟ ਚਾਹੀਦਾ ਹੈ।','غږیز ان‌پټ ته انټرنیټ پکار دی.'],
+net:['Voice input needs internet.','آواز سے ان پٹ کے لیے انٹرنیٹ چاہیے۔','आवाज़ इनपुट के लिए इंटरनेट चाहिए।','الإدخال الصوتي يحتاج إلى الإنترنت.','ਆਵਾਜ਼ ਇਨਪੁੱਟ ਲਈ ਇੰਟਰਨੈੱਟ ਚਾਹੀਦਾ ہے।','غږیز ان‌پټ ته انټرنیټ پکار دی.'],
 https:['Open this app from an https address.','اس ایپ کو https ایڈریس سے کھولیں۔','इस ऐप को https पते से खोलें।','افتح هذا التطبيق من عنوان https.','ਇਸ ਐਪ ਨੂੰ https ਪਤੇ ਤੋਂ ਖੋਲ੍ਹੋ।','دا اپ د https پتې څخه پرانیزئ.']
 };
 const NAMES=[['person','شخص','व्यक्ति','شخص','ਵਿਅਕਤੀ','سړی'],['chair','کرسی','कुर्सी','كرسي','ਕੁਰਸੀ','کرسۍ'],['sofa','صوفہ','सोफ़ा','أريكة','ਸੋਫ਼ਾ','صوفه'],['bed','بستر','बिस्तर','سرير','ਬਿਸਤਰਾ','بستره'],['table','میز','मेज़','طاولة','ਮੇਜ਼','میز'],['plant pot','گملا','गमला','أصيص نبات','ਗਮਲਾ','ګلدان'],['dog','کتا','कुत्ता','كلب','ਕੁੱਤਾ','سپی'],['cat','بلی','बिल्ली','قطة','ਬਿੱਲੀ','پیشو'],['bicycle','سائیکل','साइकिल','دراجة','ਸਾਈਕਲ','بایسکل'],['car','گاڑی','गाड़ी','سيارة','ਗੱਡੀ','موټر'],['motorcycle','موٹر سائیکل','मोटरसाइकिल','دراجة نارية','ਮੋਟਰਸਾਈਕਲ','موټرسایکل'],['large vehicle','بڑی گاڑی','बड़ी गाड़ी','مركبة كبيرة','ਵੱਡੀ ਗੱਡੀ','لوی موټر']];
-// model class -> [real height in metres, index in NAMES]. Only these classes are announced.
 const OBJ={person:[1.7,0],chair:[.9,1],couch:[.85,2],bed:[.55,3],'dining table':[.75,4],'potted plant':[.5,5],dog:[.5,6],cat:[.3,7],bicycle:[1,8],car:[1.5,9],motorcycle:[1.2,10],bus:[3,11],truck:[2.8,11]};
 
 /* ===== STATE ===== */
@@ -238,16 +239,16 @@ let P=null,voiceSel=null,voiceEn=null,haveSel=true,saver=false,state='idle',SID=
 let steps=0,segStart=0,lastStepT=0,lastAsk=-1,stopAt=0,from='',turns=[],legs=[],li=0,legStart=0,idleTimer=0,motionOk=false;
 let g=9.8,lp=0,p1=0,p2=0,acc=0,lastMT=0;
 let stream=null,det=null,camOn=false,lastProc=0,hist=[],cur=null,sawAt=0,wake=null,rec=null,ac=null,gid=null,gp=null,gs=0;
-let STRIDE=+ls.get('sc_stride')||.65;   // metres per step; refined automatically outdoors with GPS
+let STRIDE=+ls.get('sc_stride')||.65;   
 let DB;try{DB=JSON.parse(ls.get('sc_db'))}catch(e){}
 if(!DB||!Array.isArray(DB.edges)||!Array.isArray(DB.places))DB={places:[],edges:[]};
 const save=()=>ls.set('sc_db',JSON.stringify(DB));
 const IOS=/iP(hone|ad|od)/.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const vib=p=>{try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}};
 
-/* ===== LANGUAGE: 6 built-in packs, the rest translated once (cached on the phone) ===== */
+/* ===== LANGUAGE ===== */
 const bi=c=>IDX[c]??IDX[c.split('-')[0]]??-1;
-const fb=()=>!haveSel||(bi(code)<0&&!P);                       // English fallback in use
+const fb=()=>!haveSel||(bi(code)<0&&!P);                       
 const pk=()=>fb()?0:(bi(code)>=0?bi(code):'x');
 const t=(k,v)=>{const p=pk(),s=p==='x'?P.u[k]:S[k][p];return s.replace(/\{(\w+)\}/g,(_,x)=>v[x])};
 const nm=i=>{const p=pk();return p==='x'?P.n[i]:NAMES[i][p]};
@@ -273,7 +274,7 @@ const loadPack=(c,name)=>pend[c]||(pend[c]=(async()=>{
   if(!okPack(j))throw new Error('bad translation');
   ls.set('sc_pk_'+c,JSON.stringify(j));return j;
 })().finally(()=>{delete pend[c]}));
-function pickVoice(){   // prefers Google (Speech Services) voices, local ones first for the lowest delay
+function pickVoice(){   
   const vs=speechSynthesis.getVoices();
   const f=c=>{const pre=c.split('-')[0],sc=v=>{const l=v.lang.replace('_','-');return(l===c?4:l.split('-')[0]===pre?2:0)+(/google|-x-/i.test(v.name+' '+v.voiceURI)?2:0)+(v.localService?1:0)};
     const a=vs.map(v=>[sc(v),v]).filter(x=>x[0]>=2).sort((x,y)=>y[0]-x[0]);return a.length?a[0][1]:null};
@@ -298,18 +299,24 @@ function render(){
   if(!haveSel)info('No installed voice for this language - using English. Install it: Settings > System > Languages & input > Text-to-speech output > Speech Services by Google.');
 }
 
-/* ===== SPEECH: whole sentences, one after another, obstacles first, nothing repeated ===== */
+/* ===== SPEECH & QUEUE FIX ===== */
 let q=[],lastSaid='',lastSaidT=0;
 const voice=()=>fb()?voiceEn:voiceSel;
 function speak(s){
-  stEl.textContent=s;const u=new SpeechSynthesisUtterance(s),v=voice();
-  u.lang=v?v.lang:(fb()?'en-US':code);if(v)u.voice=v;u.rate=1.15;speechSynthesis.speak(u);
+  stEl.textContent=s;
+  // پرانے سপীচ کینسل کریں تاکہ اوورلیپ نہ ہو
+  try { speechSynthesis.cancel(); } catch(e) {}
+  const u=new SpeechSynthesisUtterance(s),v=voice();
+  u.lang=v?v.lang:(fb()?'en-US':code);
+  if(v) u.voice=v;
+  u.rate=1.15;
+  speechSynthesis.speak(u);
 }
-function say(s,pri,instr){   // pri: 0 obstacle, 1 guidance (default), 2 information
+function say(s,pri,instr){   
   if(!s)return;pri=pri===undefined?1:pri;if(instr)lastInstr=s;
   const n=performance.now();
   if(pri!==1&&s===lastSaid&&n-lastSaidT<4000)return;
-  if(pri===0)q=q.filter(x=>x.p!==0);                       // only the newest obstacle alert waits
+  if(pri===0)q=q.filter(x=>x.p!==0);                       
   q.push({s,p:pri,t:n});
 }
 function pump(){
@@ -326,7 +333,7 @@ function beep(f,d){
     gn.gain.setValueAtTime(.2,n);gn.gain.linearRampToValueAtTime(0,n+d);o.start(n);o.stop(n+d)}catch(e){}
 }
 
-/* ===== VOICE INPUT (waits for the speech to finish, retries once by itself) ===== */
+/* ===== VOICE INPUT ===== */
 function listenOnce(){
   return new Promise(res=>{
     const R=window.SpeechRecognition||window.webkitSpeechRecognition;
@@ -352,7 +359,7 @@ async function listen(id){
 }
 async function ask(key,id){say(t(key),1,true);await idle();return id!==SID?null:listen(id)}
 
-/* ===== SAVED PLACES: fuzzy match + shortest route ===== */
+/* ===== SAVED PLACES ===== */
 const norm=s=>s.toLowerCase().replace(/[\s.,!?;:'"()\-،۔]+/g,'');
 const lev=(a,b)=>{const d=[...Array(b.length+1).keys()];for(let i=1;i<=a.length;i++){let p=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const x=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,p+(a[i-1]===b[j-1]?0:1));p=x}}return d[b.length]};
 function find(name){
@@ -360,7 +367,7 @@ function find(name){
   for(const p of DB.places){const d=lev(n,norm(p));if(d<bd){bd=d;best=p}}
   return best&&bd<=Math.floor(norm(best).length*.3)?best:null;
 }
-function route(a,b){   // legs [{to,n,t:[[stepIndex,'L'|'R']]}] ; an edge walked backwards is mirrored
+function route(a,b){   
   const adj=Object.create(null),prev=Object.create(null),qu=[a];prev[a]=null;
   const add=(x,l)=>(adj[x]=adj[x]||[]).push(l);
   for(const e of DB.edges){add(e.a,{to:e.b,n:e.n,t:e.t});add(e.b,{to:e.a,n:e.n,t:e.t.map(([k,d])=>[e.n-k,d==='L'?'R':'L']).reverse()})}
@@ -370,9 +377,15 @@ function route(a,b){   // legs [{to,n,t:[[stepIndex,'L'|'R']]}] ; an edge walked
   return out;
 }
 
-/* ===== CAMERA + OBSTACLES (close range, announced once, immediately) ===== */
+/* ===== MEDIAPIPE DETECTOR & VIDEO FIX ===== */
 async function loadDet(){
-  if(!window.ObjectDetector)await new Promise((ok,no)=>{const h=setTimeout(no,15000);addEventListener('mediapipe-loaded',()=>{clearTimeout(h);ok()},{once:true})});
+  if(!window.ObjectDetector){
+    await new Promise((ok,no)=>{
+      const h=setTimeout(()=>no(new Error('timeout')),15000);
+      if(window.mediapipeLoaded){clearTimeout(h);ok();return;}
+      addEventListener('mediapipe-loaded',()=>{clearTimeout(h);ok()},{once:true})
+    });
+  }
   const v=await FilesetResolver.forVisionTasks(WASM);
   for(const d of['GPU','CPU'])try{return await ObjectDetector.createFromOptions(v,{baseOptions:{modelAssetPath:MODEL,delegate:d},scoreThreshold:.5,maxResults:5,runningMode:'VIDEO'})}catch(e){}
   throw new Error('detector');
@@ -392,30 +405,35 @@ function onFrame(){
   nextFrame();
   const n=performance.now();
   if(!det||video.readyState<2||n-lastProc<(saver?(n-lastStepT>3000?1000:200):0))return;
+  
+  // ویڈیو ڈتھ اور ہائٹ سیفٹی چیک (زیرو ڈینومینیٹر ایرر سے بچاؤ)
+  const W=video.videoWidth,H=video.videoHeight;
+  if(!W || !H) return;
+
   lastProc=n;
-  const W=video.videoWidth,H=video.videoHeight;let best=null;
+  let best=null;
   for(const d of det.detectForVideo(video,n).detections){
     const c=d.categories[0],o=OBJ[c.categoryName];if(!o)continue;
-    const b=d.boundingBox;let m=o[0]*.77*Math.max(W,H)/b.height;          // distance from the object's real height
-    if(b.originY<2||b.originY+b.height>H-2)m=Math.min(m,1);               // cut by the frame edge: closer than it looks
+    const b=d.boundingBox;let m=o[0]*.77*Math.max(W,H)/b.height;          
+    if(b.originY<2||b.originY+b.height>H-2)m=Math.min(m,1);               
     if(m>RANGE)continue;
     const near=m<.5,cx=(b.originX+b.width/2)/W,side=cx<.4?'L':cx>.6?'R':'F';
     m=Math.max(.5,Math.round(m*2)/2);
     if(!best||m<best.m)best={m,near,side,o:o[1],key:c.categoryName+side};
   }
   hist.push(best?best.key:0);if(hist.length>3)hist.shift();
-  if(best&&hist.filter(k=>k===best.key).length>=2){                       // seen in 2 of the last 3 frames
+  if(best&&hist.filter(k=>k===best.key).length>=2){                       
     sawAt=n;
     if(!cur||cur.key!==best.key||best.m<=cur.m-.5){cur={key:best.key,m:best.m};alertObs(best)}
     else if(best.m>cur.m)cur.m=best.m;
-  }else if(cur&&n-sawAt>700){cur=null;say(t('clear'),2)}                    // "clear" once, after an obstacle
+  }else if(cur&&n-sawAt>700){cur=null;say(t('clear'),2)}                    
 }
 function alertObs(b){
   say(t(b.near?'obNear':'ob',{o:nm(b.o),d:t(b.side),m:b.m}),0);
   beep(b.m<=1?990:660);vib(b.m<=1?[100,50,100]:60);
 }
 
-/* ===== STEPS + TURNS (motion sensors, no GPS map) ===== */
+/* ===== STEPS & IOS MOTION PERMISSION FIX ===== */
 function onMotion(e){
   const a=e.accelerationIncludingGravity,r=e.rotationRate;if(!a||a.x==null)return;
   const n=performance.now(),dt=Math.min(n-lastMT,100)/1000,mag=Math.hypot(a.x,a.y,a.z)||1;
@@ -423,7 +441,7 @@ function onMotion(e){
   g+=(mag-g)*.02;p2=p1;p1=lp;lp+=(mag-g-lp)*.3;
   if(p1>.8&&p1<12&&p1>p2&&p1>=lp&&n-lastStepT>280){steps++;lastStepT=n;onStep()}
   if(r&&r.alpha!=null){
-    const w=(r.beta*a.x+r.gamma*a.y+r.alpha*a.z)/mag*(IOS?-1:1);          // deg/s about the vertical axis, + = left
+    const w=(r.beta*a.x+r.gamma*a.y+r.alpha*a.z)/mag*(IOS?-1:1);          
     acc+=w*dt;if(Math.abs(w)<8)acc*=.97;
     if(Math.abs(acc)>=60){
       if(state==='teach'||state==='confirmStop'){const d=acc>0?'L':'R',at=steps-segStart,l=turns[turns.length-1];if(!(l&&l[1]===d&&at-l[0]<=2))turns.push([at,d])}
@@ -434,19 +452,25 @@ function onMotion(e){
 function motionOn(){motionOk=false;lastMT=0;addEventListener('devicemotion',onMotion);setTimeout(()=>{if(!motionOk&&state!=='idle')say(t('noSens'))},2500)}
 const motionOff=()=>removeEventListener('devicemotion',onMotion);
 const hav=(a,b)=>{const r=Math.PI/180,x=(b[0]-a[0])*r,y=(b[1]-a[1])*r,s=Math.sin(x/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(y/2)**2;return 12742000*Math.atan2(Math.sqrt(s),Math.sqrt(1-s))};
-function geoOn(){   // outdoors only: refines the step length from GPS
+
+/* ===== GEOLOCATION WITH ERROR HANDLING FIX ===== */
+function geoOn(){   
   if(!navigator.geolocation||saver||gid!==null)return;gp=null;
   gid=navigator.geolocation.watchPosition(p=>{
     const c=p.coords;if(c.accuracy>12)return;const a=[c.latitude,c.longitude];
     if(!gp){gp=a;gs=steps;return}
     const d=hav(gp,a),n=steps-gs;
     if(d>=30&&n>=20){const s=d/n;if(s>.4&&s<1.1){STRIDE=+(STRIDE*.7+s*.3).toFixed(3);ls.set('sc_stride',STRIDE)}gp=a;gs=steps}
-  },()=>{},{enableHighAccuracy:false,maximumAge:5000});
+  },(err)=>{
+    // جیو لوکیشن ایرر ہینڈلنگ (بیٹری یا پروسیسنگ بچانے کے لیے واچ کلیر کرنا)
+    console.warn('Geolocation error:', err.message);
+    geoOff();
+  },{enableHighAccuracy:false,maximumAge:5000});
 }
 const geoOff=()=>{if(gid!==null){navigator.geolocation.clearWatch(gid);gid=null}};
 async function lock(on){try{if(on&&!wake&&navigator.wakeLock){wake=await navigator.wakeLock.request('screen');wake.onrelease=()=>{wake=null}}else if(!on&&wake){await wake.release();wake=null}}catch(e){}}
 
-/* ===== BATTERY SAVER (automatic at 20% or below, off while charging) ===== */
+/* ===== BATTERY SAVER ===== */
 function setSaver(on,low){
   if(on===saver)return;saver=on;document.body.classList.toggle('saver',on);
   say((low?t('low')+' ':'')+t(on?'sOn':'sOff'),2);
@@ -456,13 +480,22 @@ function setSaver(on,low){
 }
 if(navigator.getBattery)navigator.getBattery().then(b=>{const f=()=>setSaver(!b.charging&&b.level<=.2,true);b.onlevelchange=f;b.onchargingchange=f;f()}).catch(()=>{});
 
-/* ===== FLOWS: voice-tag a path, then guide along it ===== */
-async function motionPerm(){const D=window.DeviceMotionEvent;if(D&&typeof D.requestPermission==='function'){try{return await D.requestPermission()==='granted'}catch(e){return false}}return true}
+/* ===== FLOWS & MOTION PERMISSION FIX ===== */
+async function motionPerm(){
+  const D=window.DeviceMotionEvent;
+  if(D&&typeof D.requestPermission==='function'){
+    try{return await D.requestPermission()==='granted'}catch(e){return false}
+  }
+  return true;
+}
 async function startSession(){
-  state='free';const mp=motionPerm();          // asked inside the tap (needed on iPhone)
+  state='free';
+  // آئی او ایس کے لیے یوزر ٹچ کے فورا بعد پرمیشن ریکوئسٹ کا درست طریقہ
+  const mp=await motionPerm();
+  if(!mp) say(t('noSens'));
+
   if(permP){permOk=await permP;permP=null;if(!permOk)say(t('perm'))}
   await camStart();lock(true);motionOn();geoOn();
-  if(!await mp)say(t('noSens'));
   if(state!=='free')return;
   begin();
 }
@@ -485,13 +518,13 @@ async function destFlow(start,id){
 function teach(start){
   state='teach';from=start;if(!DB.places.includes(start))DB.places.push(start);save();
   steps=0;segStart=0;turns=[];lastAsk=-1;
-  say(t('startSaved',{p:start}),1,true);say(t('walk'),1,true);          // confirmed at once, then the next sentence
+  say(t('startSaved',{p:start}),1,true);say(t('walk'),1,true);          
   clearInterval(idleTimer);idleTimer=setInterval(teachTick,500);
 }
 function teachTick(){
   const n=performance.now();
   if(state==='teach'&&steps-segStart>=2&&steps>lastAsk&&n-lastStepT>2500){state='confirmStop';lastAsk=steps;stopAt=steps;say(t('stopQ'),1,true)}
-  else if(state==='confirmStop'&&steps-stopAt>=2)state='teach';            // kept walking = "no"
+  else if(state==='confirmStop'&&steps-stopAt>=2)state='teach';            
 }
 async function nameHere(){
   const n=steps-segStart;
@@ -502,7 +535,7 @@ async function nameHere(){
   const p=find(name)||name;
   if(p===from){say(t('nf'),1,true);return}
   DB.edges=DB.edges.filter(e=>!(e.a===from&&e.b===p));DB.edges.push({a:from,b:p,n,t:turns});
-  if(!DB.places.includes(p))DB.places.push(p);save();                      // saved in the phone's memory
+  if(!DB.places.includes(p))DB.places.push(p);save();                      
   say(t('saved',{p,n}),1,true);say(t('more'),1,true);
   from=p;segStart=steps;turns=[];lastAsk=steps;state='teach';retry=null;
 }
@@ -530,7 +563,7 @@ function stopAll(talk){
   if(talk)say(t('done'),1);
 }
 
-/* ===== PERMISSIONS (asked at startup: camera, microphone, location, persistent storage) ===== */
+/* ===== PERMISSIONS ===== */
 async function perms(){
   let ok=true;
   try{const s=await navigator.mediaDevices.getUserMedia({video:true,audio:true});s.getTracks().forEach(x=>x.stop())}catch(e){ok=false}
@@ -554,19 +587,19 @@ async function onBack(){
   if(retry)retry();else if(lastInstr)say(lastInstr,1);
 }
 $('ok').onclick=onOK;$('cancel').onclick=onCancel;$('back').onclick=onBack;
-$('startBtn').onclick=onOK;$('stopBtn').onclick=onCancel;stEl.onclick=onBack;     // tap the text line = repeat / retry
+$('startBtn').onclick=onOK;$('stopBtn').onclick=onCancel;stEl.onclick=onBack;     
 const show=v=>['homeView','settingsView','aboutView'].forEach(i=>$(i).classList.toggle('active',i===v));
 $('settingsNavBtn').onclick=()=>{vib(15);show('settingsView')};
 $('aboutNavBtn').onclick=()=>{vib(15);show('aboutView')};
 $('backToHomeBtn').onclick=$('backFromAboutBtn').onclick=()=>{vib(15);show('homeView')};
-document.addEventListener('keydown',e=>{   // optional external buttons (Bluetooth clicker / keyboard)
+document.addEventListener('keydown',e=>{   
   if(e.target.tagName==='SELECT')return;
   const k={Enter:'ok',Escape:'cancel',Backspace:'back'}[e.key];if(k){e.preventDefault();$(k).click()}
 });
 document.addEventListener('pointerdown',e=>{if(!greeted){greeted=true;if(!/^(startBtn|ok)$/.test(e.target.id))say(t('hello'),1,true)}},true);
 sel.innerHTML=LANGS.map((l,i)=>`<option value="${i}">${l[1]}${l[2]?' - '+l[2]:''}</option>`).join('');
 sel.value=LANGS.indexOf(L);
-sel.onchange=()=>{vib(15);setLang(LANGS[+sel.value][0],true)};                      // the choice is remembered
+sel.onchange=()=>{vib(15);setLang(LANGS[+sel.value][0],true)};                      
 setInterval(()=>{const on=state!=='idle';$('stopBtn').style.display=on?'block':'none';const k=on?'ok':'start';if($('startBtn').textContent!==t(k))$('startBtn').textContent=t(k)},300);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&camOn){lock(true);nextFrame()}});
 speechSynthesis.onvoiceschanged=pickVoice;
