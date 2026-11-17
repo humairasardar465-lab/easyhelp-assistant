@@ -39,7 +39,7 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 
 <div id="homeView" class="view active">
   <h2>SMART CANE</h2>
-  <div class="sub">Created by Humaira Sardar, Okara, Pakistan</div>
+  <div class="sub">Your Eyes Smart Cane created by Humaira Sardar</div>
   <label for="lang">SELECT LANGUAGE</label>
   <select id="lang"></select>
   <div id="info"></div>
@@ -73,7 +73,7 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 
 <div id="aboutView" class="view">
   <h2>ABOUT APP</h2>
-  <div class="sub">Your Eyes Smart Cane v4.1</div>
+  <div class="sub">Your Eyes Smart Cane v4.2</div>
   <p class="txt">Smart Cane helps you walk with confidence. It spots nearby obstacles, tells their distance in meters, and guides you in real time.<br><br><strong>Created by Humaira Sardar, Okara, Pakistan</strong></p>
   <button id="backFromAboutBtn" class="sec">BACK</button>
 </div>
@@ -195,7 +195,7 @@ const S={
 hello:['Smart Cane is ready. Press Start to begin.','اسمارٹ کین تیار ہے۔ شروع کرنے کے لیے اسپاٹ دبائیں۔','स्मार्ट केन तैयार है। शुरू करने के लिए स्टार्ट दबाएँ।','العصا الذكية جاهزة. اضغط ابدأ للبدء.','ਸਮਾਰਟ ਕੇਨ ਤਿਆਰ ਹੈ। ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਸਟਾਰਟ ਦਬਾਓ۔','سمارټ کین چمتو دی. د پیل لپاره پیل کېکاږئ.'],
 obsGeneral:['Obstacle ahead, about {m} meters','سامنے رکاوٹ ہے، تقریباً {m} میٹر','सामने बाधा है, लगभग {m} मीटर','هناك عوائق أمامك، حوالي {m} متر','ਸਾਹਮਣੇ ਰੁਕਾਵਟ ਹੈ, ਲਗਭਗ {m} ਮੀਟਰ','مخکې خنډ دی، شاوخوا {m} متره'],
 obsNear:['Obstacle very close. Stop.','رکاوٹ بہت قریب ہے۔ رک جائیں۔','बाधा बहुत पास है। रुकें।','خطر! العائق قريب جدا. توقف.','ਰੁਕਾਵਟ ਬਹੁਤ ਨੇੜੇ ਹੈ। ਰੁਕੋ۔','خنډ ډېر نږدې دی. ودرېږئ.'],
-clear:['Path is clear. Keep walking.','راستا صاف ہے۔ چلتے رہیں۔','रास्ता साफ है। चलते रहें।','الطريق واضح. واصل المشي.','ਰਸਤਾ ਸਾਫ ਹੈ। ਤੁਰਦੇ ਰਹੋ।','لار پاکه ده. روان اوسئ.'],
+clear:['Path is clear. Keep walking.','راستا صاف ہے۔ چلتے رہیں۔','रास्ता साफ है। चलते रहें।','الطريق واضح. واصل المشي.','ਰਸਤਾ ਸਾਫ ਹੈ। ਤੁਰਦੇ ਰਹੋ۔','لار پاکه ده. روان اوسئ.'],
 sOn:['Battery saver on.','بیٹری سیور آن۔','बैटरी सेवर चालू।','وضع توفير البطارية قيد التشغيل.','ਬੈਟਰੀ ਸੇਵਰ ਚਾਲੂ۔','د بیټرۍ سیور فعال شو.'],
 sOff:['Battery saver off.','بیٹری سیور بند۔','बैटरी सेवर बंद।','تم إيقاف توفير البطارية.','ਬੈਟਰੀ ਸੇਵਰ ਬੰਦ۔','د بیټرۍ سیور بند شو.'],
 low:['Battery low.','بیٹری کم ہے۔','बैटरी कम है।','البطارية منخفضة.','ਬੈਟਰੀ ਘੱਟ ਹੈ۔','بیټرۍ کمه ده.'],
@@ -211,7 +211,7 @@ const stEl=$('status'),infoEl=$('info'),video=$('cam'),sel=$('lang'),voiceSelEl=
 let code=ls.get('sc_lang')||'en-US',L=LANGS.find(l=>l[0]===code)||LANGS[0];code=L[0];
 let voices=[],selectedVoiceIdx=ls.get('sc_voice_idx')!==null?+ls.get('sc_voice_idx'):null;
 let saver=false,running=false,stream=null,det=null,camOn=false,lastProc=0,curKey='',sawAt=0,lastClearSpoken=0,ac=null;
-let consecutiveObstacleFrames = 0; // وائبریشن اور فالس الرٹ سے بچنے کے لیے فریم کاؤنٹر
+let consecutiveObstacleFrames = 0;
 
 /* ===== LANGUAGE & TTS ENGINE ===== */
 const bi=c=>IDX[c]??IDX[c.split('-')[0]]??-1;
@@ -227,7 +227,6 @@ function populateVoices(){
   if(selectedVoiceIdx!==null && voices[selectedVoiceIdx]){
     voiceSelEl.value=selectedVoiceIdx;
   } else {
-    // بائی ڈیفالٹ موجودہ زبان کی وائس ڈھونڈیں
     const defIdx = voices.findIndex(v=>v.lang.replace('_','-')===code || v.lang.startsWith(code.split('-')[0]));
     if(defIdx>=0) { voiceSelEl.value=defIdx; selectedVoiceIdx=defIdx; }
   }
@@ -306,7 +305,7 @@ async function camStart(){
 function camStop(){camOn=false;if(stream){stream.getTracks().forEach(x=>x.stop());stream=null}video.srcObject=null;curKey='';consecutiveObstacleFrames=0;}
 const nextFrame=()=>{if(camOn&&running)requestAnimationFrame(onFrame)};
 
-const CLEAR_INTERVAL = 4000; // راستہ صاف ہونے کا وقفہ
+const CLEAR_INTERVAL = 4000;
 
 function onFrame(){
   if(!camOn||!running)return;
@@ -324,9 +323,7 @@ function onFrame(){
   if(detections && detections.length > 0){
     for(const d of detections){
       const b=d.boundingBox;
-      
-      // زمین یا کیمرے کے ہلنے کے شور کو فلٹر کرنے کی سخت شرط
-      if(b.originY > (H * 0.70)) continue; // فرش یا زمین کی چیزیں اگنور ہوں
+      if(b.originY > (H * 0.70)) continue; 
       
       let m = 0.85 * Math.max(W, H) / b.height;
       if(m > RANGE) continue; 
@@ -342,7 +339,6 @@ function onFrame(){
 
   if(best){
     consecutiveObstacleFrames++;
-    // فالس الرٹ اور موبائل ہلنے کے مسئلے کو ختم کرنے کے لیے ضروری ہے کہ رکاوٹ کم از کم لگاتار 2 فریمز میں موجود ہو
     if(consecutiveObstacleFrames >= 2) {
       sawAt=n;
       const currentKey = (best.near ? 'near_' : 'gen_') + best.m;
@@ -353,7 +349,6 @@ function onFrame(){
     }
   }else{
     consecutiveObstacleFrames = 0;
-    // جب رکاوٹ ہٹ جائے تو فوراً راستہ صاف بتانے کے لیے ٹائمر چیک کریں
     if(n - sawAt > 700){ 
       curKey = '';
       if(n - lastClearSpoken > CLEAR_INTERVAL) {
