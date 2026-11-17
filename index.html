@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0a0f1e">
 <link rel="manifest" href="manifest.json">
-<title>Smart Cane | Amazon Collection</title>
+<title>Smart Cane</title>
 <script type="module">
 import {FilesetResolver,ObjectDetector} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/+esm";
 window.FilesetResolver=FilesetResolver;window.ObjectDetector=ObjectDetector;
@@ -39,7 +39,7 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 
 <div id="homeView" class="view active">
   <h2>SMART CANE</h2>
-  <div class="sub">Amazon Collection | Created by Humaira Sardar</div>
+  <div class="sub">Your Eyes Smart Assistant</div>
   <label for="lang">SELECT LANGUAGE</label>
   <select id="lang"></select>
   <div id="info"></div>
@@ -76,12 +76,14 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 
 <div id="aboutView" class="view">
   <h2>ABOUT APP</h2>
-  <div class="sub">Your Eyes Smart Cane v8.0</div>
+  <div class="sub">Your Eyes Smart Cane v9.0</div>
   <p class="txt">Smart Cane helps you walk with confidence. It spots nearby obstacles, tells their distance in meters, and guides you in real time.<br><br><strong>Amazon Collection<br>Created by Humaira Sardar, Okara, Pakistan</strong></p>
   <button id="backFromAboutBtn" class="sec">BACK</button>
 </div>
 
 </div>
+
+<canvas id="canvas" style="display:none;"></canvas>
 
 <script>
 /* ===== OFFLINE SERVICE WORKER ===== */
@@ -200,18 +202,19 @@ yi|Yiddish|ייִדיש
 yo-NG|Yoruba (Nigeria)|Yorùbá
 zu-ZA|Zulu (South Africa)|isiZulu`.split('\n').map(r=>{const a=r.split('|');return[a[0],a[1],a[2]||'']});
 
-/* ===== VOICE & GUIDANCE TEXT PACKS ===== */
+/* ===== VOICE & GUIDANCE TEXT PACKS (Fixed Correct Spelling: خطرہ) ===== */
 const S={
 hello:['Smart Cane is ready. Press Start to begin.','اسمارٹ کین تیار ہے۔ شروع کرنے کے لیے اسپاٹ دبائیں۔','स्मार्ट केन तैयार है। शुरू करने के लिए स्टार्ट दबाएँ।','العصا الذكية جاهزة. اضغط ابدأ للبدء.','ਸਮਾਰਟ ਕੇਨ ਤਿਆਰ ਹੈ। ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਸਟਾਰਟ ਦਬਾਓ۔','سمارټ کین چمتو دی. د پیل لپاره پیل کېکاږئ.'],
-obsNear:['Danger! Obstacle very close at {m} meters. Stop!','خطر! رکاوٹ بہت قریب ہے، تقریباً {m} میٹر دور ہے۔ رک جائیں!','खतरा! बाधा बहुत पास है, लगभग {m} मीटर दूर। रुकें!','خطر! العائق قريب جدا على بعد {m} متر. توقف!','ਖਤਰਾ! ਰੁਕਾਵਟ ਬਹੁਤ ਨੇੜੇ ਹੈ, ਲਗਭਗ {m} ਮੀਟਰ। ਰੁਕੋ!','خطر! خنډ ډېر نږدې دی، شاوخوا {m} متره. ودرېږئ!'],
+obsNear:['Danger! Obstacle very close at {m} meters. Stop!','خطرہ! رکاوٹ بہت قریب ہے، تقریباً {m} میٹر دور ہے۔ رک جائیں!','खतरा! बाधा बहुत पास है, लगभग {m} मीटर दूर। रुकें!','خطر! العائق قريب جدا على بعد {m} متر. توقف!','ਖਤਰਾ! ਰੁਕਾਵਟ ਬਹੁਤ ਨੇੜੇ ਹੈ, ਲਗਭਗ {m} ਮੀਟਰ। ਰੁਕੋ!','خطر! خنډ ډېر نږدې دی، شاوخوا {m} متره. ودرېږئ!'],
 obsFar:['Caution, obstacle ahead at {m} meters. Walk carefully.','احتیاط کریں، سامنے رکاوٹ ہے، تقریباً {m} میٹر دور۔ دھیان سے چلیں۔','सावधानी, सामने बाधा है, लगभग {m} मीटर दूर। सावधानी से चलें।','انتبه، هناك عوائق أمامك على بعد {m} متر','ਧਿਆਨ ਰੱਖੋ, ਸਾਹਮਣੇ ਰੁਕਾਵਟ ہے, ਲਗਭਗ {m} ਮੀਟਰ۔ ਧਿਆਨ ਨਾਲ ਤੁਰੋ۔','پامال, مخکې خنډ دی، شاوخوا {m} متره'],
 clear:['Path is clear. Keep walking.','راستا صاف ہے۔ چلتے رہیں۔','रास्ता साफ है। चलते रहें।','الطريق واضح. واصل المشي.','ਰਸਤਾ ਸਾਫ ਹੈ। ਤੁਰਦੇ ਰਹੋ۔','لار پاکه ده. روان اوسئ.'],
+dark:['Darkness detected. Camera cannot see anything.','اندھیرا ہے، کیمرہ کچھ دیکھ نہیں پا رہا۔','अंधेरा है, कैमरा कुछ देख नहीं पा रहा।','ظلام تام. الكاميرا لا ترى شيئا.','ਹਨੇਰਾ ہے, ਕੈਮਰਾ ਕੁਝ ਨਹੀਂ ਦੇਖ ਸਕਦਾ।','تاریکی ده، کامره هیڅ نه شي لیدلی.'],
 sOn:['Battery saver on.','بیٹری سیور آن۔','बैटरी सेवर चालू।','وضع توفير البطارية قيد التشغيل.','ਬੈਟਰੀ ਸੇਵਰ ਚਾਲੂ۔','د بیټرۍ سیور فعال شو.'],
-sOff:['Battery saver off.','بیٹری سیور بند۔','बैटरी सेवर बंद।','تم إيقاف توفير البطارية.','ਬੈਟਰੀ ਸੇਵਰ ਬੰਦ۔','د بیټرۍ سیور بند شو.'],
+sOff:['Battery saver off.','بیٹری سیور بند۔','बैटरी सेवर बंद।','تم إيقاف توفير البطارية.','ਬੈਟਰੀ ਸੇਵਰ بੰਦ۔','د بیټرۍ سیور بند شو.'],
 low:['Battery low.','بیٹری کم ہے۔','बैटरी कम है।','البطارية منخفضة.','ਬੈਟਰੀ ਘੱਟ ਹੈ۔','بیټرۍ کمه ده.'],
-det:['Camera or detector is not working. Walk carefully.','کیمرہ یا ڈیٹیکٹر کام نہیں کر رہا۔ احتیاط سے چلیں۔','कैमरा या डिटेक्टर काम नहीं कर रहा। सावधानी से चलें।','الكاميرا أو كشف العوائق لا يعمل. امش بحذر.','ਕੈਮਰਾ ਜਾਂ ਡਿਟੈਕਟਰ ਕੰਮ ਨਹੀਂ ਕਰ ਰਿਹਾ۔ ਧਿਆਨ ਨਾਲ ਤੁਰੋ۔','کمره یا کشف کو کار نه کوي. په احتیاط روان شئ.'],
+det:['Camera or detector is not working. Walk carefully.','کیمرہ یا ڈیٹیکٹر کام نہیں کر رہا۔ احتیاط سے چلیں۔','कैमरा या डिटेक्टर काम नहीं कर रहा। सावधानी से चलें।','الكاميرا أو كشف العوائق لا يعمل. امش بحذر.','ਕੈਮਰਾ ਜਾਂ ਡਿਟੈਕਟਰ ਕੰਮ ਨਹੀਂ ਕਰ ਰਿਹਾ। ਧਿਆਨ ਨਾਲ ਤੁਰੋ۔','کمره یا کشف کو کار نه کوي. په احتیاط روان شئ.'],
 perm:['Please allow camera in browser settings.','براہ کرم براؤزر کی سیٹنگز میں کیمرے کی اجازت دیں۔','कृपया ब्राउज़र सेटिंग्स में कैमरे की अनुमति दें।','يرجى السماح بالكاميرا من إعدادات المتصفح.','ਕਿਰਪਾ ਕਰਕੇ ਬ੍ਰਾਊਜ਼ਰ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਕੈਮਰੇ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ۔','مهرباني وکړئ د براوزر په ترتیباتو کې کامرې ته اجازه ورکړئ.'],
-https:['Open this app from an https address.','اس ایپ کو https ایڈریس سے کھولیں۔','इस ऐप को https पते से खोलें।','افتح هذا التطبيق من عنوان https.','ਇਸ ਐਪ ਨੂੰ https ਪਤੇ ਤੋਂ ਖੋల్੍ਹੋ۔','دا اپ د https پتې څخه پرانیزئ.']
+https:['Open this app from an https address.','اس ایپ کو https ایڈریس سے کھولیں۔','इस ऐप को https पते से खोलें።','افتح هذا التطبيق من عنوان https.','ਇਸ ਐਪ ਨੂੰ https ਪਤੇ ਤੋਂ ਖੋల్੍ਹੋ۔','دا اپ د https پتې څخه پرانیزئ.']
 };
 
 /* ===== STATE & STORAGE ===== */
@@ -222,7 +225,7 @@ let code=ls.get('sc_lang')||'en-US',L=LANGS.find(l=>l[0]===code)||LANGS[0];code=
 let voices=[],selectedVoiceIdx=ls.get('sc_voice_idx')!==null?+ls.get('sc_voice_idx'):null;
 let selectedEngine=ls.get('sc_tts_engine')||'all';
 let saver=false,running=false,stream=null,det=null,camOn=false,lastProc=0,curKey='',sawAt=0,lastClearSpoken=0,ac=null;
-let consecutiveObstacleFrames = 0;
+let consecutiveObstacleFrames = 0, lastDarkSpoken = 0;
 
 /* ===== LANGUAGE & TTS ENGINE SELECTOR ===== */
 const bi=c=>IDX[c]??IDX[c.split('-')[0]]??-1;
@@ -237,7 +240,6 @@ function populateTTSOptions(){
 
   const engineMap = new Map();
   voices.forEach(v => {
-    // براؤزر کے حساب سے وائس کے نام یا URI سے انجن الگ کرنا
     let engName = "Default TTS";
     if(v.name.includes("Google")) engName = "Google TTS";
     else if(v.name.includes("Microsoft")) engName = "Microsoft TTS";
@@ -259,10 +261,10 @@ function populateTTSOptions(){
   ttsEngineSelEl.innerHTML = engineOptions;
   if(selectedEngine) ttsEngineSelEl.value = selectedEngine;
 
-  filterVoicesByEngine(engineMap);
+  filterVoicesByEngine();
 }
 
-function filterVoicesByEngine(preMap){
+function filterVoicesByEngine(){
   voices = speechSynthesis.getVoices();
   const eng = ttsEngineSelEl.value;
   
@@ -276,7 +278,7 @@ function filterVoicesByEngine(preMap){
       if(eng === "eSpeak NG") return v.name.includes("eSpeak");
       return v.name.startsWith(eng);
     });
-    if(filtered.length === 0) filtered = voices; // اگر فلٹر میں کچھ نہ ملے تو تمام شو کریں
+    if(filtered.length === 0) filtered = voices;
   }
 
   voiceSelEl.innerHTML = filtered.map((v)=>{
@@ -310,54 +312,48 @@ function setLang(c,greet){
   if(greet)say(t('hello'),1,true);
 }
 
-/* ===== SPEECH QUEUE & AUDIO BEEPS ===== */
+/* ===== INSTANT SPEECH QUEUE & AUDIO BEEPS ===== */
 let q=[],lastSaid='',lastSaidT=0;
 const getActiveVoice=()=>(selectedVoiceIdx!==null && voices[selectedVoiceIdx]) ? voices[selectedVoiceIdx] : voices[0];
 
 function speak(s){
   stEl.textContent=s;
-  try { if(!q.some(x=>x.p===0)) speechSynthesis.cancel(); } catch(e) {}
+  try { speechSynthesis.cancel(); } catch(e) {}
   const u=new SpeechSynthesisUtterance(s),v=getActiveVoice();
   if(v) u.voice=v;
   u.lang=code;
-  u.rate=1.15;
+  u.rate=1.2;
   speechSynthesis.speak(u);
 }
 
 function say(s,pri){   
-  if(!s)return;pri=pri===undefined?1:pri;
+  if(!s)return;
+  // فوری اووررائیڈ (Instant Override): رکاوٹ आते ہی پرانی آواز کینسل ہو جائے گی
+  if(pri === 0) {
+    try { speechSynthesis.cancel(); } catch(e) {}
+    speak(s);
+    lastSaid = s;
+    lastSaidT = performance.now();
+    return;
+  }
   const n=performance.now();
-  if(pri!==1&&s===lastSaid&&n-lastSaidT<1500)return;
-  if(pri===0)q=q.filter(x=>x.p!==0);                       
-  q.push({s,p:pri,t:n});
+  if(s===lastSaid&&n-lastSaidT<1200)return;
+  lastSaid=s; lastSaidT=n;
+  speak(s);
 }
-
-function pump(){
-  if(!q.length||speechSynthesis.speaking||speechSynthesis.pending)return;
-  const n=performance.now();
-  q=q.filter(x=>x.p!==0||n-x.t<1500);
-  if(!q.length)return;
-  
-  const hasObstacle = q.some(x => x.p === 0);
-  if (hasObstacle) q = q.filter(x => x.p === 0);
-
-  let b=0;q.forEach((x,i)=>{if(x.p<q[b].p)b=i});
-  const x=q.splice(b,1)[0];lastSaid=x.s;lastSaidT=n;speak(x.s);
-}
-(function tick(){pump();setTimeout(tick,saver?200:30)})();
 
 function playHeartbeatBeep(){
   try{
     ac=ac||new(window.AudioContext||window.webkitAudioContext)();
     if(ac.state==='suspended')ac.resume();
     const n=ac.currentTime;
-    [0, 0.1].forEach(offset => {
+    [0, 0.08].forEach(offset => {
       const o=ac.createOscillator(),gn=ac.createGain();
       o.frequency.value=950;
       o.connect(gn); gn.connect(ac.destination);
-      gn.gain.setValueAtTime(0.25, n+offset);
-      gn.gain.linearRampToValueAtTime(0, n+offset+0.06);
-      o.start(n+offset); o.stop(n+offset+0.06);
+      gn.gain.setValueAtTime(0.3, n+offset);
+      gn.gain.linearRampToValueAtTime(0, n+offset+0.05);
+      o.start(n+offset); o.stop(n+offset+0.05);
     });
   }catch(e){}
 }
@@ -368,15 +364,15 @@ function playClearBeep(){
     if(ac.state==='suspended')ac.resume();
     const n=ac.currentTime;
     const o=ac.createOscillator(),gn=ac.createGain();
-    o.frequency.value=550;
+    o.frequency.value=600;
     o.connect(gn); gn.connect(ac.destination);
-    gn.gain.setValueAtTime(0.15, n);
-    gn.gain.linearRampToValueAtTime(0, n+0.08);
-    o.start(n); o.stop(n+0.08);
+    gn.gain.setValueAtTime(0.2, n);
+    gn.gain.linearRampToValueAtTime(0, n+0.06);
+    o.start(n); o.stop(n+0.06);
   }catch(e){}
 }
 
-/* ===== MEDIAPIPE OBJECT DETECTION ===== */
+/* ===== MEDIAPIPE OBJECT DETECTION & DARKNESS CHECK ===== */
 async function loadDet(){
   if(!window.ObjectDetector){
     await new Promise((ok,no)=>{
@@ -419,18 +415,47 @@ function camStop(){
 }
 const nextFrame=()=>{if(camOn&&running)requestAnimationFrame(onFrame)};
 
-const CLEAR_INTERVAL = 6000;
+const CLEAR_INTERVAL = 4000;
+
+function checkDarkness(){
+  try {
+    const canvas = $('canvas');
+    canvas.width = 64; canvas.height = 64;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, 64, 64);
+    const imgData = ctx.getImageData(0, 0, 64, 64).data;
+    let sum = 0;
+    for (let i = 0; i < imgData.length; i += 4) {
+      sum += (imgData[i] + imgData[i+1] + imgData[i+2]) / 3;
+    }
+    const avg = sum / (imgData.length / 4);
+    return avg < 25; // اگر اوسط روشنی 25 سے کم ہو تو اندھیرا مانا جائے گا
+  } catch(e) {
+    return false;
+  }
+}
 
 function onFrame(){
   if(!camOn||!running)return;
   nextFrame();
   const n=performance.now();
-  if(!det||video.readyState<2||n-lastProc<(saver?200:40))return;
+  if(!video.readyState||video.readyState<2||n-lastProc<(saver?150:30))return;
   
   const W=video.videoWidth,H=video.videoHeight;
   if(!W || !H) return;
 
   lastProc=n;
+
+  // اندھیرے کی جانچ
+  if(checkDarkness()) {
+    if(n - lastDarkSpoken > 8000) {
+      lastDarkSpoken = n;
+      say(t('dark'), 0);
+    }
+    return;
+  }
+
+  if(!det) return;
   let best=null;
   const detections=det.detectForVideo(video,performance.now()).detections;
 
@@ -453,7 +478,7 @@ function onFrame(){
 
   if(best){
     consecutiveObstacleFrames++;
-    if(consecutiveObstacleFrames >= 2) {
+    if(consecutiveObstacleFrames >= 1) { // فوری رسپانس کے لیے 1 فریم
       sawAt=n;
       const currentKey = (best.near ? 'near_' : 'far_') + best.m;
       if(curKey !== currentKey) {
@@ -463,12 +488,12 @@ function onFrame(){
     }
   }else{
     consecutiveObstacleFrames = 0;
-    if(n - sawAt > 800){ 
+    if(n - sawAt > 600){ 
       curKey = '';
       if(n - lastClearSpoken > CLEAR_INTERVAL) {
         lastClearSpoken = n;
         playClearBeep();
-        say(t('clear'), 2);
+        say(t('clear'), 1);
       }
     }
   }
@@ -476,7 +501,7 @@ function onFrame(){
 
 function alertObs(b){
   const key = b.near ? 'obsNear' : 'obsFar';
-  say(t(key, {m: b.m}), 0);
+  say(t(key, {m: b.m}), 0); // فوری اووررائیڈ پرائمری 0
   playHeartbeatBeep();
   try{navigator.vibrate&&navigator.vibrate(b.near ? [100, 50, 100] : 60);}catch(e){}
 }
@@ -485,7 +510,7 @@ function alertObs(b){
 function rateApp(score){
   ls.set('sc_rating', score);
   const email = "humairasardar@gmail.com";
-  const subject = encodeURIComponent("Smart Cane App Rating - Amazon Collection");
+  const subject = encodeURIComponent("Smart Cane App Rating");
   const body = encodeURIComponent(`Hello Humaira,\n\nI have rated your Smart Cane application: ${score} Stars.`);
   
   speak(code.startsWith('ur') ? `شکریہ! آپ نے ${score} اسٹار دیے ہیں۔ ای میل تیار کی جا رہی ہے۔` : `Thank you for rating ${score} stars! Opening email.`);
@@ -503,7 +528,7 @@ function toggleBatterySaver(){
 function setSaver(on,low){
   saver=on;
   document.body.classList.toggle('saver', on);
-  say((low?t('low')+' ':'')+t(on?'sOn':'sOff'),2);
+  say((low?t('low')+' ':'')+t(on?'sOn':'sOff'),1);
   const tr = stream && stream.getVideoTracks()[0];
   if(tr) tr.applyConstraints({width:{ideal:on?240:320},height:{ideal:on?180:240},frameRate:{ideal:on?15:30}}).catch(()=>{});
 }
@@ -528,8 +553,7 @@ function stopSession(){
   camStop();
   $('stopBtn').style.display = 'none';
   $('startBtn').style.display = 'block';
-  speechSynthesis.cancel();
-  q = [];
+  try { speechSynthesis.cancel(); } catch(e) {}
   playClearBeep();
   say(t('clear'), 1);
 }
@@ -552,6 +576,7 @@ $('backToHomeBtn').onclick = $('backFromAboutBtn').onclick = () => {
   }
 };
 
+// ہارڈویئر بیک بٹن پر پراپر Yes / No ایگزٹ کنفرمیشن
 window.addEventListener('popstate', (e) => {
   const activeView = document.querySelector('.view.active').id;
   if(activeView !== 'homeView') {
@@ -568,6 +593,8 @@ window.addEventListener('popstate', (e) => {
     if(confirm(msg)) {
       if(running) stopSession();
       window.close();
+      // اگر ونڈو بند نہ ہو تو براؤزر کا بلینک پیج کر دیں
+      window.location.href = "about:blank";
     } else {
       history.pushState(null, '', window.location.href);
     }
