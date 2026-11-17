@@ -5,12 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0a0f1e">
 <link rel="manifest" href="manifest.json">
-<title>Your Eyes Smart Cane</title>
+<title>Smart Cane</title>
 <script type="module">
 import {FilesetResolver,ObjectDetector} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/+esm";
 window.FilesetResolver=FilesetResolver;window.ObjectDetector=ObjectDetector;
-window.mediapipeLoaded = true;
-window.dispatchEvent(new Event('mediapipe-loaded'));
+window.mediapipeLoaded=true;window.dispatchEvent(new Event('mediapipe-loaded'));
 </script>
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -32,20 +31,12 @@ button:active{opacity:.8}
 .view{display:none}.view.active{display:block}
 #info{text-align:center;font-size:12px;color:#94a3b8;min-height:16px;margin-top:6px}
 p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
-#exitModal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:999;align-items:center;justify-content:center;padding:20px}
-#exitModal.show{display:flex}
-.exit-box{background:#1f2937;padding:22px;border-radius:16px;text-align:center;width:100%;max-width:360px;border:2px solid #00ffcc}
-.exit-box p{font-size:17px;line-height:1.5}
-.exit-row{display:flex;gap:10px}
-.exit-row button{flex:1}
-#exitYesBtn{background:#ef4444}
-#exitNoBtn{background:#00ffcc;color:#000}
 </style>
 </head>
 <body>
 <div class="container">
 <div id="homeView" class="view active">
-  <h2>YOUR EYES SMART CANE</h2>
+  <h2>SMART CANE</h2>
   <div class="sub">Your Eyes Smart Assistant</div>
   <label for="lang">SELECT LANGUAGE</label>
   <select id="lang"></select>
@@ -55,16 +46,15 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
   <button id="startBtn" class="main">START</button>
   <button id="stopBtn" class="stop" style="display:none">STOP</button>
   <button id="settingsNavBtn" class="sec">SETTINGS</button>
-  <button id="exitAppBtn" class="sec">EXIT APP</button>
 </div>
 <div id="settingsView" class="view">
   <h2>SETTINGS</h2>
   <div class="sub">Smart Cane Settings</div>
   <button id="batterySaverBtn">BATTERY SAVER: OFF</button>
-  <label for="ttsEngineSelect">SELECT TTS ENGINE</label>
-  <select id="ttsEngineSelect"></select>
-  <label for="voiceSelect">PREFERRED TTS VOICE</label>
+  <label for="voiceSelect">SELECT TTS</label>
   <select id="voiceSelect"></select>
+  <button id="openTtsSettingsBtn" class="sec">OPEN MOBILE TTS SETTINGS</button>
+  <div id="ttsInfo" style="text-align:center;font-size:12px;color:#94a3b8;margin-top:6px"></div>
   <label>RATE EXPERIENCE (Sends via Email)</label>
   <div class="rating-container">
     <button class="rating-btn" onclick="rateApp(1)">★ 1</button>
@@ -83,7 +73,6 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
   <button id="backFromAboutBtn" class="sec">BACK</button>
 </div>
 </div>
-<div id="exitModal"><div class="exit-box"><p id="exitText">Do you want to exit Smart Cane App?</p><div class="exit-row"><button id="exitYesBtn">YES</button><button id="exitNoBtn">NO</button></div></div></div>
 <canvas id="canvas" style="display:none;"></canvas>
 <script>
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./sw.js').catch(()=>{});});}
@@ -209,10 +198,9 @@ https:['Open this app from an https address.','اس ایپ کو https ایڈری
 };
 const $=id=>document.getElementById(id);
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
-const stEl=$('status'),infoEl=$('info'),video=$('cam'),sel=$('lang'),voiceSelEl=$('voiceSelect'),ttsEngineSelEl=$('ttsEngineSelect');
+const stEl=$('status'),infoEl=$('info'),video=$('cam'),sel=$('lang'),voiceSelEl=$('voiceSelect');
 let code=ls.get('sc_lang')||'en-US',L=LANGS.find(l=>l[0]===code)||LANGS[0];code=L[0];
 let voices=[],selectedVoiceIdx=ls.get('sc_voice_idx')!==null?+ls.get('sc_voice_idx'):null;
-let selectedEngine=ls.get('sc_tts_engine')||'all';
 let saver=false,running=false,stream=null,det=null,camOn=false,lastProc=0,curKey='',sawAt=0,lastClearSpoken=0,ac=null;
 let consecutiveObstacleFrames=0,lastDarkSpoken=0;
 const bi=c=>IDX[c]??IDX[c.split('-')[0]]??-1;
@@ -220,62 +208,20 @@ const fb=()=>bi(code)<0;
 const pk=()=>fb()?0:(bi(code)>=0?bi(code):0);
 const t=(k,v)=>{const p=pk(),s=S[k]?.[p]!==undefined?S[k][p]:S[k]?.[0]||k;return s.replace(/\{(\w+)\}/g,(_,x)=>v[x])};
 const info=s=>{infoEl.textContent=s||''};
-function updateExitText(){
-  const exitTexts=[
-    'Do you want to exit Smart Cane App?',
-    'کیا آپ اسمارٹ کین ایپ بند کرنا چاہتی ہیں؟',
-    'क्या आप स्मार्ट केन ऐप बंद करना चाहती हैं?',
-    'هل تريد إغلاق تطبيق العصا الذكية؟',
-    'ਕੀ ਤੁਸੀਂ ਸਮਾਰਟ ਕੇਨ ਐਪ ਬੰਦ ਕਰਨਾ ਚਾਹੁੰਦੇ ਹੋ?',
-    'ایا تاسو غواړئ سمارټ کین اپ وتړئ؟'
-  ];
-  const p=pk();
-  const el=$('exitText');
-  if(el) el.textContent=exitTexts[p]||exitTexts[0];
-}
 function populateTTSOptions(){
   voices=speechSynthesis.getVoices();
-  if(!voices.length)return;
-  const engineMap=new Map();
-  voices.forEach(v=>{
-    let engName="Default TTS";
-    if(v.name.includes("Google"))engName="Google TTS";
-    else if(v.name.includes("Microsoft"))engName="Microsoft TTS";
-    else if(v.name.includes("Samsung"))engName="Samsung TTS";
-    else if(v.name.includes("Vocalizer"))engName="Vocalizer";
-    else if(v.name.includes("eSpeak"))engName="eSpeak NG";
-    else{let parts=v.name.split(' ');if(parts.length>0)engName=parts[0];}
-    if(!engineMap.has(engName))engineMap.set(engName,[]);
-    engineMap.get(engName).push(v);
-  });
-  let engineOptions=`<option value="all">All TTS Engines</option>`;
-  for(let eng of engineMap.keys()){engineOptions+=`<option value="${eng}">${eng}</option>`;}
-  ttsEngineSelEl.innerHTML=engineOptions;
-  if(selectedEngine)ttsEngineSelEl.value=selectedEngine;
-  filterVoicesByEngine();
-}
-function filterVoicesByEngine(){
-  voices=speechSynthesis.getVoices();
-  const eng=ttsEngineSelEl.value;
-  let filtered=voices;
-  if(eng!=='all'){
-    filtered=voices.filter(v=>{
-      if(eng==="Google TTS")return v.name.includes("Google");
-      if(eng==="Microsoft TTS")return v.name.includes("Microsoft");
-      if(eng==="Samsung TTS")return v.name.includes("Samsung");
-      if(eng==="Vocalizer")return v.name.includes("Vocalizer");
-      if(eng==="eSpeak NG")return v.name.includes("eSpeak");
-      return v.name.startsWith(eng);
-    });
-    if(filtered.length===0)filtered=voices;
-  }
-  voiceSelEl.innerHTML=filtered.map((v)=>{const realIdx=voices.indexOf(v);return `<option value="${realIdx}">${v.name} (${v.lang})</option>`;}).join('');
+  if(!voices.length){$('ttsInfo').textContent='No voice found. Please open Mobile TTS Settings and enable a TTS.';return;}
+  voiceSelEl.innerHTML=voices.map((v,i)=>`<option value="${i}">${v.name} (${v.lang})</option>`).join('');
+  $('ttsInfo').textContent=voices.length+' voices found in your mobile.';
   if(selectedVoiceIdx!==null&&voices[selectedVoiceIdx]){voiceSelEl.value=selectedVoiceIdx;}
-  else if(filtered.length>0){voiceSelEl.value=voices.indexOf(filtered[0]);selectedVoiceIdx=+voiceSelEl.value;}
+  else{voiceSelEl.value=0;selectedVoiceIdx=0;}
 }
-ttsEngineSelEl.onchange=()=>{selectedEngine=ttsEngineSelEl.value;ls.set('sc_tts_engine',selectedEngine);filterVoicesByEngine();speak(code.startsWith('ur')?'ٹی ٹی ایس انجن تبدیل کر دیا گیا ہے':'TTS Engine updated');};
-voiceSelEl.onchange=()=>{selectedVoiceIdx=+voiceSelEl.value;ls.set('sc_voice_idx',selectedVoiceIdx);speak(code.startsWith('ur')?'آواز منتخب کر لی گئی ہے':'Voice selected successfully');};
-function setLang(c,greet){L=LANGS.find(l=>l[0]===c)||LANGS[0];code=L[0];ls.set('sc_lang',code);q=[];info('');updateExitText();if(greet)say(t('hello'),1,true);}
+voiceSelEl.onchange=()=>{selectedVoiceIdx=+voiceSelEl.value;ls.set('sc_voice_idx',selectedVoiceIdx);speak(voices[selectedVoiceIdx]?voices[selectedVoiceIdx].name:'Voice selected');};
+$('openTtsSettingsBtn').onclick=()=>{
+  try{window.location.href='intent://com.android.settings.TTS_SETTINGS#Intent;action=android.settings.TTS_SETTINGS;end';}catch(e){}
+  setTimeout(()=>{speak('Please select your TTS engine in mobile settings, then come back to app.');},500);
+};
+function setLang(c,greet){L=LANGS.find(l=>l[0]===c)||LANGS[0];code=L[0];ls.set('sc_lang',code);q=[];info('');if(greet)say(t('hello'),1,true);}
 let q=[],lastSaid='',lastSaidT=0;
 const getActiveVoice=()=>(selectedVoiceIdx!==null&&voices[selectedVoiceIdx])?voices[selectedVoiceIdx]:voices[0];
 function speak(s){stEl.textContent=s;try{speechSynthesis.cancel();}catch(e){}const u=new SpeechSynthesisUtterance(s),v=getActiveVoice();if(v)u.voice=v;u.lang=code;u.rate=1.2;speechSynthesis.speak(u);}
@@ -294,27 +240,19 @@ function rateApp(score){ls.set('sc_rating',score);const email="humairasardar@gma
 function toggleBatterySaver(){saver=!saver;$('batterySaverBtn').textContent=`BATTERY SAVER: ${saver?'ON':'OFF'}`;setSaver(saver,false);}
 function setSaver(on,low){saver=on;document.body.classList.toggle('saver',on);say((low?t('low')+' ':'')+t(on?'sOn':'sOff'),1);const tr=stream&&stream.getVideoTracks()[0];if(tr)tr.applyConstraints({width:{ideal:on?240:320},height:{ideal:on?180:240},frameRate:{ideal:on?15:30}}).catch(()=>{});}
 async function startSession(){running=true;$('startBtn').style.display='none';$('stopBtn').style.display='block';const success=await camStart();if(success){say(t('hello'),1,true);}else{running=false;$('stopBtn').style.display='none';$('startBtn').style.display='block';}}
-function stopSession(){running=false;camStop();$('stopBtn').style.display='none';$('startBtn').style.display='block';try{speechSynthesis.cancel();}catch(e){}playClearBeep();say(t('clear'),1);}
+function stopSession(){running=false;camStop();$('stopBtn').style.display='none';$('startBtn').style.display='block';try{speechSynthesis.cancel();}catch(e){}playClearBeep();}
 $('batterySaverBtn').onclick=toggleBatterySaver;$('startBtn').onclick=startSession;$('stopBtn').onclick=stopSession;
 const show=v=>['homeView','settingsView','aboutView'].forEach(i=>$(i).classList.toggle('active',i===v));
 $('settingsNavBtn').onclick=()=>{show('settingsView');};
 $('aboutNavBtn').onclick=()=>{show('aboutView');};
 $('backToHomeBtn').onclick=()=>{show('homeView');};
 $('backFromAboutBtn').onclick=()=>{show('homeView');};
-function openExitModal(){updateExitText();$('exitModal').classList.add('show');}
-function closeExitModal(){$('exitModal').classList.remove('show');}
-$('exitAppBtn').onclick=openExitModal;
-$('exitNoBtn').onclick=closeExitModal;
-$('exitYesBtn').onclick=()=>{closeExitModal();if(running)stopSession();try{speechSynthesis.cancel();}catch(e){}window.location.href="about:blank";};
-window.addEventListener('popstate',()=>{const activeView=document.querySelector('.view.active').id;if(activeView!=='homeView'){show('homeView');}else{openExitModal();}history.pushState(null,'',window.location.href);});
-history.pushState(null,'',window.location.href);
 sel.innerHTML=LANGS.map((l,i)=>`<option value="${i}">${l[1]}${l[2]?' - '+l[2]:''}</option>`).join('');
 sel.value=LANGS.indexOf(L);
 sel.onchange=()=>{setLang(LANGS[+sel.value][0],true);};
 if(speechSynthesis.onvoiceschanged!==undefined){speechSynthesis.onvoiceschanged=populateTTSOptions;}
 setTimeout(populateTTSOptions,500);
 setLang(code,false);
-updateExitText();
 stEl.textContent=t('hello');
 </script>
 </body>
