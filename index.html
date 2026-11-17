@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0a0f1e">
 <link rel="manifest" href="manifest.json">
-<title>Smart Cane | Humaira Sardar</title>
+<title>Smart Cane | Amazon Collection</title>
 <script type="module">
 import {FilesetResolver,ObjectDetector} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/+esm";
 window.FilesetResolver=FilesetResolver;window.ObjectDetector=ObjectDetector;
@@ -39,7 +39,7 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 
 <div id="homeView" class="view active">
   <h2>SMART CANE</h2>
-  <div class="sub">Your Eyes Smart Cane</div>
+  <div class="sub">Your Eyes Smart Cane | Created by Humaira Sardar, Okara, Pakistan</div>
   <label for="lang">SELECT LANGUAGE</label>
   <select id="lang"></select>
   <div id="info"></div>
@@ -52,9 +52,12 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 
 <div id="settingsView" class="view">
   <h2>SETTINGS</h2>
-  <div class="sub">Smart Cane</div>
+  <div class="sub">Smart Cane Settings</div>
   <button id="batterySaverBtn">BATTERY SAVER: OFF</button>
   
+  <label for="ttsEngineSelect">SELECT TTS ENGINE</label>
+  <select id="ttsEngineSelect"></select>
+
   <label for="voiceSelect">PREFERRED TTS VOICE</label>
   <select id="voiceSelect"></select>
 
@@ -73,7 +76,7 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 
 <div id="aboutView" class="view">
   <h2>ABOUT APP</h2>
-  <div class="sub">Your Eyes Smart Cane v5.1</div>
+  <div class="sub">Your Eyes Smart Cane v6.0</div>
   <p class="txt">Smart Cane helps you walk with confidence. It spots nearby obstacles, tells their distance in meters, and guides you in real time.<br><br><strong>Created by Humaira Sardar, Okara, Pakistan</strong></p>
   <button id="backFromAboutBtn" class="sec">BACK</button>
 </div>
@@ -81,7 +84,7 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 </div>
 
 <script>
-/* ===== OFFLINE SERVICE WORKER REGISTRATION ===== */
+/* ===== OFFLINE SERVICE WORKER ===== */
 if('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch(() => {});
@@ -91,7 +94,7 @@ if('serviceWorker' in navigator) {
 /* ===== CONFIG ===== */
 const WASM="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm";
 const MODEL="https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite";
-const RANGE=2.2;   
+const RANGE=2.5;   
 const IDX={en:0,ur:1,hi:2,ar:3,'pa-IN':4,ps:5};   
 const LANGS=`en-US|English (United States)|
 en-GB|English (United Kingdom)|
@@ -144,7 +147,7 @@ fil-PH|Filipino (Philippines)|Filipino
 sw-KE|Swahili (Kenya)|Kiswahili
 sw-TZ|Swahili (Tanzania)|Kiswahili
 af-ZA|Afrikaans (South Africa)|Afrikaans
-sq-AL|Albanian (Albania)|Shقip
+sq-AL|Albanian (Albania)|Shqip
 am-ET|Amharic (Ethiopia)|አማርኛ
 hy-AM|Armenian (Armenia)|Հայերեն
 az-AZ|Azerbaijani (Azerbaijan)|Azərbaycan dili
@@ -197,51 +200,82 @@ yi|Yiddish|ייִדיש
 yo-NG|Yoruba (Nigeria)|Yorùbá
 zu-ZA|Zulu (South Africa)|isiZulu`.split('\n').map(r=>{const a=r.split('|');return[a[0],a[1],a[2]||'']});
 
-/* ===== VOICE & GUIDANCE TEXT PACKS ===== */
+/* ===== VOICE & GUIDANCE TEXT PACKS (Rich Distance & Walk Guidance) ===== */
 const S={
 hello:['Smart Cane is ready. Press Start to begin.','اسمارٹ کین تیار ہے۔ شروع کرنے کے لیے اسپاٹ دبائیں۔','स्मार्ट केन तैयार है। शुरू करने के लिए स्टार्ट दबाएँ।','العصا الذكية جاهزة. اضغط ابدأ للبدء.','ਸਮਾਰਟ ਕੇਨ ਤਿਆਰ ਹੈ। ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਸਟਾਰਟ ਦਬਾਓ۔','سمارټ کین چمتو دی. د پیل لپاره پیل کېکاږئ.'],
 obsNear:['Danger! Obstacle very close at {m} meters. Stop!','خطر! رکاوٹ بہت قریب ہے، تقریباً {m} میٹر دور ہے۔ رک جائیں!','खतरा! बाधा बहुत पास है, लगभग {m} मीटर दूर। रुकें!','خطر! العائق قريب جدا على بعد {m} متر. توقف!','ਖਤਰਾ! ਰੁਕਾਵਟ ਬਹੁਤ ਨੇੜੇ ਹੈ, ਲਗਭਗ {m} ਮੀਟਰ। ਰੁਕੋ!','خطر! خنډ ډېر نږدې دی، شاوخوا {m} متره. ودرېږئ!'],
-obsFar:['Caution, obstacle ahead at {m} meters','احتیاط کریں، सामने رکاوٹ ہے، تقریباً {m} میٹر دور','सावधानी, सामने बाधा है, लगभग {m} मीटर दूर','انتبه، هناك عوائق أمامك على بعد {m} متر','ਧਿਆਨ ਰੱਖੋ, ਸਾਹመਣੇ ਰੁਕਾਵਟ ہے, ਲਗਭਗ {m} ਮੀਟਰ','پامال, مخکې خنډ دی، شاوخوا {m} متره'],
-clear:['Path is clear. Keep walking.','راستا صاف ہے۔ چلتے رہیں۔','रास्ता साफ है। चलते रहें।','الطريق واضح. واصل المشي.','ਰਸਤਾ ਸਾفا ਹੈ। ਤੁਰਦੇ ਰਹੋ۔','لار پاکه ده. روان اوسئ.'],
+obsFar:['Caution, obstacle ahead at {m} meters. Walk carefully.','احتیاط کریں، سامنے رکاوٹ ہے، تقریباً {m} میٹر دور۔ دھیان سے چلیں۔','सावधानी, सामने बाधा है, लगभग {m} मीटर दूर। सावधानी से चलें।','انتبه، هناك عوائق أمامك على بعد {m} متر','ਧਿਆਨ ਰੱਖੋ, ਸਾਹਮਣੇ ਰੁਕਾਵਟ ਹੈ, ਲਗਭਗ {m} ਮੀਟਰ۔ ਧਿਆਨ ਨਾਲ ਤੁਰੋ۔','پامال, مخکې خنډ دی، شاوخوا {m} متره'],
+clear:['Path is clear. Keep walking.','راستا صاف ہے۔ چلتے رہیں۔','रास्ता साफ है। चलते रहें।','الطريق واضح. واصل المشي.','ਰਸਤਾ ਸਾਫ ਹੈ। ਤੁਰਦੇ ਰਹੋ۔','لار پاکه ده. روان اوسئ.'],
 sOn:['Battery saver on.','بیٹری سیور آن۔','बैटरी सेवर चालू।','وضع توفير البطارية قيد التشغيل.','ਬੈਟਰੀ ਸੇਵਰ ਚਾਲੂ۔','د بیټرۍ سیور فعال شو.'],
 sOff:['Battery saver off.','بیٹری سیور بند۔','बैटरी सेवर बंद।','تم إيقاف توفير البطارية.','ਬੈਟਰੀ ਸੇਵਰ ਬੰਦ۔','د بیټرۍ سیور بند شو.'],
-low:['Battery low.','بیٹری کم ہے۔','बैटरी कम है।','البطارية منخفضة.','ਬੈਟਰੀ ਘੱਟ ਹੈ۔','بیټرۍ کمه ده.'],
-det:['Camera or detector is not working. Walk carefully.','کیمرہ یا ڈیٹیکٹر کام نہیں کر رہا۔ احتیاط سے چلیں۔','कैमरा या डिटेक्टर काम नहीं कर रहा। सावधानी से चलें।','الكاميرا أو كشف العوائق لا يعمل. امش بحذر.','ਕੈਮਰਾ ਜਾਂ ਡਿਟੈকਟਰ ਕੰਮ ਨਹੀਂ ਕਰ ਰਿਹਾ۔ ਧਿਆਨ ਨਾਲ ਤੁਰੋ۔','کمره یا کشف کو کار نه کوي. په احتیاط روان شئ.'],
-perm:['Please allow camera in browser settings.','براہ کرم براؤزر کی سیٹنگز میں کیمرے کی اجازت دیں۔','कृपया ब्राउज़र सेटिंग्स में कैमरे की अनुमति दें।','يرجى السماح بالكاميرا من إعدادات المتصفح.','ਕਿਰਪਾ ਕਰਕੇ ਬ੍ਰਾਊਜ਼ਰ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਕੈਮਰੇ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ۔','مهرباني وکړئ د براوزر په ترتیباتو کې کامرې ته اجازه ورکړئ.'],
-https:['Open this app from an https address.','اس ایپ کو https ایڈریس سے کھولیں۔','इस ऐप को https पते से खोलें।','افتح هذا التطبيق من عنوان https.','ਇਸ ਐਪ ਨੂੰ https ਪਤੇ ਤੋਂ ਖੋల్੍ਹੋ۔','دا اپ د https پتې څخه پرانیزئ.']
+low:['Battery low.','بیٹری کم ہے۔','बैटरी कम है۔','البطارية منخفضة.','ਬੈਟਰੀ ਘੱਟ ਹੈ۔','بیټرۍ کمه ده.'],
+det:['Camera or detector is not working. Walk carefully.','کیمرہ یا ڈیٹیکٹر کام نہیں کر رہا۔ احتیاط سے چلیں۔','कैमरा या डिटेक्टर काम नहीं कर रहा। सावधानी से चलें।','الكاميرا أو كشف العوائق لا يعمل. امش بحذر.','ਕੈਮਰਾ ਜਾਂ ਡਿਟੈਕਟਰ ਕੰਮ ਨਹੀਂ ਕਰ ਰਿਹਾ। ਧਿਆਨ ਨਾਲ ਤੁਰੋ۔','کمره یا کشف کو کار نه کوي. په احتیاط روان شئ.'],
+perm:['Please allow camera in browser settings.','براہ کرم براؤزر کی سیٹنگز میں کیمرے کی اجازت دیں۔','कृपया ब्राउज़र सेटिंग्स में कैमरे की अनुमति दें।','يرجى السماح بالكاميرا من إعدادات المتصفح.','ਕਿਰਪਾ ਕਰਕੇ ਬ੍ਰਾਊਜ਼ਰ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਕੈਮਰੇ ਦੀ ਇਜਾਜ਼त ਦਿਓ۔','مهرباني وکړئ د براوزر په ترتیباتو کې کامرې ته اجازه ورکړئ.'],
+https:['Open this app from an https address.','اس ایپ کو https ایڈریس سے کھولیں۔','इस ऐप को https पते से खोलें።','افتح هذا التطبيق من عنوان https.','ਇਸ ਐਪ ਨੂੰ https ਪਤੇ ਤੋਂ ਖੋల్੍ਹੋ۔','دا اپ د https پتې څخه پرانیزئ.']
 };
 
-/* ===== STATE ===== */
+/* ===== STATE & STORAGE ===== */
 const $=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
-const stEl=$('status'),infoEl=$('info'),video=$('cam'),sel=$('lang'),voiceSelEl=$('voiceSelect');
+const stEl=$('status'),infoEl=$('info'),video=$('cam'),sel=$('lang'),voiceSelEl=$('voiceSelect'),ttsEngineSelEl=$('ttsEngineSelect');
 let code=ls.get('sc_lang')||'en-US',L=LANGS.find(l=>l[0]===code)||LANGS[0];code=L[0];
-let voices=[],selectedVoiceIdx=ls.get('sc_voice_idx')!==null?+ls.get('sc_voice_idx'):null;
+let voices=[],engines=[],selectedVoiceIdx=ls.get('sc_voice_idx')!==null?+ls.get('sc_voice_idx'):null;
+let selectedEngine=ls.get('sc_tts_engine')||'';
 let saver=false,running=false,stream=null,det=null,camOn=false,lastProc=0,curKey='',sawAt=0,lastClearSpoken=0,ac=null;
 let consecutiveObstacleFrames = 0;
 
-/* ===== LANGUAGE & TTS ENGINE ===== */
+/* ===== LANGUAGE & TTS ENGINE SELECTOR ===== */
 const bi=c=>IDX[c]??IDX[c.split('-')[0]]??-1;
 const fb=()=>bi(code)<0;                       
 const pk=()=>fb()?0:(bi(code)>=0?bi(code):0);
 const t=(k,v)=>{const p=pk(),s=S[k]?.[p]!==undefined?S[k][p]:S[k]?.[0]||k;return s.replace(/\{(\w+)\}/g,(_,x)=>v[x])};
 const info=s=>{infoEl.textContent=s||''};
 
-function populateVoices(){
+function populateTTSOptions(){
   voices = speechSynthesis.getVoices();
   if(!voices.length) return;
-  voiceSelEl.innerHTML = voices.map((v,i)=>`<option value="${i}">${v.name} (${v.lang})</option>`).join('');
-  if(selectedVoiceIdx!==null && voices[selectedVoiceIdx]){
-    voiceSelEl.value=selectedVoiceIdx;
-  } else {
-    const defIdx = voices.findIndex(v=>v.lang.replace('_','-')===code || v.lang.startsWith(code.split('-')[0]));
-    if(defIdx>=0) { voiceSelEl.value=defIdx; selectedVoiceIdx=defIdx; }
+
+  // Extract unique TTS engines/providers from voice names (e.g., Google, Vocalizer, eSpeak, Microsoft, Samsung)
+  const engineSet = new Set();
+  voices.forEach(v => {
+    const nameParts = v.name.split(' ')[0];
+    engineSet.add(nameParts);
+  });
+  engines = Array.from(engineSet);
+
+  ttsEngineSelEl.innerHTML = `<option value="all">All Engines / Default</option>` + engines.map(e => `<option value="${e}">${e}</option>`).join('');
+  if(selectedEngine) ttsEngineSelEl.value = selectedEngine;
+
+  filterVoicesByEngine();
+}
+
+function filterVoicesByEngine(){
+  const eng = ttsEngineSelEl.value;
+  const filtered = voices.filter(v => eng === 'all' || v.name.startsWith(eng));
+
+  voiceSelEl.innerHTML = filtered.map((v)=>{
+    const realIdx = voices.indexOf(v);
+    return `<option value="${realIdx}">${v.name} (${v.lang})</option>`;
+  }).join('');
+
+  if(selectedVoiceIdx !== null && voices[selectedVoiceIdx] && (eng === 'all' || voices[selectedVoiceIdx].name.startsWith(eng))) {
+    voiceSelEl.value = selectedVoiceIdx;
+  } else if(filtered.length > 0) {
+    voiceSelEl.value = voices.indexOf(filtered[0]);
+    selectedVoiceIdx = +voiceSelEl.value;
   }
 }
-voiceSelEl.onchange=()=>{
-  selectedVoiceIdx=+voiceSelEl.value;
-  ls.set('sc_voice_idx',selectedVoiceIdx);
-  speak('Voice updated');
+
+ttsEngineSelEl.onchange = () => {
+  selectedEngine = ttsEngineSelEl.value;
+  ls.set('sc_tts_engine', selectedEngine);
+  filterVoicesByEngine();
+};
+
+voiceSelEl.onchange = () => {
+  selectedVoiceIdx = +voiceSelEl.value;
+  ls.set('sc_voice_idx', selectedVoiceIdx);
+  speak('Voice selected successfully');
 };
 
 function setLang(c,greet){
@@ -249,7 +283,7 @@ function setLang(c,greet){
   if(greet)say(t('hello'),1,true);
 }
 
-/* ===== SPEECH QUEUE ===== */
+/* ===== SPEECH QUEUE & AUDIO BEEPS ===== */
 let q=[],lastSaid='',lastSaidT=0;
 const getActiveVoice=()=>(selectedVoiceIdx!==null && voices[selectedVoiceIdx]) ? voices[selectedVoiceIdx] : voices[0];
 function speak(s){
@@ -282,7 +316,6 @@ function pump(){
 }
 (function tick(){pump();setTimeout(tick,saver?200:30)})();
 
-/* ===== CUSTOM DISTINCT AUDIO BEEPS ===== */
 function playHeartbeatBeep(){
   try{
     ac=ac||new(window.AudioContext||window.webkitAudioContext)();
@@ -326,16 +359,34 @@ async function loadDet(){
   for(const d of['GPU','CPU'])try{return await ObjectDetector.createFromOptions(v,{baseOptions:{modelAssetPath:MODEL,delegate:d},scoreThreshold:.35,maxResults:6,runningMode:'VIDEO'})}catch(e){}
   throw new Error('detector');
 }
+
 async function camStart(){
   if(camOn)return true;
-  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:saver?240:320},height:{ideal:saver?180:240},frameRate:{ideal:saver?15:30}},audio:false})}
-  catch(e){stream=null;say(t(window.isSecureContext?'perm':'https'));info('Camera: '+((e&&e.name)||'error'));return false}
-  video.srcObject=stream;try{await video.play()}catch(e){}
-  camOn=true;nextFrame();
-  if(!det){try{det=await loadDet()}catch(e){say(t('det'))}}
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:saver?240:320},height:{ideal:saver?180:240},frameRate:{ideal:saver?15:30}},audio:false});
+  }catch(e){
+    stream=null;
+    say(t(window.isSecureContext?'perm':'https'));
+    info('Camera: '+((e&&e.name)||'error'));
+    return false;
+  }
+  video.srcObject=stream;
+  try{await video.play()}catch(e){}
+  camOn=true;
+  nextFrame();
+  if(!det){
+    try{det=await loadDet()}catch(e){say(t('det'))}
+  }
   return true;
 }
-function camStop(){camOn=false;if(stream){stream.getTracks().forEach(x=>x.stop());stream=null}video.srcObject=null;curKey='';consecutiveObstacleFrames=0;}
+
+function camStop(){
+  camOn=false;
+  if(stream){stream.getTracks().forEach(x=>x.stop());stream=null;}
+  video.srcObject=null;
+  curKey='';
+  consecutiveObstacleFrames=0;
+}
 const nextFrame=()=>{if(camOn&&running)requestAnimationFrame(onFrame)};
 
 const CLEAR_INTERVAL = 6000;
@@ -404,7 +455,7 @@ function alertObs(b){
 function rateApp(score){
   ls.set('sc_rating', score);
   const email = "humairasardar@gmail.com";
-  const subject = encodeURIComponent("Smart Cane App Rating");
+  const subject = encodeURIComponent("Smart Cane App Rating - Amazon Collection");
   const body = encodeURIComponent(`Hello Humaira,\n\nI have rated your Smart Cane application: ${score} Stars.`);
   
   speak(code.startsWith('ur') ? `شکریہ! آپ نے ${score} اسٹار دیے ہیں۔ ای میل تیار کی جا رہی ہے۔` : `Thank you for rating ${score} stars! Opening email.`);
@@ -431,8 +482,14 @@ async function startSession(){
   running=true;
   $('startBtn').style.display='none';
   $('stopBtn').style.display='block';
-  await camStart();
-  say(t('hello'),1,true);
+  const success = await camStart();
+  if(success) {
+    say(t('hello'),1,true);
+  } else {
+    running=false;
+    $('stopBtn').style.display='none';
+    $('startBtn').style.display='block';
+  }
 }
 
 function stopSession(){
@@ -446,13 +503,13 @@ function stopSession(){
   say(t('clear'),1);
 }
 
-/* ===== UI NAVIGATION & CONFIRM EXIT (YES / NO) ===== */
+/* ===== UI NAVIGATION & CONFIRM EXIT (YES / NO FOR BACK BUTTON & APP EXIT) ===== */
 const show=v=>['homeView','settingsView','aboutView'].forEach(i=>$(i).classList.toggle('active',i===v));
 
 $('settingsNavBtn').onclick=()=>{show('settingsView')};
 $('aboutNavBtn').onclick=()=>{show('aboutView')};
 
-// بیک یا ہوم جانے پر کنفرمیشن (Yes / No پرمیشن)
+// سیٹنگز یا اباؤٹ سے واپس ہوم جانے پر کنفرمیشن
 $('backToHomeBtn').onclick=$('backFromAboutBtn').onclick=()=>{
   const msg = code.startsWith('ur') ? "کیا آپ واقعی واپس ہوم اسکرین پر جانا چاہتی ہیں؟" : "Do you really want to go back to Home?";
   if(confirm(msg)) {
@@ -461,14 +518,40 @@ $('backToHomeBtn').onclick=$('backFromAboutBtn').onclick=()=>{
   }
 };
 
+// ہارڈویئر بیک بٹن (موبایل کی نیچے والی بیک کی) پریس کرنے پر پاپ اپ اور ایگزٹ کنفرمیشن
+window.addEventListener('popstate', (e) => {
+  const activeView = document.querySelector('.view.active').id;
+  if(activeView !== 'homeView') {
+    e.preventDefault();
+    const msg = code.startsWith('ur') ? "کیا آپ سیٹنگز سے باہر نکلنا چاہتی ہیں؟" : "Do you want to leave settings?";
+    if(confirm(msg)) {
+      show('homeView');
+      history.pushState(null, '', window.location.href);
+    } else {
+      history.pushState(null, '', window.location.href);
+    }
+  } else {
+    const msg = code.startsWith('ur') ? "کیا آپ اسمارٹ کین ایپ بند کرنا چاہتی ہیں؟" : "Do you want to exit Smart Cane App?";
+    if(confirm(msg)) {
+      if(running) stopSession();
+      window.close();
+    } else {
+      history.pushState(null, '', window.location.href);
+    }
+  }
+});
+
+// ہسٹری کو پش کریں تاکہ بیک بٹن کا ایونٹ ٹریگر ہو سکے
+history.pushState(null, '', window.location.href);
+
 sel.innerHTML=LANGS.map((l,i)=>`<option value="${i}">${l[1]}${l[2]?' - '+l[2]:''}</option>`).join('');
 sel.value=LANGS.indexOf(L);
 sel.onchange=()=>{setLang(LANGS[+sel.value][0],true)};                      
 
 if(speechSynthesis.onvoiceschanged!==undefined){
-  speechSynthesis.onvoiceschanged=populateVoices;
+  speechSynthesis.onvoiceschanged=populateTTSOptions;
 }
-setTimeout(populateVoices, 500);
+setTimeout(populateTTSOptions, 500);
 
 setLang(code,false);
 stEl.textContent=t('hello');
