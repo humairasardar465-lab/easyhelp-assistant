@@ -39,7 +39,7 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 
 <div id="homeView" class="view active">
   <h2>SMART CANE</h2>
-  <div class="sub">Amazon Collection | Created by Humaira Sardar, Okara, Pakistan</div>
+  <div class="sub">Amazon Collection | Created by Humaira Sardar</div>
   <label for="lang">SELECT LANGUAGE</label>
   <select id="lang"></select>
   <div id="info"></div>
@@ -76,7 +76,7 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 
 <div id="aboutView" class="view">
   <h2>ABOUT APP</h2>
-  <div class="sub">Your Eyes Smart Cane v7.0</div>
+  <div class="sub">Your Eyes Smart Cane v8.0</div>
   <p class="txt">Smart Cane helps you walk with confidence. It spots nearby obstacles, tells their distance in meters, and guides you in real time.<br><br><strong>Amazon Collection<br>Created by Humaira Sardar, Okara, Pakistan</strong></p>
   <button id="backFromAboutBtn" class="sec">BACK</button>
 </div>
@@ -205,21 +205,21 @@ const S={
 hello:['Smart Cane is ready. Press Start to begin.','اسمارٹ کین تیار ہے۔ شروع کرنے کے لیے اسپاٹ دبائیں۔','स्मार्ट केन तैयार है। शुरू करने के लिए स्टार्ट दबाएँ।','العصا الذكية جاهزة. اضغط ابدأ للبدء.','ਸਮਾਰਟ ਕੇਨ ਤਿਆਰ ਹੈ। ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਸਟਾਰਟ ਦਬਾਓ۔','سمارټ کین چمتو دی. د پیل لپاره پیل کېکاږئ.'],
 obsNear:['Danger! Obstacle very close at {m} meters. Stop!','خطر! رکاوٹ بہت قریب ہے، تقریباً {m} میٹر دور ہے۔ رک جائیں!','खतरा! बाधा बहुत पास है, लगभग {m} मीटर दूर। रुकें!','خطر! العائق قريب جدا على بعد {m} متر. توقف!','ਖਤਰਾ! ਰੁਕਾਵਟ ਬਹੁਤ ਨੇੜੇ ਹੈ, ਲਗਭਗ {m} ਮੀਟਰ। ਰੁਕੋ!','خطر! خنډ ډېر نږدې دی، شاوخوا {m} متره. ودرېږئ!'],
 obsFar:['Caution, obstacle ahead at {m} meters. Walk carefully.','احتیاط کریں، سامنے رکاوٹ ہے، تقریباً {m} میٹر دور۔ دھیان سے چلیں۔','सावधानी, सामने बाधा है, लगभग {m} मीटर दूर। सावधानी से चलें।','انتبه، هناك عوائق أمامك على بعد {m} متر','ਧਿਆਨ ਰੱਖੋ, ਸਾਹਮਣੇ ਰੁਕਾਵਟ ہے, ਲਗਭਗ {m} ਮੀਟਰ۔ ਧਿਆਨ ਨਾਲ ਤੁਰੋ۔','پامال, مخکې خنډ دی، شاوخوا {m} متره'],
-clear:['Path is clear. Keep walking.','راستا صاف ہے۔ چلتے رہیں۔','रास्ता साफ है। चलते रहें।','الطريق واضح. واصل المشي.','ਰਸਤਾ ਸਾفا ਹੈ। ਤੁਰਦੇ ਰਹੋ۔','لار پاکه ده. روان اوسئ.'],
+clear:['Path is clear. Keep walking.','راستا صاف ہے۔ چلتے رہیں۔','रास्ता साफ है। चलते रहें।','الطريق واضح. واصل المشي.','ਰਸਤਾ ਸਾਫ ਹੈ। ਤੁਰਦੇ ਰਹੋ۔','لار پاکه ده. روان اوسئ.'],
 sOn:['Battery saver on.','بیٹری سیور آن۔','बैटरी सेवर चालू।','وضع توفير البطارية قيد التشغيل.','ਬੈਟਰੀ ਸੇਵਰ ਚਾਲੂ۔','د بیټرۍ سیور فعال شو.'],
 sOff:['Battery saver off.','بیٹری سیور بند۔','बैटरी सेवर बंद।','تم إيقاف توفير البطارية.','ਬੈਟਰੀ ਸੇਵਰ ਬੰਦ۔','د بیټرۍ سیور بند شو.'],
 low:['Battery low.','بیٹری کم ہے۔','बैटरी कम है।','البطارية منخفضة.','ਬੈਟਰੀ ਘੱਟ ਹੈ۔','بیټرۍ کمه ده.'],
 det:['Camera or detector is not working. Walk carefully.','کیمرہ یا ڈیٹیکٹر کام نہیں کر رہا۔ احتیاط سے چلیں۔','कैमरा या डिटेक्टर काम नहीं कर रहा। सावधानी से चलें।','الكاميرا أو كشف العوائق لا يعمل. امش بحذر.','ਕੈਮਰਾ ਜਾਂ ਡਿਟੈਕਟਰ ਕੰਮ ਨਹੀਂ ਕਰ ਰਿਹਾ۔ ਧਿਆਨ ਨਾਲ ਤੁਰੋ۔','کمره یا کشف کو کار نه کوي. په احتیاط روان شئ.'],
-perm:['Please allow camera in browser settings.','براہ کرم براؤزر کی سیٹنگز میں کیمرے کی اجازت دیں۔','कृपया ब्राउज़र सेटिंग्स में कैमरे की अनुमति दें።','يرجى السماح بالكاميرا من إعدادات المتصفح.','ਕਿਰਪਾ ਕਰਕੇ ਬ੍ਰਾਊਜ਼ਰ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਕੈਮਰੇ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ۔','مهرباني وکړئ د براوزر په ترتیباتو کې کامرې ته اجازه ورکړئ.'],
+perm:['Please allow camera in browser settings.','براہ کرم براؤزر کی سیٹنگز میں کیمرے کی اجازت دیں۔','कृपया ब्राउज़र सेटिंग्स में कैमरे की अनुमति दें।','يرجى السماح بالكاميرا من إعدادات المتصفح.','ਕਿਰਪਾ ਕਰਕੇ ਬ੍ਰਾਊਜ਼ਰ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਕੈਮਰੇ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ۔','مهرباني وکړئ د براوزر په ترتیباتو کې کامرې ته اجازه ورکړئ.'],
 https:['Open this app from an https address.','اس ایپ کو https ایڈریس سے کھولیں۔','इस ऐप को https पते से खोलें।','افتح هذا التطبيق من عنوان https.','ਇਸ ਐਪ ਨੂੰ https ਪਤੇ ਤੋਂ ਖੋల్੍ਹੋ۔','دا اپ د https پتې څخه پرانیزئ.']
 };
 
 /* ===== STATE & STORAGE ===== */
-const $=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const $=id=>document.getElementById(id);
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
 const stEl=$('status'),infoEl=$('info'),video=$('cam'),sel=$('lang'),voiceSelEl=$('voiceSelect'),ttsEngineSelEl=$('ttsEngineSelect');
 let code=ls.get('sc_lang')||'en-US',L=LANGS.find(l=>l[0]===code)||LANGS[0];code=L[0];
-let voices=[],engines=[],selectedVoiceIdx=ls.get('sc_voice_idx')!==null?+ls.get('sc_voice_idx'):null;
+let voices=[],selectedVoiceIdx=ls.get('sc_voice_idx')!==null?+ls.get('sc_voice_idx'):null;
 let selectedEngine=ls.get('sc_tts_engine')||'all';
 let saver=false,running=false,stream=null,det=null,camOn=false,lastProc=0,curKey='',sawAt=0,lastClearSpoken=0,ac=null;
 let consecutiveObstacleFrames = 0;
@@ -235,29 +235,56 @@ function populateTTSOptions(){
   voices = speechSynthesis.getVoices();
   if(!voices.length) return;
 
-  const engineSet = new Set();
+  const engineMap = new Map();
   voices.forEach(v => {
-    let nameParts = v.name.split(' ')[0];
-    if(nameParts) engineSet.add(nameParts);
+    // براؤزر کے حساب سے وائس کے نام یا URI سے انجن الگ کرنا
+    let engName = "Default TTS";
+    if(v.name.includes("Google")) engName = "Google TTS";
+    else if(v.name.includes("Microsoft")) engName = "Microsoft TTS";
+    else if(v.name.includes("Samsung")) engName = "Samsung TTS";
+    else if(v.name.includes("Vocalizer")) engName = "Vocalizer";
+    else if(v.name.includes("eSpeak")) engName = "eSpeak NG";
+    else {
+      let parts = v.name.split(' ');
+      if(parts.length > 0) engName = parts[0];
+    }
+    if(!engineMap.has(engName)) engineMap.set(engName, []);
+    engineMap.get(engName).push(v);
   });
-  engines = Array.from(engineSet);
 
-  ttsEngineSelEl.innerHTML = `<option value="all">All Engines / Default</option>` + engines.map(e => `<option value="${e}">${e}</option>`).join('');
+  let engineOptions = `<option value="all">All TTS Engines</option>`;
+  for(let eng of engineMap.keys()){
+    engineOptions += `<option value="${eng}">${eng}</option>`;
+  }
+  ttsEngineSelEl.innerHTML = engineOptions;
   if(selectedEngine) ttsEngineSelEl.value = selectedEngine;
 
-  filterVoicesByEngine();
+  filterVoicesByEngine(engineMap);
 }
 
-function filterVoicesByEngine(){
+function filterVoicesByEngine(preMap){
+  voices = speechSynthesis.getVoices();
   const eng = ttsEngineSelEl.value;
-  const filtered = voices.filter(v => eng === 'all' || v.name.startsWith(eng));
+  
+  let filtered = voices;
+  if(eng !== 'all') {
+    filtered = voices.filter(v => {
+      if(eng === "Google TTS") return v.name.includes("Google");
+      if(eng === "Microsoft TTS") return v.name.includes("Microsoft");
+      if(eng === "Samsung TTS") return v.name.includes("Samsung");
+      if(eng === "Vocalizer") return v.name.includes("Vocalizer");
+      if(eng === "eSpeak NG") return v.name.includes("eSpeak");
+      return v.name.startsWith(eng);
+    });
+    if(filtered.length === 0) filtered = voices; // اگر فلٹر میں کچھ نہ ملے تو تمام شو کریں
+  }
 
   voiceSelEl.innerHTML = filtered.map((v)=>{
     const realIdx = voices.indexOf(v);
     return `<option value="${realIdx}">${v.name} (${v.lang})</option>`;
   }).join('');
 
-  if(selectedVoiceIdx !== null && voices[selectedVoiceIdx] && (eng === 'all' || voices[selectedVoiceIdx].name.startsWith(eng))) {
+  if(selectedVoiceIdx !== null && voices[selectedVoiceIdx]) {
     voiceSelEl.value = selectedVoiceIdx;
   } else if(filtered.length > 0) {
     voiceSelEl.value = voices.indexOf(filtered[0]);
@@ -469,63 +496,62 @@ function rateApp(score){
 
 /* ===== BATTERY SAVER ===== */
 function toggleBatterySaver(){
-  saver=!saver;
-  $('batterySaverBtn').textContent=`BATTERY SAVER: ${saver ? 'ON' : 'OFF'}`;
+  saver = !saver;
+  $('batterySaverBtn').textContent = `BATTERY SAVER: ${saver ? 'ON' : 'OFF'}`;
   setSaver(saver, false);
 }
 function setSaver(on,low){
-  saver=on;document.body.classList.toggle('saver',on);
+  saver=on;
+  document.body.classList.toggle('saver', on);
   say((low?t('low')+' ':'')+t(on?'sOn':'sOff'),2);
-  const tr=stream&&stream.getVideoTracks()[0];
-  if(tr)tr.applyConstraints({width:{ideal:on?240:320},height:{ideal:on?180:240},frameRate:{ideal:on?15:30}}).catch(()=>{});
+  const tr = stream && stream.getVideoTracks()[0];
+  if(tr) tr.applyConstraints({width:{ideal:on?240:320},height:{ideal:on?180:240},frameRate:{ideal:on?15:30}}).catch(()=>{});
 }
 
 /* ===== APP START & STOP ===== */
 async function startSession(){
-  running=true;
-  $('startBtn').style.display='none';
-  $('stopBtn').style.display='block';
+  running = true;
+  $('startBtn').style.display = 'none';
+  $('stopBtn').style.display = 'block';
   const success = await camStart();
   if(success) {
-    say(t('hello'),1,true);
+    say(t('hello'), 1, true);
   } else {
-    running=false;
-    $('stopBtn').style.display='none';
-    $('startBtn').style.display='block';
+    running = false;
+    $('stopBtn').style.display = 'none';
+    $('startBtn').style.display = 'block';
   }
 }
 
 function stopSession(){
-  running=false;
+  running = false;
   camStop();
-  $('stopBtn').style.display='none';
-  $('startBtn').style.display='block';
+  $('stopBtn').style.display = 'none';
+  $('startBtn').style.display = 'block';
   speechSynthesis.cancel();
-  q=[];
+  q = [];
   playClearBeep();
-  say(t('clear'),1);
+  say(t('clear'), 1);
 }
 
 /* ===== UI EVENTS & CONTROLS ===== */
-$('batterySaverBtn').onclick=toggleBatterySaver;
-$('startBtn').onclick=startSession;
-$('stopBtn').onclick=stopSession;
+$('batterySaverBtn').onclick = toggleBatterySaver;
+$('startBtn').onclick = startSession;
+$('stopBtn').onclick = stopSession;
 
-const show=v=>['homeView','settingsView','aboutView'].forEach(i=>$(i).classList.toggle('active',i===v));
+const show = v => ['homeView','settingsView','aboutView'].forEach(i => $(i).classList.toggle('active', i === v));
 
-$('settingsNavBtn').onclick=()=>{show('settingsView')};
-$('aboutNavBtn').onclick=()=>{show('aboutView')};
+$('settingsNavBtn').onclick = () => { show('settingsView'); };
+$('aboutNavBtn').onclick = () => { show('aboutView'); };
 
-// سیٹنگز یا اباؤٹ سے واپس ہوم جانے پر کنفرمیشن
-$('backToHomeBtn').onclick=$('backFromAboutBtn').onclick=()=>{
-  const msg = code.startsWith('ur') ? "क्या आप वाकई वापस होम اسکرین پر جانا چاہتی ہیں؟ (Yes / No)" : "Do you really want to go back to Home?";
+$('backToHomeBtn').onclick = $('backFromAboutBtn').onclick = () => {
+  const msg = code.startsWith('ur') ? "کیا آپ واقعی واپس ہوم اسکرین پر جانا چاہتی ہیں؟ (Yes / No)" : "Do you really want to go back to Home?";
   if(confirm(msg)) {
     if(running) stopSession();
     show('homeView');
   }
 };
 
-// ہارڈویئر بیک بٹن (موبائل کی نیچے والی بیک کی) پر اوکے/کینسل (Yes/No) پرمیشن
 window.addEventListener('popstate', (e) => {
   const activeView = document.querySelector('.view.active').id;
   if(activeView !== 'homeView') {
@@ -550,17 +576,17 @@ window.addEventListener('popstate', (e) => {
 
 history.pushState(null, '', window.location.href);
 
-sel.innerHTML=LANGS.map((l,i)=>`<option value="${i}">${l[1]}${l[2]?' - '+l[2]:''}</option>`).join('');
-sel.value=LANGS.indexOf(L);
-sel.onchange=()=>{setLang(LANGS[+sel.value][0],true)};                      
+sel.innerHTML = LANGS.map((l,i)=>`<option value="${i}">${l[1]}${l[2]?' - '+l[2]:''}</option>`).join('');
+sel.value = LANGS.indexOf(L);
+sel.onchange = () => { setLang(LANGS[+sel.value][0], true); };                      
 
-if(speechSynthesis.onvoiceschanged!==undefined){
-  speechSynthesis.onvoiceschanged=populateTTSOptions;
+if(speechSynthesis.onvoiceschanged !== undefined){
+  speechSynthesis.onvoiceschanged = populateTTSOptions;
 }
 setTimeout(populateTTSOptions, 500);
 
-setLang(code,false);
-stEl.textContent=t('hello');
+setLang(code, false);
+stEl.textContent = t('hello');
 </script>
 </body>
 </html>
