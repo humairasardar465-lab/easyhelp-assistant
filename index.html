@@ -38,7 +38,7 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 
 <div id="homeView" class="view active">
   <h2>SMART CANE</h2>
-  <div class="sub">Your Eyes Smart Cane created by Humaira Sardar</div>
+  <div class="sub">Created by Humaira Sardar, Okara, Pakistan</div>
   <label for="lang">SELECT LANGUAGE</label>
   <select id="lang"></select>
   <div id="info"></div>
@@ -60,8 +60,8 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 
 <div id="aboutView" class="view">
   <h2>ABOUT APP</h2>
-  <div class="sub">Your Eyes Smart Cane v3.7</div>
-  <p class="txt">Smart Cane helps you walk with confidence. It spots nearby obstacles, tells their distance in meters, and guides you in real time.</p>
+  <div class="sub">Your Eyes Smart Cane v4.0</div>
+  <p class="txt">Smart Cane helps you walk with confidence. It spots nearby obstacles, tells their distance in meters, and guides you in real time.<br><br><strong>Created by Humaira Sardar, Okara, Pakistan</strong></p>
   <button id="backFromAboutBtn" class="sec">BACK</button>
 </div>
 
@@ -71,7 +71,7 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 /* ===== CONFIG ===== */
 const WASM="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm";
 const MODEL="https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite";
-const RANGE=1.8;   
+const RANGE=2.5;   
 const IDX={en:0,ur:1,hi:2,ar:3,'pa-IN':4,ps:5};   
 const LANGS=`en-US|English (United States)|
 en-GB|English (United Kingdom)|
@@ -143,8 +143,8 @@ ga-IE|Irish (Ireland)|Gaeilge
 jv-ID|Javanese (Indonesia)|Basa Jawa
 kn-IN|Kannada (India)|ಕನ್ನಡ
 kk-KZ|Kazakh (Kazakhstan)|Қазақ тілі
-km-KH|Khmer (Cambodia)|ខ្ಮែរ
-ky-KG|Kyrgyz (Kyrgyzstan)|Kyrgyzstan
+km-KH|Khmer (Cambodia)|ខ្មែរ
+ky-KG|Kyrgyz (Kyrgyzstan)|Кыргызча
 lo-LA|Lao (Laos)|ລາວ
 lv-LV|Latvian (Latvia)|Latviešu
 lt-LT|Lithuanian (Lithuania)|Lietuvių
@@ -179,16 +179,16 @@ zu-ZA|Zulu (South Africa)|isiZulu`.split('\n').map(r=>{const a=r.split('|');retu
 
 /* ===== VOICE & GUIDANCE TEXT PACKS ===== */
 const S={
-hello:['Smart Cane is ready. Press Start to begin.','اسمارٹ کین تیار ہے۔ شروع کرنے کے لیے اسپاٹ دبائیں۔','स्मार्ट केन तैयार है। शुरू करने के लिए स्टार्ट दबाएँ।','العصا الذكية جاهزة. اضغط ابدأ للبدء.','ਸਮਾਰਟ ਕੇਨ ਤਿਆਰ ਹੈ। ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਸਟਾਰਟ ਦਬਾਓ۔','سمارټ کین چمتو دی. د پیل لپاره پیل کېکاږئ.'],
+hello:['Smart Cane is ready. Press Start to begin.','اسمارٹ کین تیار ہے۔ شروع کرنے کے لیے اسپاٹ دبائیں۔','स्मार्ट केन तैयार है। शुरू करने के लिए स्टार्ट दबाएँ।','العصا الذكية جاهزة. اضغط ابدأ للبدء.','ਸਮਾਰਟ ਕੇਨ ਤਿਆਰ ਹੈ। ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਸਟਾਰਟ ਦਬਾਓ।','سمارټ کین چمتو دی. د پیل لپاره پیل کېکاږئ.'],
 obsGeneral:['Obstacle ahead, about {m} meters','سامنے رکاوٹ ہے، تقریباً {m} میٹر','सामने बाधा है, लगभग {m} मीटर','هناك عوائق أمامك، حوالي {m} متر','ਸਾਹਮਣੇ ਰੁਕਾਵਟ ਹੈ, ਲਗਭਗ {m} ਮੀਟਰ','مخکې خنډ دی، شاوخوا {m} متره'],
 obsNear:['Obstacle very close. Stop.','رکاوٹ بہت قریب ہے۔ رک جائیں۔','बाधा बहुत पास है। रुकें।','خطر! العائق قريب جدا. توقف.','ਰੁਕਾਵਟ ਬਹੁਤ ਨੇੜੇ ਹੈ। ਰੁਕੋ۔','خنډ ډېر نږدې دی. ودرېږئ.'],
 clear:['Path is clear. Keep walking.','راستا صاف ہے۔ چلتے رہیں۔','रास्ता साफ है। चलते रहें।','الطريق واضح. واصل المشي.','ਰਸਤਾ ਸਾਫ ਹੈ। ਤੁਰਦੇ ਰਹੋ।','لار پاکه ده. روان اوسئ.'],
 sOn:['Battery saver on.','بیٹری سیور آن۔','बैटरी सेवर चालू।','وضع توفير البطارية قيد التشغيل.','ਬੈਟਰੀ ਸੇਵਰ ਚਾਲੂ۔','د بیټرۍ سیور فعال شو.'],
-sOff:['Battery saver off.','بیٹری سیور بند۔','बैटरी सेवर बंद।','تم إيقاف توفير البطارية.','ਬੈਟਰੀ ਸੇਵਰ ਬੰਦ۔','د بیټرۍ سیور بند شو.'],
+sOff:['Battery saver off.','بیٹری سیور بند۔','बैटरी सेवर बंद।','تم إيقاف توفير البطارية.','ਬੈਟਰੀ ਸੇਵਰ بند۔','د بیټرۍ سیور بند شو.'],
 low:['Battery low.','بیٹری کم ہے۔','बैटरी कम है।','البطارية منخفضة.','ਬੈਟਰੀ ਘੱਟ ਹੈ۔','بیټرۍ کمه ده.'],
 det:['Camera or detector is not working. Walk carefully.','کیمرہ یا ڈیٹیکٹر کام نہیں کر رہا۔ احتیاط سے چلیں۔','कैमरा या डिटेक्टर काम नहीं कर रहा। सावधानी से चलें।','الكاميرا أو كشف العوائق لا يعمل. امش بحذر.','ਕੈਮਰਾ ਜਾਂ ਡਿਟੈਕਟਰ ਕੰਮ ਨਹੀਂ ਕਰ ਰਿਹਾ। ਧਿਆਨ ਨਾਲ ਤੁਰੋ۔','کمره یا کشف کو کار نه کوي. په احتیاط روان شئ.'],
 perm:['Please allow camera in browser settings.','براہ کرم براؤزر کی سیٹنگز میں کیمرے کی اجازت دیں۔','कृपया ब्राउज़र सेटिंग्स में कैमरे की अनुमति दें।','يرجى السماح بالكاميرا من إعدادات المتصفح.','ਕਿਰਪਾ ਕਰਕੇ ਬ੍ਰਾਊਜ਼ਰ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਕੈਮਰੇ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ۔','مهرباني وکړئ د براوزر په ترتیباتو کې کامرې ته اجازه ورکړئ.'],
-https:['Open this app from an https address.','اس ایپ کو https ایڈریس سے کھولیں۔','इस ऐप को https पते से खोलें।','افتح هذا التطبيق من عنوان https.','ਇਸ ਐਪ ਨੂੰ https ਪਤੇ ਤੋਂ ਖੋల్੍ਹੋ۔','دا اپ د https پتې څخه پرانیزئ.']
+https:['Open this app from an https address.','اس ایپ کو https ایڈریس سے کھولیں۔','इस ऐप को https पते से खोलें።','افتح هذا التطبيق من عنوان https.','ਇਸ ਐਪ ਨੂੰ https ਪਤੇ ਤੋਂ ਖੋల్੍ਹੋ۔','دا اپ د https پتې څخه پرانیزئ.']
 };
 
 /* ===== STATE ===== */
@@ -197,7 +197,7 @@ const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:
 const stEl=$('status'),infoEl=$('info'),video=$('cam'),sel=$('lang');
 let code=ls.get('sc_lang')||'en-US',L=LANGS.find(l=>l[0]===code)||LANGS[0];code=L[0];
 let voiceSel=null,voiceEn=null,haveSel=true,saver=false,running=false;
-let stream=null,det=null,camOn=false,lastProc=0,cur=null,sawAt=0,lastClearSpoken=0,lastObsSpoken=0,ac=null;
+let stream=null,det=null,camOn=false,lastProc=0,curKey='',sawAt=0,lastClearSpoken=0,ac=null;
 
 /* ===== LANGUAGE & GOOGLE TTS ENGINE ===== */
 const bi=c=>IDX[c]??IDX[c.split('-')[0]]??-1;
@@ -232,14 +232,14 @@ function speak(s){
 function say(s,pri){   
   if(!s)return;pri=pri===undefined?1:pri;
   const n=performance.now();
-  if(pri!==1&&s===lastSaid&&n-lastSaidT<2500)return;
+  if(pri!==1&&s===lastSaid&&n-lastSaidT<1500)return;
   if(pri===0)q=q.filter(x=>x.p!==0);                       
   q.push({s,p:pri,t:n});
 }
 function pump(){
   if(!q.length||speechSynthesis.speaking||speechSynthesis.pending)return;
   const n=performance.now();
-  q=q.filter(x=>x.p!==0||n-x.t<2000);
+  q=q.filter(x=>x.p!==0||n-x.t<1500);
   if(!q.length)return;
   
   const hasObstacle = q.some(x => x.p === 0);
@@ -250,10 +250,10 @@ function pump(){
   let b=0;q.forEach((x,i)=>{if(x.p<q[b].p)b=i});
   const x=q.splice(b,1)[0];lastSaid=x.s;lastSaidT=n;speak(x.s);
 }
-(function tick(){pump();setTimeout(tick,saver?200:40)})();
+(function tick(){pump();setTimeout(tick,saver?200:30)})();
 function beep(f,d){
   try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();
-    const o=ac.createOscillator(),gn=ac.createGain(),n=ac.currentTime;d=d||.06;o.frequency.value=f;o.connect(gn);gn.connect(ac.destination);
+    const o=ac.createOscillator(),gn=ac.createGain(),n=ac.currentTime;d=d||.05;o.frequency.value=f;o.connect(gn);gn.connect(ac.destination);
     gn.gain.setValueAtTime(.2,n);gn.gain.linearRampToValueAtTime(0,n+d);o.start(n);o.stop(n+d)}catch(e){}
 }
 
@@ -267,28 +267,28 @@ async function loadDet(){
     });
   }
   const v=await FilesetResolver.forVisionTasks(WASM);
-  for(const d of['GPU','CPU'])try{return await ObjectDetector.createFromOptions(v,{baseOptions:{modelAssetPath:MODEL,delegate:d},scoreThreshold:.35,maxResults:6,runningMode:'VIDEO'})}catch(e){}
+  for(const d of['GPU','CPU'])try{return await ObjectDetector.createFromOptions(v,{baseOptions:{modelAssetPath:MODEL,delegate:d},scoreThreshold:.25,maxResults:8,runningMode:'VIDEO'})}catch(e){}
   throw new Error('detector');
 }
 async function camStart(){
   if(camOn)return true;
-  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:saver?240:320},height:{ideal:saver?180:240},frameRate:{ideal:saver?10:30}},audio:false})}
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:saver?240:320},height:{ideal:saver?180:240},frameRate:{ideal:saver?15:30}},audio:false})}
   catch(e){stream=null;say(t(window.isSecureContext?'perm':'https'));info('Camera: '+((e&&e.name)||'error'));return false}
   video.srcObject=stream;try{await video.play()}catch(e){}
   camOn=true;nextFrame();
   if(!det){try{det=await loadDet()}catch(e){say(t('det'))}}
   return true;
 }
-function camStop(){camOn=false;if(stream){stream.getTracks().forEach(x=>x.stop());stream=null}video.srcObject=null;cur=null;}
+function camStop(){camOn=false;if(stream){stream.getTracks().forEach(x=>x.stop());stream=null}video.srcObject=null;curKey='';}
 const nextFrame=()=>{if(camOn&&running)requestAnimationFrame(onFrame)};
-const CLEAR_INTERVAL = 6000; // راستہ صاف ہونے پر ہر 6 سیکنڈ بعد ریپیٹ ہوگا
-const OBS_REPEAT_INTERVAL = 2500; // رکاوٹ ہونے پر ہر 2.5 سیکنڈ بعد فوری ریپیٹ ہوگا
+
+const CLEAR_INTERVAL = 5000; // راستہ صاف ہونے پر ہر 5 سیکنڈ بعد بتائے گا
 
 function onFrame(){
   if(!camOn||!running)return;
   nextFrame();
   const n=performance.now();
-  if(!det||video.readyState<2||n-lastProc<(saver?250:50))return;
+  if(!det||video.readyState<2||n-lastProc<(saver?200:30))return;
   
   const W=video.videoWidth,H=video.videoHeight;
   if(!W || !H) return;
@@ -301,34 +301,32 @@ function onFrame(){
     for(const d of detections){
       const b=d.boundingBox;
       
-      let m = 0.9 * Math.max(W, H) / (b.height * 1.3);
+      // فوری اور درست فاصلہ نکالنے کا فارمولا
+      let m = 0.8 * Math.max(W, H) / b.height;
       if(m > RANGE) continue; 
 
       const near = m < .55;
       m = Math.max(0.3, Math.round(m * 2) / 2);
 
       if(!best || m < best.m) {
-        best = { m, near, key: 'obs' };
+        best = { m, near };
       }
     }
   }
 
   if(best){
     sawAt=n;
-    // اگر نئی رکاوٹ ہے یا پرانی رکاوٹ پر 2.5 سیکنڈ گزر گئے ہیں تو فوری ریپیٹ کریں
-    if(!cur || cur.key !== best.key || Math.abs(cur.m - best.m) >= 0.2 || (n - lastObsSpoken > OBS_REPEAT_INTERVAL)) {
-      cur = { key: best.key, m: best.m };
-      lastObsSpoken = n;
+    const currentKey = (best.near ? 'near_' : 'gen_') + best.m;
+    // اگر رکاوٹ نئی ہے یا اس کا فاصلہ بدل گیا ہے تو بغیر کسی ڈیلے کے فوراً بولیں
+    if(curKey !== currentKey) {
+      curKey = currentKey;
       alertObs(best);
     }
-  } else {
-    // اگر کوئی رکاوٹ نہیں ہے تو چیک کریں کہ آخری بار 'راستا صاف ہے' کب بولا تھا (ہر 6 سیکنڈ بعد)
-    if(cur || n - sawAt > 1200) {
-      cur = null;
-      if(n - lastClearSpoken > CLEAR_INTERVAL) {
-        lastClearSpoken = n;
-        say(t('clear'), 2);
-      }
+  }else if(n - sawAt > 600){ // جیسے ہی کیمرے کے سامنے سے رکاوٹ ہٹے گی، فوراً راستہ صاف بتائے گا
+    curKey = '';
+    if(n - lastClearSpoken > CLEAR_INTERVAL) {
+      lastClearSpoken = n;
+      say(t('clear'), 2);
     }
   }
 }
@@ -349,7 +347,7 @@ function setSaver(on,low){
   saver=on;document.body.classList.toggle('saver',on);
   say((low?t('low')+' ':'')+t(on?'sOn':'sOff'),2);
   const tr=stream&&stream.getVideoTracks()[0];
-  if(tr)tr.applyConstraints({width:{ideal:on?240:320},height:{ideal:on?180:240},frameRate:{ideal:on?10:30}}).catch(()=>{});
+  if(tr)tr.applyConstraints({width:{ideal:on?240:320},height:{ideal:on?180:240},frameRate:{ideal:on?15:30}}).catch(()=>{});
 }
 
 /* ===== APP START & STOP FLOWS ===== */
