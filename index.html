@@ -60,7 +60,7 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 
 <div id="aboutView" class="view">
   <h2>ABOUT APP</h2>
-  <div class="sub">Your Eyes Smart Cane v3.6</div>
+  <div class="sub">Your Eyes Smart Cane v3.7</div>
   <p class="txt">Smart Cane helps you walk with confidence. It spots nearby obstacles, tells their distance in meters, and guides you in real time.</p>
   <button id="backFromAboutBtn" class="sec">BACK</button>
 </div>
@@ -143,8 +143,8 @@ ga-IE|Irish (Ireland)|Gaeilge
 jv-ID|Javanese (Indonesia)|Basa Jawa
 kn-IN|Kannada (India)|ಕನ್ನಡ
 kk-KZ|Kazakh (Kazakhstan)|Қазақ тілі
-km-KH|Khmer (Cambodia)|ខ្មែរ
-ky-KG|Kyrgyz (Kyrgyzstan)|Кыргызча
+km-KH|Khmer (Cambodia)|ខ្ಮែរ
+ky-KG|Kyrgyz (Kyrgyzstan)|Kyrgyzstan
 lo-LA|Lao (Laos)|ລາວ
 lv-LV|Latvian (Latvia)|Latviešu
 lt-LT|Lithuanian (Lithuania)|Lietuvių
@@ -179,7 +179,7 @@ zu-ZA|Zulu (South Africa)|isiZulu`.split('\n').map(r=>{const a=r.split('|');retu
 
 /* ===== VOICE & GUIDANCE TEXT PACKS ===== */
 const S={
-hello:['Smart Cane is ready. Press Start to begin.','اسمارٹ کین تیار ہے۔ شروع کرنے کے لیے اسپاٹ دبائیں۔','स्मार्ट केन तैयार है। शुरू करने के लिए स्टार्ट दबाएँ।','العصا الذكية جاهزة. اضغط ابدأ للبدء.','ਸਮਾਰਟ ਕੇਨ ਤਿਆਰ ਹੈ। ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਸਟਾਰਟ ਦਬਾਓ।','سمارټ کین چمتو دی. د پیل لپاره پیل کېکاږئ.'],
+hello:['Smart Cane is ready. Press Start to begin.','اسمارٹ کین تیار ہے۔ شروع کرنے کے لیے اسپاٹ دبائیں۔','स्मार्ट केन तैयार है। शुरू करने के लिए स्टार्ट दबाएँ।','العصا الذكية جاهزة. اضغط ابدأ للبدء.','ਸਮਾਰਟ ਕੇਨ ਤਿਆਰ ਹੈ। ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਸਟਾਰਟ ਦਬਾਓ۔','سمارټ کین چمتو دی. د پیل لپاره پیل کېکاږئ.'],
 obsGeneral:['Obstacle ahead, about {m} meters','سامنے رکاوٹ ہے، تقریباً {m} میٹر','सामने बाधा है, लगभग {m} मीटर','هناك عوائق أمامك، حوالي {m} متر','ਸਾਹਮਣੇ ਰੁਕਾਵਟ ਹੈ, ਲਗਭਗ {m} ਮੀਟਰ','مخکې خنډ دی، شاوخوا {m} متره'],
 obsNear:['Obstacle very close. Stop.','رکاوٹ بہت قریب ہے۔ رک جائیں۔','बाधा बहुत पास है। रुकें।','خطر! العائق قريب جدا. توقف.','ਰੁਕਾਵਟ ਬਹੁਤ ਨੇੜੇ ਹੈ। ਰੁਕੋ۔','خنډ ډېر نږدې دی. ودرېږئ.'],
 clear:['Path is clear. Keep walking.','راستا صاف ہے۔ چلتے رہیں۔','रास्ता साफ है। चलते रहें।','الطريق واضح. واصل المشي.','ਰਸਤਾ ਸਾਫ ਹੈ। ਤੁਰਦੇ ਰਹੋ।','لار پاکه ده. روان اوسئ.'],
@@ -197,7 +197,7 @@ const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:
 const stEl=$('status'),infoEl=$('info'),video=$('cam'),sel=$('lang');
 let code=ls.get('sc_lang')||'en-US',L=LANGS.find(l=>l[0]===code)||LANGS[0];code=L[0];
 let voiceSel=null,voiceEn=null,haveSel=true,saver=false,running=false;
-let stream=null,det=null,camOn=false,lastProc=0,cur=null,sawAt=0,ac=null;
+let stream=null,det=null,camOn=false,lastProc=0,cur=null,sawAt=0,lastClearSpoken=0,lastObsSpoken=0,ac=null;
 
 /* ===== LANGUAGE & GOOGLE TTS ENGINE ===== */
 const bi=c=>IDX[c]??IDX[c.split('-')[0]]??-1;
@@ -281,6 +281,9 @@ async function camStart(){
 }
 function camStop(){camOn=false;if(stream){stream.getTracks().forEach(x=>x.stop());stream=null}video.srcObject=null;cur=null;}
 const nextFrame=()=>{if(camOn&&running)requestAnimationFrame(onFrame)};
+const CLEAR_INTERVAL = 6000; // راستہ صاف ہونے پر ہر 6 سیکنڈ بعد ریپیٹ ہوگا
+const OBS_REPEAT_INTERVAL = 2500; // رکاوٹ ہونے پر ہر 2.5 سیکنڈ بعد فوری ریپیٹ ہوگا
+
 function onFrame(){
   if(!camOn||!running)return;
   nextFrame();
@@ -298,7 +301,6 @@ function onFrame(){
     for(const d of detections){
       const b=d.boundingBox;
       
-      // ہاتھ یا قریب کی چیزوں کو پکڑنے کے لیے سینٹر چیک اور سائز کی بہتر حد
       let m = 0.9 * Math.max(W, H) / (b.height * 1.3);
       if(m > RANGE) continue; 
 
@@ -313,13 +315,21 @@ function onFrame(){
 
   if(best){
     sawAt=n;
-    if(!cur||cur.key!==best.key||Math.abs(cur.m-best.m)>=0.3){
-      cur={key:best.key,m:best.m};
+    // اگر نئی رکاوٹ ہے یا پرانی رکاوٹ پر 2.5 سیکنڈ گزر گئے ہیں تو فوری ریپیٹ کریں
+    if(!cur || cur.key !== best.key || Math.abs(cur.m - best.m) >= 0.2 || (n - lastObsSpoken > OBS_REPEAT_INTERVAL)) {
+      cur = { key: best.key, m: best.m };
+      lastObsSpoken = n;
       alertObs(best);
     }
-  }else if(cur&&n-sawAt>1500){ // ٹائم بڑھا دیا گیا ہے تاکہ رکاوٹ ہٹنے پر فوری 'راستا صاف ہے' نہ بولے جب تک تسلی نہ ہو جائے
-    cur=null;
-    say(t('clear'),2);
+  } else {
+    // اگر کوئی رکاوٹ نہیں ہے تو چیک کریں کہ آخری بار 'راستا صاف ہے' کب بولا تھا (ہر 6 سیکنڈ بعد)
+    if(cur || n - sawAt > 1200) {
+      cur = null;
+      if(n - lastClearSpoken > CLEAR_INTERVAL) {
+        lastClearSpoken = n;
+        say(t('clear'), 2);
+      }
+    }
   }
 }
 
