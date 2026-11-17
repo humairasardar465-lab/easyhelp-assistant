@@ -26,42 +26,7 @@ button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer
 button:active{opacity:.8}
 .main{background:#00ffcc;color:#000}.stop{background:#ef4444}.sec{background:#374151}
 #ok{background:#16a34a}#cancel{background:#dc2626}#back{background:#2563eb}
-.wa{background:#25d366;color:#fff;text-decoration:none;display:block;text-align:center;padding:14px;font-size:16px;border-radius:10px;margin-top:10px;font-weight:700}
-#status{cursor:pointer;text-align:center;margin:12px 0;font-weight:700;font-size:16px;color:#38bdf8;min-height:44px}
-.view{display:none}.view.active{display:block}
-#info{text-align:center;font-size:12px;color:#94a3b8;min-height:16px;margin-top:6px}
-p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
-</style>
-</head>
-<body>
-<div class="container"><!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0a0f1e">
-<link rel="manifest" href="manifest.json">
-<title>Smart Cane | Humaira Sardar</title>
-<script type="module">
-import {FilesetResolver,ObjectDetector} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/+esm";
-window.FilesetResolver=FilesetResolver;window.ObjectDetector=ObjectDetector;
-window.mediapipeLoaded = true;
-window.dispatchEvent(new Event('mediapipe-loaded'));
-</script>
-<style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{font-family:Arial,sans-serif;background:#0a0f1e;color:#fff;margin:0;padding:16px;touch-action:manipulation}
-.container{max-width:620px;margin:auto;background:#111827;padding:22px;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.5)}
-h2{text-align:center;color:#00ffcc;margin:0;letter-spacing:1px;font-size:24px}
-.sub{text-align:center;font-size:12px;color:#94a3b8;margin:6px 0 14px}
-label{display:block;color:#00ffcc;font-size:13px;font-weight:700;margin:14px 0 6px}
-select{width:100%;padding:12px;border-radius:10px;border:1px solid #374151;background:#1f2937;color:#fff;font-size:15px;outline:none}
-video{width:100%;height:280px;border-radius:12px;background:#000;object-fit:cover;margin-bottom:12px;border:3px solid #00ffcc}
-body.saver video{height:90px}
-button{border:none;padding:14px;font-size:16px;border-radius:10px;cursor:pointer;margin-top:10px;font-weight:700;width:100%;color:#fff}
-button:active{opacity:.8}
-.main{background:#00ffcc;color:#000}.stop{background:#ef4444}.sec{background:#374151}
-#ok{background:#16a34a}#cancel{background:#dc2626}#back{background:#2563eb}
+#batterySaverBtn{background:#ca8a04}
 .wa{background:#25d366;color:#fff;text-decoration:none;display:block;text-align:center;padding:14px;font-size:16px;border-radius:10px;margin-top:10px;font-weight:700}
 #status{cursor:pointer;text-align:center;margin:12px 0;font-weight:700;font-size:16px;color:#38bdf8;min-height:44px}
 .view{display:none}.view.active{display:block}
@@ -75,7 +40,7 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 <div id="homeView" class="view active">
   <h2>SMART CANE</h2>
   <div class="sub">Your Eyes Smart Cane created by Humaira Sardar</div>
-  <label for="lang" id="langLbl">SELECT LANGUAGE</label>
+  <label for="lang">SELECT LANGUAGE</label>
   <select id="lang"></select>
   <div id="info"></div>
   <video id="cam" autoplay playsinline muted aria-label="Camera view"></video>
@@ -86,20 +51,21 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 </div>
 
 <div id="settingsView" class="view">
-  <h2 id="setTitle">SETTINGS</h2>
+  <h2>SETTINGS</h2>
   <div class="sub">Smart Cane</div>
-  <button id="ok"></button>
-  <button id="cancel"></button>
-  <button id="back"></button>
+  <button id="ok">OK / Confirm</button>
+  <button id="cancel">Cancel / Stop</button>
+  <button id="back">Back / Retry</button>
+  <button id="batterySaverBtn">BATTERY SAVER: OFF</button>
   <a id="waBtn" href="https://wa.me/923030133274" target="_blank" rel="noopener noreferrer" class="wa">CONTACT WHATSAPP</a>
   <button id="aboutNavBtn" class="sec">ABOUT APP</button>
   <button id="backToHomeBtn" class="sec">BACK TO HOME</button>
 </div>
 
 <div id="aboutView" class="view">
-  <h2 id="aboutTitle">ABOUT APP</h2>
+  <h2>ABOUT APP</h2>
   <div class="sub">Your Eyes Smart Cane v3.0</div>
-  <p class="txt" id="aboutTxt"></p>
+  <p class="txt">Smart Cane helps you walk with confidence. It spots nearby obstacles, tells their distance in meters, counts your steps and guides you to the places you save by voice.</p>
   <button id="backFromAboutBtn" class="sec">BACK</button>
 </div>
 
@@ -107,8 +73,6 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 
 <script>
 /* ===== CONFIG ===== */
-const AI_API_KEY="";   
-const AI_MODEL="gemini-flash-latest";
 const WASM="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm";
 const MODEL="https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite";
 const RANGE=2.25;   
@@ -217,53 +181,42 @@ yi|Yiddish|ייִדיש
 yo-NG|Yoruba (Nigeria)|Yorùbá
 zu-ZA|Zulu (South Africa)|isiZulu`.split('\n').map(r=>{const a=r.split('|');return[a[0],a[1],a[2]||'']});
 
-/* ===== TEXT ===== */
+/* ===== VOICE & GUIDANCE TEXT PACKS ===== */
 const S={
-ok:['OK / Confirm','ٹھیک ہے / تصدیق','ठीक है / पुष्टि','موافق / تأكيد','ਠੀਕ ਹੈ / ਪੁਸ਼ਟੀ','سم دی / تایید'],
-cancel:['Cancel / Stop','منسوخ / روکیں','रद्द करें / रोकें','إلغاء / إيقاف','ਰੱਦ ਕਰੋ / ਰੋਕੋ','لغوه / ودرول'],
-back:['Back / Retry','واپس / दोबारा','वापस / दोबारा','رجوع / إعادة','ਵਾਪਸ / ਦੁਬਾਰਾ','شاته / بیا'],
-start:['START','شروع کریں','शुरू करें','ابدأ','ਸ਼ੁਰੂ ਕਰੋ','پیل کړئ'],
-stop:['STOP','روکیں','रोकें','إيقاف','ਰੋਕੋ','ودرول'],
-settings:['SETTINGS','سیٹنگز','सेटिंग्स','الإعدادات','ਸੈਟਿੰਗਾਂ','ترتیبات'],
-about:['ABOUT APP','ایپ کے بارے میں','ऐप के बारे में','عن التطبيق','ਐਪ ਬारे','د اپ په اړه'],
-home:['BACK TO HOME','ہوم پر واپس','होम पर वापस','العودة للرئيسية','ਹੋਮ ਤੇ ਵਾਪਸ','کور ته ستنیدل'],
-wa:['CONTACT WHATSAPP','واٹس ایپ پر رابطہ کریں','व्हाट्सएप पर संपर्क करें','تواصل عبر واتساب','ਵਟਸਐਪ ਤੇ ਸੰਪਰਕ ਕਰੋ','په واټس اپ اړیکه'],
-lang:['SELECT LANGUAGE','زبان منتخب کریں','भाषा चुनें','اختر اللغة','ਭਾਸ਼ਾ ਚੁਣੋ','ژبه وټاکئ'],
-aboutTxt:['Smart Cane helps you walk with confidence. It spots nearby obstacles, tells their distance in meters, counts your steps and guides you to the places you save by voice.','اسمارٹ کین آپ کو اعتماد سے چلنے میں مدد دیتا ہے۔ یہ قریبی رکاوٹیں پہچانتا ہے، میٹروں میں فاصلہ بتاتا ہے، قدم گنتا ہے اور آواز سے محفوظ کی گئی جگہوں تک رہنمائی کرتا ہے۔','स्मार्ट केन आपको भरोसे के साथ चलने में मदद करता है। यह आस-पास की बाधाएँ पहचानता है, मीटर में दूरी बताता है, कदम गिनता है और आवाज़ से सहेजी गई जगहों तक रास्ता दिखाता है।','العصا الذكية تساعدك على المشي بثقة. تكتشف العوائق القريبة، وتخبرك بالمسافة بالأمتار، وتعدّ خطواتك، وترشدك إلى الأماكن التي تحفظها بصوتك.','ਸਮਾਰਟ ਕੇਨ ਤੁਹਾਨੂੰ ਭਰੋਸੇ ਨਾਲ ਤੁਰਨ ਵਿੱਚ ਮਦਦ ਕਰਦਾ ਹੈ। ਇਹ ਨੇੜੇ ਦੀਆਂ ਰੁਕਾਵਟਾਂ ਲੱਭਦਾ ਹੈ, ਮੀਟਰਾਂ ਵਿੱਚ ਦੂਰੀ ਦੱਸਦਾ ਹੈ, ਕਦਮ ਗਿਣਦਾ ਹੈ ਅਤੇ ਆਵਾਜ਼ ਨਾਲ ਸੰਭਾਲੀਆਂ ਥਾਵਾਂ ਤੱਕ ਰਾਹ ਦੱਸਦਾ ہے۔','سمارټ کین تاسو سره په ډاډ سره د تګ کې مرسته کوي. دا نږدې خنډونه موندي، فاصله په مترو کې وايي، ګامونه شمېري او د غږ په مرسته خوندي شویو ځایونو ته لارښوونه کوي.'],
 hello:['Smart Cane is ready. Press OK to begin.','اسمارٹ کین تیار ہے۔ شروع کرنے کے لیے ٹھیک ہے دبائیں۔','स्मार्ट केन तैयार है। शुरू करने के लिए ठीक है दबाएँ।','العصا الذكية جاهزة. اضغط موافق للبدء.','ਸਮਾਰਟ ਕੇਨ ਤਿਆਰ ਹੈ। ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਠੀਕ ਹੈ ਦਬਾਓ।','سمارټ کین چمتو دی. د پیل لپاره سم دی ووهئ.'],
 sayStart:['Say your starting point.','اپنی شروعات کی جگہ بتائیں۔','अपनी शुरुआत की जगह बताएँ।','قل نقطة البداية.','ਆਪਣੀ ਸ਼ੁਰੂਆਤ ਦੀ ਥਾਂ ਦੱਸੋ।','د پیل ځای ووایاست.'],
 startSaved:['Okay, I remembered {p} as your starting point.','ٹھیک ہے، میں نے {p} کو آپ کی شروعات کی جگہ کے طور پر یاد کر لیا۔','ठीक है, मैंने {p} को आपकी शुरुआत की जगह के रूप में याद कर लिया।','حسنًا، حفظت {p} كنقطة بداية لك.','ਠੀਕ ਹੈ, ਮੈਂ {p} ਨੂੰ ਤੁਹਾਡੀ ਸ਼ੁਰੂਆਤ ਦੀ ਥਾਂ ਵਜੋਂ ਯਾਦ ਕਰ ਲਿਆ।','ښه، ما {p} ستاسو د پیل ځای په توګه په یاد کړ.'],
 walk:['Start walking. I am counting your steps.','چلنا شروع کریں۔ میں آپ کے قدم گن رہا ہوں۔','चलना शुरू करें। मैं आपके कदम गिन रहा हूँ।','ابدأ المشي. أنا أعدّ خطواتك.','ਤੁਰਨਾ ਸ਼ੁਰੂ ਕਰੋ। ਮੈਂ ਤੁਹਾਡੇ ਕਦਮ ਗਿਣ ਰਿਹਾ ਹਾਂ।','ګام وهل پیل کړئ. زه ستاسو ګامونه شمېرم.'],
-stopQ:['Do you want to stop here? OK for yes, Cancel for no.','کیا آپ یہاں رکنا چاہتے ہیں؟ ہاں کے لیے ٹھیک ہے، نہیں کے لیے منسوخ دبائیں۔','क्या आप यहाँ रुकना चाहते हैं? हाँ के लिए ठीक है, नहीं के लिए रद्द दबाएँ।','هل تريد التوقف هنا؟ موافق للتأكيد، إلغاء للرفض.','ਕੀ ਤੁਸੀਂ ਇੱਥੇ ਰੁਕਣਾ ਚਾਹੁੰਦੇ ਹੋ? ਹਾਂ ਲਈ ਠੀਕ ਹੈ, ਨਾਂਹ ਲਈ ਰੱਦ ਕਰੋ ਦਬਾਓ።','ایا تاسو غواړئ دلته ودرېږئ؟ د هو لپاره سم دی، د نه لپاره لغوه ووهئ.'],
+stopQ:['Do you want to stop here? OK for yes, Cancel for no.','کیا آپ یہاں رکنا چاہتے ہیں؟ ہاں کے لیے ٹھیک ہے، نہیں کے لیے منسوخ دبائیں۔','क्या आप यहाँ रुकना चाहते हैं? हाँ के लिए ठीक है, नहीं के लिए रद्द दबाएँ।','هل تريد التوقف هنا؟ موافق للتأكيد، إلغاء للرفض.','ਕੀ ਤੁਸੀਂ ਇੱਥੇ ਰੁਕਣਾ ਚਾਹੁੰਦੇ ਹੋ? ਹਾਂ ਲਈ ਠੀਕ ਹੈ, ਨਾਂਹ ਲਈ ਰੱਦ ਕਰੋ ਦਬਾਓ।','ایا تاسو غواړئ دلته ودرېږئ؟ د هو لپاره سم دی، د نه لپاره لغوه ووهئ.'],
 place:['What is this place?','یہ کون سی جگہ ہے؟','यह कौन सी जगह है?','ما اسم هذا المكان؟','ਇਹ ਕਿਹੜੀ ਥਾਂ ਹੈ?','دا کوم ځای دی؟'],
-saved:['Saved {p}, {n} steps.','{p} محفوظ ہو گیا، {n} قدم۔','{p} सहेजा गया, {n} कदम।','تم حفظ {p}. عدد الخطوات {n}.','{p} ਸੰਭਾਲ ਲਿਆ, {n} ਕਦਮ।','{p} خوندي شو، {n} ګامونه.'],
+saved:['Saved {p}, {n} steps.','{p} محفوظ ہو گیا، {n} قدم۔','{p} सहेजा गया, {n} कदम।','تم حفظ {p}. عدد الخطوات {n}.','{p} ਸੰਭਾਲ ਲਿਆ, {n} ਕਦਮ።','{p} خوندي شو، {n} ګامونه.'],
 noSteps:['No steps counted yet. Please walk a little.','ابھی تک کوئی قدم نہیں گنا گیا۔ براہ کرم تھوڑا چلیں۔','अभी तक कोई कदम नहीं गिना गया। कृपया थोड़ा चलें।','لم تُحسب أي خطوات بعد. يرجى المشي قليلًا.','ਅਜੇ ਕੋਈ ਕਦਮ ਨਹੀਂ ਗਿਣਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਥੋੜ੍ਹਾ ਤੁਰੋ।','تر اوسه هېڅ ګام نه دی شمېرل شوی. مهرباني وکړئ لږ ګام ووهئ.'],
-more:['Keep walking to save the next place, or press Cancel to finish.','اگلی جگہ محفوظ کرنے کے لیے چلتے رہیں، یا ختم کرنے کے لیے منسوخ دبائیں۔','अगली जगह सहेजने के लिए चलते रहें, या खत्म करने के लिए रद्द दबाएँ।','واصل المشي لحفظ المكان التالي، أو اضغط إلغاء للإنهاء.','ਅਗਲੀ ਥਾਂ ਸੰਭਾਲਣ ਲਈ ਤੁਰਦੇ ਰਹੋ, ਜਾਂ ਮੁਕਾਉਣ ਲਈ ਰੱਦ ਕਰੋ ਦਬਾਓ।','د بل ځای د خوندي کولو لپاره روان اوسئ، یا د پای لپاره لغوه ووهئ.'],
+more:['Keep walking to save the next place, or press Cancel to finish.','اگلی جگہ محفوظ کرنے کے لیے چلتے رہیں، یا ختم کرنے کے لیے منسوخ دبائیں۔','अगली जगह सहेजने के लिए चलते रहें, या खत्म करने के लिए रद्द दबाएँ।','واصل المشي لحفظ المكان التالي، أو اضغط إلغاء للإنهاء.','ਅਗਲੀ ਥਾਂ ਸੰਭਾਲਣ ਲਈ ਤੁਰਦੇ ਰਹੋ, ਜਾਂ ਮੁਕਾਉਣ ਲਈ ਰੱਦ ਕਰੋ ਦਬਾਓ۔','د بل ځای د خوندي کولو لپاره روان اوسئ، یا د پای لپاره لغوه ووهئ.'],
 done:['Stopped.','روک دیا گیا۔','रोक दिया गया।','تم الإيقاف.','ਰੋਕ ਦਿੱਤਾ ਗਿਆ।','ودرول شو.'],
-dest:['Where do you want to go? Say the place name, or press OK to save a new path.','آپ کہاں جانا چاہتے ہیں؟ جگہ کا نام بتائیں، یا نیا راستہ محفوظ کرنے کے لیے ٹھیک ہے دبائیں۔','आप कहाँ जाना चाहते हैं? जगह का नाम बताएँ, या नया रास्ता सहेजने के लिए ठीक है दबाएँ।','إلى أين تريد الذهاب؟ قل اسم المكان، أو اضغط موافق لحفظ مسار جديد.','ਤੁਸੀਂ ਕਿੱਥੇ ਜਾਣਾ ਚਾਹੁੰਦੇ ਹੋ? ਥਾਂ ਦਾ ਨਾਂ ਦੱਸੋ, ਜਾਂ ਨਵਾਂ ਰਸਤਾ ਸੰਭਾਲਣ ਲਈ ਠੀਕ ਹੈ ਦਬਾਓ।','تاسو چېرته تلل غواړئ؟ د ځای نوم ووایاست، یا د نوې لارې د خوندي کولو لپاره سم دی ووهئ.'],
-nf:['I did not catch that, or the place is not saved. Press Back to retry.','میں سمجھ نہیں سکا، یا یہ جگہ محفوظ نہیں ہے۔ دوبارہ کے لیے واپس دبائیں۔','मैं समझ नहीं पाया, या यह जगह सहेजी नहीं है। दोबारा के लिए वापस दबाएँ।','لم أفهم، أو أن المكان غير محفوظ. اضغط رجوع للمحاولة مرة أخرى.','ਮੈਂ ਸਮਝ ਨਹੀਂ ਸਕਿਆ, ਜਾਂ ਇਹ ਥਾਂ ਸੰਭਾਲੀ ਨਹੀਂ ਹੋਈ। ਦੁਬਾਰਾ ਲਈ ਵਾਪس ਦਬਾਓ।','زه پوه نه شوم، یا دا ځای خوندي نه دی. د بیا هڅې لپاره شاته ووهئ.'],
-go:['Going to {p}. Walk {n} steps, about {m} meters.','{p} کی طرف۔ {n} قدم چلیں، تقریباً {m} میٹر۔','{p} की ओर। {n} कदम चलें, लगभग {m} मीटर।','الذهاب إلى {p}. عدد الخطوات {n}، حوالي {m} متر.','{p} ਵੱਲ। {n} ਕਦਮ ਤੁਰੋ, ਲਗਭਗ {m} ਮੀਟਰ।','{p} ته. {n} ګامونه ووهئ، شاوخوا {m} متره.'],
-turn:['In {n} steps, turn {d}.','{n} قدم بعد {d} مڑیں۔','{n} कदम बाद {d} मुड़ें।','بعد {n} من الخطوات، انعطف {d}.','{n} ਕਦਮ ਬਾਅਦ {d} ਮੁੜੋ।','د {n} ګامونو وروسته {d} ته وګرځئ.'],
-turnNow:['Turn {d} now.','اب {d} مڑیں۔','अब {d} मुड़ें।','انعطف {d} الآن.','ਹੁਣ {d} ਮੁੜੋ।','اوس {d} ته وګرځئ.'],
+dest:['Where do you want to go? Say the place name, or press OK to save a new path.','آپ کہاں جانا چاہتے ہیں؟ جگہ کا نام بتائیں، یا نیا راستہ محفوظ کرنے کے لیے ٹھیک ہے دبائیں۔','आप कहाँ जाना चाहते हैं? जगह का नाम बताएँ, या नया रास्ता सहेजने के लिए ठीक है दबाएँ।','إلى أين تريد الذهاب؟ قل اسم المكان، أو اضغط موافق لحفظ مسار جديد.','ਤੁਸੀਂ ਕਿੱਥੇ ਜਾਣਾ ਚਾਹੁੰਦੇ ਹੋ? ਥਾਂ ਦਾ ਨਾਂ ਦੱਸੋ, ਜਾਂ ਨਵਾਂ ਰਸਤਾ ਸੰਭਾਲਣ ਲਈ ਠੀਕ ਹੈ ਦਬਾਓ።','تاسو چېرته تلل غواړئ؟ د ځای نوم ووایاست، یا د نوې لارې د خوندي کولو لپاره سم دی ووهئ.'],
+nf:['I did not catch that, or the place is not saved. Press Back to retry.','میں سمجھ نہیں سکا، یا یہ جگہ محفوظ نہیں ہے۔ دوبارہ کے لیے واپس دبائیں۔','मैं समझ नहीं पाया, या यह जगह सहेजी नहीं है। दोबारा के लिए वापस दबाएँ।','لم أفهم، أو أن المكان غير محفوظ. اضغط رجوع للمحاولة مرة أخرى.','ਮੈਂ ਸਮਝ ਨਹੀਂ ਸਕਿਆ, ਜਾਂ ਇਹ ਥਾਂ ਸੰਭਾਲੀ ਨਹੀਂ ਹੋਈ। ਦੁਬਾਰਾ ਲਈ ਵਾਪس ਦਬਾਓ۔','زه پوه نه شوم، یا دا ځای خوندي نه دی. د بیا هڅې لپاره شاته ووهئ.'],
+go:['Going to {p}. Walk {n} steps, about {m} meters.','{p} کی طرف۔ {n} قدم چلیں، تقریباً {m} میٹر۔','{p} की ओर। {n} कदम चलें, लगभग {m} मीटर।','الذهاب إلى {p}. عدد الخطوات {n}، حوالي {m} متر.','{p} ਵੱਲ। {n} ਕਦਮ ਤੁਰੋ, ਲਗਭਗ {m} ਮੀਟਰ።','{p} ته. {n} ګامونه ووهئ، شاوخوا {m} متره.'],
+turn:['In {n} steps, turn {d}.','{n} قدم بعد {d} مڑیں۔','{n} कदम बाद {d} मुड़ें।','بعد {n} من الخطوات، انعطف {d}.','{n} ਕਦਮ ਬਾਅਦ {d} ਮੁੜੋ።','د {n} ګامونو وروسته {d} ته وګرځئ.'],
+turnNow:['Turn {d} now.','اب {d} مڑیں۔','अब {d} मुड़ें।','انعطف {d} الآن.','ਹੁਣ {d} ਮੁੜੋ።','اوس {d} ته وګرځئ.'],
 L:['left','بائیں','बाएँ','يسارًا','ਖੱਬੇ','کیڼ'],
 R:['right','دائیں','दाएँ','يمينًا','ਸੱਜੇ','ښي'],
 F:['front','سامنے','सामने','أمامك','ਸਾਹਮਣੇ','مخکې'],
-arr:['You have arrived at {p}.','آپ {p} پر پہنچ گئے ہیں۔','आप {p} पर पहुँच गए हैं।','لقد وصلت إلى {p}.','ਤੁਸੀਂ {p} ਤੇ ਪਹੁੰਚ ਗਏ ਹੋ।','تاسو {p} ته ورسېدئ.'],
-pass:['You may have passed {p}. Press Back to repeat, or Cancel to stop.','ہو سکتا ہے آپ {p} سے آگے نکل گئے ہوں۔ دہرانے کے لیے واپس، روکنے کے لیے منسوخ دبائیں۔','हो सकता है आप {p} से आगे निकल गए हों। दोहराने के लिए वापस, रोकने के लिए रद्द दबाएँ।','ربما تجاوزت {p}. اضغط رجوع للتكرار، أو إلغاء للإيقاف.','ਹੋ ਸਕਦਾ ਹੈ ਤੁਸੀਂ {p} ਤੋਂ ਅੱਗੇ ਲੰਘ ਗਏ ਹੋ। ਦੁਹਰਾਉਣ ਲਈ ਵਾਪਸ, ਰੋਕਣ ਲਈ ਰੱਦ ਕਰੋ ਦਬਾਓ।','امکان لري تاسو له {p} څخه تير شوي یاست. د تکرار لپاره شاته، د درولو لپاره لغوه ووهئ.'],
-perm:['Please allow camera, microphone and location in browser settings.','براہ کرم براؤزر کی سیٹنگز میں کیمرہ، مائیکروفون اور لوکیشن کی اجازت دیں۔','कृपया ब्राउज़र सेटिंग्स में कैमरा, माइक्रोफ़ोन और लोकेशन की अनुमति दें।','يرجى السماح بالكاميرا والميكروفون والموقع من إعدادات المتصفح.','ਕਿਰਪਾ ਕਰਕੇ ਬ੍ਰਾਊਜ਼ਰ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਕੈਮਰਾ, ਮਾਈਕ੍ਰੋਫ਼ੋਨ ਅਤੇ ਲੋਕੇਸ਼ਨ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ።','مهرباني وکړئ د براوزر په ترتیباتو کې کامرې، مایکروفون او موقعیت ته اجازه ورکړئ.'],
+arr:['You have arrived at {p}.','آپ {p} پر پہنچ گئے ہیں۔','आप {p} पर पहुँच गए हैं।','لقد وصلت إلى {p}.','ਤੁਸੀਂ {p} ਤੇ ਪਹੁੰਚ ਗਏ ਹੋ۔','تاسو {p} ته ورسېدئ.'],
+pass:['You may have passed {p}. Press Back to repeat, or Cancel to stop.','ہو سکتا ہے آپ {p} سے آگے نکل گئے ہوں۔ دہرانے کے لیے واپس، روکنے کے لیے منسوخ دبائیں۔','हो सकता है आप {p} से आगे निकल गए हों। दोहराने के लिए वापस, रोकने के लिए रद्द दबाएँ।','ربما تجاوزت {p}. اضغط رجوع للتكرار، أو إلغاء للإيقاف.','ਹੋ ਸਕਦਾ ਹੈ ਤੁਸੀਂ {p} ਤੋਂ ಅੱਗੇ ਲੰਘ ਗਏ ਹੋ। ਦੁਹਰਾਉਣ ਲਈ ਵਾਪਸ, ਰੋਕਣ ਲਈ ਰੱਦ ਕਰੋ ਦਬਾਓ।','امکان لري تاسو له {p} څخه تير شوي یاست. د تکرار لپاره شاته، د درولو لپاره لغوه ووهئ.'],
+perm:['Please allow camera, microphone and location in browser settings.','براہ کرم براؤزر کی سیٹنگز میں کیمرہ، مائیکروفون اور لوکیشن کی اجازت دیں۔','कृपया ब्राउज़र सेटिंग्स में कैमरा, माइक्रोफ़ोन और लोकेशन की अनुमति दें।','يرجى السماح بالكاميرا والميكروفون والموقع من إعدادات المتصفح.','ਕਿਰਪਾ ਕਰਕੇ ਬ੍ਰਾਊਜ਼ਰ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਕੈਮਰਾ, ਮਾਈਕ੍ਰੋਫ਼ੋਨ ਅਤੇ ਲੋਕੇਸ਼ਨ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ۔','مهرباني وکړئ د براوزر په ترتیباتو کې کامرې، مایکروفون او موقعیت ته اجازه ورکړئ.'],
 sOn:['Battery saver on.','بیٹری سیور آن۔','बैटरी सेवर चालू।','وضع توفير البطارية قيد التشغيل.','ਬੈਟਰੀ ਸੇਵਰ ਚਾਲੂ۔','د بیټرۍ سیور فعال شو.'],
 sOff:['Battery saver off.','بیٹری سیور بند۔','बैटरी सेवर बंद।','تم إيقاف توفير البطارية.','ਬੈਟਰੀ ਸੇਵਰ ਬੰਦ۔','د بیټرۍ سیور بند شو.'],
-low:['Battery low.','بیٹری کم ہے۔','बैटरी कम है।','البطارية منخفضة.','ਬੈਟਰੀ ਘੱਟ ਹੈ።','بیټرۍ کمه ده.'],
+low:['Battery low.','بیٹری کم ہے۔','बैटरी कम है।','البطارية منخفضة.','ਬੈਟਰੀ ਘੱਟ ਹੈ۔','بیټرۍ کمه ده.'],
 det:['Obstacle detection is not working. Walk carefully.','رکاوٹ کی شناخت کام نہیں کر رہی۔ احتیاط سے چلیں۔','बाधा की पहचान काम नहीं कर रही। सावधानी से चलें।','كشف العوائق لا يعمل. امش بحذر.','ਰੁਕاوਟ ਦੀ ਪਛਾਣ ਕੰਮ ਨਹੀਂ ਕਰ ਰਹੀ। ਧਿਆਨ ਨਾਲ ਤੁਰੋ।','د خنډ پېژندنه کار نه کوي. په احتیاط روان شئ.'],
 ob:['{o}, {d}, about {m} meters','{o}، {d}، تقریباً {m} میٹر','{o}, {d}, लगभग {m} मीटर','{o}، {d}، حوالي {m} متر','{o}, {d}, ਲਗਭਗ {m} ਮੀਟਰ','{o}، {d}، شاوخوا {m} متره'],
-obNear:['{o}, {d}, very close. Stop.','{o}، {d}، بہت قریب۔ رک جائیں۔','{o}, {d}, बहुत पास। रुकें।','{o}، {d}، قريب جدًا. توقف.','{o}, {d}, ਬਹੁਤ ਨੇੜੇ। ਰੁਕੋ।','{o}، {d}، ډېر نږدې. ودرېږئ.'],
-clear:['No obstacle detected.','کوئی رکاوٹ نظر نہیں آ رہی۔','कोई बाधा नहीं दिख रही।','لا توجد عوائق مكتشفة.','ਕੋਈ ਰੁਕਾਵਟ ਨਹੀਂ ਦਿਸ ਰਹੀ।','هېڅ خنډ نه ښکاري.'],
+obNear:['{o}, {d}, very close. Stop.','{o}، {d}، بہت قریب۔ رک جائیں۔','{o}, {d}, बहुत पास। रुकें।','{o}، {d}، قريب جدًا. توقف.','{o}, {d}, ਬਹੁਤ ਨੇੜੇ। ਰੁਕੋ።','{o}، {d}، ډېر نږدې. ودرېږئ.'],
+clear:['No obstacle detected.','کوئی رکاوٹ نظر نہیں آ رہی۔','कोई बाधा नहीं दिख रही।','لا توجد عوائق مكتشفة.','ਕੋਈ ਰੁਕਾਵਟ ਨਹੀਂ ਦਿਸ ਰਹੀ۔','هېڅ خنډ نه ښکاري.'],
 noSens:['Motion sensor is not available.','موشن سینسر دستیاب نہیں ہے۔','मोशन सेंसर उपलब्ध नहीं है।','مستشعر الحركة غير متوفر.','ਮੋਸ਼ਨ ਸੈਂਸਰ ਉਪਲਬਧ ਨਹੀਂ ਹੈ।','د حرکت سنسر نشته.'],
 noStt:['Voice input is not supported in this browser.','اس براؤزر میں آواز سے ان پٹ دستیاب نہیں ہے۔','इस ब्राउज़र में आवाज़ इनपुट उपलब्ध नहीं है।','الإدخال الصوتي غير مدعوم في هذا المتصفح.','ਇਸ ਬ੍ਰਾਊਜ਼ਰ ਵਿੱਚ ਆਵਾਜ਼ ਇਨਪੁੱਟ ਉਪਲਬਧ ਨਹੀਂ ਹੈ।','په دې براوزر کې غږیز ان‌پټ نشته.'],
-net:['Voice input needs internet.','آواز سے ان پٹ کے لیے انٹرنیٹ چاہیے۔','आवाज़ इनपुट के लिए इंटरनेट चाहिए।','الإدخال الصوتي يحتاج إلى الإنترنت.','ਆਵਾਜ਼ ਇਨਪੁੱਟ ਲਈ ਇੰਟਰਨੈੱਟ ਚਾਹੀਦਾ ہے।','غږیز ان‌پټ ته انټرنیټ پکار دی.'],
-https:['Open this app from an https address.','اس ایپ کو https ایڈریس سے کھولیں۔','इस ऐप को https पते से खोलें।','افتح هذا التطبيق من عنوان https.','ਇਸ ਐਪ ਨੂੰ https ਪਤੇ ਤੋਂ ਖੋਲ੍ਹੋ।','دا اپ د https پتې څخه پرانیزئ.']
+noNet:['Voice input needs internet.','آواز سے ان پٹ کے لیے انٹرنیٹ چاہیے۔','आवाज़ इनपुट के लिए इंटरनेट चाहिए।','الإدخال الصوتي يحتاج إلى الإنترنت.','ਆਵਾਜ਼ ਇਨਪੁੱਟ ਲਈ ਇੰਟਰਨੈੱਟ ਚਾਹੀਦਾ ਹੈ।','غږیز ان‌پټ ته انټرنیټ پکار دی.'],
+https:['Open this app from an https address.','اس ایپ کو https ایڈریس سے کھولیں۔','इस ऐप को https पते से खोलें।','افتح هذا التطبيق من عنوان https.','ਇਸ ਐਪ ਨੂੰ https ਪਤੇ ਤੋਂ ਖੋల్੍ਹੋ።','دا اپ د https پتې څخه پرانیزئ.']
 };
-const NAMES=[['person','شخص','व्यक्ति','شخص','ਵਿਅਕਤੀ','سړی'],['chair','کرسی','कुर्सी','كرسي','ਕੁਰਸੀ','کرسۍ'],['sofa','صوفہ','सोफ़ा','أريكة','ਸੋਫ਼ਾ','صوفه'],['bed','بستر','बिस्तर','سرير','ਬਿਸਤਰਾ','بستره'],['table','میز','मेज़','طاولة','ਮੇਜ਼','میز'],['plant pot','گملا','गमला','أصيص نبات','ਗਮਲਾ','ګلدان'],['dog','کتا','कुत्ता','كلب','ਕੁੱਤਾ','سپی'],['cat','بلی','बिल्ली','قطة','ਬਿੱਲੀ','پیشو'],['bicycle','سائیکل','साइकिल','دراجة','ਸਾਈਕਲ','بایسکل'],['car','گاڑی','गाड़ी','سيارة','ਗੱਡੀ','موټر'],['motorcycle','موٹر سائیکل','मोटरसाइकिल','دراجة نارية','ਮੋਟਰਸਾਈਕਲ','موټرسایکل'],['large vehicle','بڑی گاڑی','बड़ी गाड़ी','مركبة كبيرة','ਵੱਡੀ ਗੱਡੀ','لوی موټر']];
+const NAMES=[['person','شخص','व्यक्ति','شخص','ਵਿਅਕਤੀ','سړی'],['chair','کرسی','कुर्सी','كرسي','ਕੁਰਸੀ','کرسۍ'],['sofa','صوفہ','सोफ़ा','أريكة','ਸੋਫ਼ਾ','صوفه'],['bed','بستر','बिस्तर','سرير','ਬਿਸਤਰਾ','بستره'],['table','میز','मेज़','طاولة','ਮੇਜ਼','میز'],['plant pot','گملا','गमला','أصيص نبات','ਗਮਲਾ','ګلدان'],['dog','کتا','कुत्ता','كلب','ਕੁੱਤਾ','سپی'],['cat','بلی','बिल्ली','قطة','ਬਿੱਲੀ','پیشو'],['bicycle','سائیکل','साइकिल','دراجة','ਸਾਈਕਲ','بایسکل'],['car','گاڑی','गाड़ी','سيارة','ਗੱਡੀ','موټر'],['motorcycle','موٹر سائیکل','मोटरसाइकिल','دراجة نارية','ਮੋਟਰਸਾਈਕਲ','موټرسایکل'],['large vehicle','بڑی گاڑی','بड़ी گاڑی','مركبة كبيرة','ਵੱਡੀ ਗੱਡੀ','لوی موټر']];
 const OBJ={person:[1.7,0],chair:[.9,1],couch:[.85,2],bed:[.55,3],'dining table':[.75,4],'potted plant':[.5,5],dog:[.5,6],cat:[.3,7],bicycle:[1,8],car:[1.5,9],motorcycle:[1.2,10],bus:[3,11],truck:[2.8,11]};
 
 /* ===== STATE ===== */
@@ -271,7 +224,7 @@ const $=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
 const stEl=$('status'),infoEl=$('info'),video=$('cam'),sel=$('lang');
 let code=ls.get('sc_lang')||'en-US',L=LANGS.find(l=>l[0]===code)||LANGS[0];code=L[0];
-let P=null,voiceSel=null,voiceEn=null,haveSel=true,saver=false,state='idle',SID=0,retry=null,lastInstr='',greeted=false,forceTeach=false,permP=null,permOk=true,listening=false;
+let voiceSel=null,voiceEn=null,haveSel=true,saver=false,state='idle',SID=0,retry=null,lastInstr='',greeted=false,forceTeach=false,permP=null,permOk=true,listening=false;
 let steps=0,segStart=0,lastStepT=0,lastAsk=-1,stopAt=0,from='',turns=[],legs=[],li=0,legStart=0,idleTimer=0,motionOk=false;
 let g=9.8,lp=0,p1=0,p2=0,acc=0,lastMT=0;
 let stream=null,det=null,camOn=false,lastProc=0,hist=[],cur=null,sawAt=0,wake=null,rec=null,ac=null,gid=null,gp=null,gs=0;
@@ -282,76 +235,41 @@ const save=()=>ls.set('sc_db',JSON.stringify(DB));
 const IOS=/iP(hone|ad|od)/.test(navigator.userAgent||'')||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
 const vib=p=>{try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}};
 
-/* ===== LANGUAGE ===== */
+/* ===== LANGUAGE & GOOGLE TTS ENGINE ===== */
 const bi=c=>IDX[c]??IDX[c.split('-')[0]]??-1;
-const fb=()=>!haveSel||(bi(code)<0&&!P);                       
-const pk=()=>fb()?0:(bi(code)>=0?bi(code):'x');
-const t=(k,v)=>{const p=pk(),s=p==='x'?P.u[k]:S[k][p];return s.replace(/\{(\w+)\}/g,(_,x)=>v[x])};
-const nm=i=>{const p=pk();return p==='x'?P.n[i]:NAMES[i][p]};
+const fb=()=>!haveSel||bi(code)<0;                       
+const pk=()=>fb()?0:(bi(code)>=0?bi(code):0);
+const t=(k,v)=>{const p=pk(),s=S[k]?.[p]!==undefined?S[k][p]:S[k]?.[0]||k;return s.replace(/\{(\w+)\}/g,(_,x)=>v[x])};
+const nm=i=>{const p=pk();return NAMES[i][p]||NAMES[i][0]};
 const info=s=>{infoEl.textContent=s||''};
-async function callAI(prompt){
-  const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),25000);
-  try{
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${AI_MODEL}:generateContent`,{method:'POST',signal:ctl.signal,headers:{'Content-Type':'application/json','x-goog-api-key':AI_API_KEY},body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{responseMimeType:'application/json'}})});
-    if(!r.ok)throw new Error('HTTP '+r.status);
-    const j=await r.json(),x=(j.candidates?.[0]?.content?.parts||[]).map(p=>p.text||'').join('').trim();
-    if(!x)throw new Error('empty answer');return x;
-  }finally{clearTimeout(to)}
-}
-const ph=s=>(s.match(/\{\w+\}/g)||[]).sort().join();
-const okPack=j=>!!(j&&j.u&&Array.isArray(j.n)&&j.n.length===NAMES.length&&j.n.every(x=>typeof x==='string'&&x.trim())&&Object.keys(S).every(k=>typeof j.u[k]==='string'&&j.u[k].trim()&&ph(j.u[k])===ph(S[k][0])));
-const pend={};
-const loadPack=(c,name)=>pend[c]||(pend[c]=(async()=>{
-  try{const s=JSON.parse(ls.get('sc_pk_'+c));if(okPack(s))return s}catch(e){}
-  if(!AI_API_KEY)return null;
-  const src={u:{},n:NAMES.map(a=>a[0])};for(const k in S)src.u[k]=S[k][0];
-  const x=await callAI(`Translate every value of this JSON from English into ${name}. Keep all keys unchanged. Keep placeholders such as {p} {n} {m} {d} {o} exactly as they are. Keep each value short, natural and easy to understand when spoken aloud. Return only the JSON.\n${JSON.stringify(src)}`);
-  const j=JSON.parse(x.replace(/```json|```/g,''));
-  if(!okPack(j))throw new Error('bad translation');
-  ls.set('sc_pk_'+c,JSON.stringify(j));return j;
-})().finally(()=>{delete pend[c]}));
+
 function pickVoice(){   
   const vs=speechSynthesis.getVoices();
   const f=c=>{const pre=c.split('-')[0],sc=v=>{const l=v.lang.replace('_','-');return(l===c?4:l.split('-')[0]===pre?2:0)+(/google|-x-/i.test(v.name+' '+v.voiceURI)?2:0)+(v.localService?1:0)};
     const a=vs.map(v=>[sc(v),v]).filter(x=>x[0]>=2).sort((x,y)=>y[0]-x[0]);return a.length?a[0][1]:null};
-  voiceSel=f(code);voiceEn=f('en-US');haveSel=!vs.length||!!voiceSel;render();
+  voiceSel=f(code);voiceEn=f('en-US');haveSel=!vs.length||!!voiceSel;
 }
-async function setLang(c,greet){
-  L=LANGS.find(l=>l[0]===c)||LANGS[0];code=L[0];ls.set('sc_lang',code);P=null;pickVoice();info('');
-  if(bi(code)<0){
-    const my=code;info('Preparing language...');
-    try{const p=await loadPack(my,L[1]);if(my===code)P=p}catch(e){console.error(e)}
-    if(my!==code)return;
-    info(P?'':(AI_API_KEY?'Could not translate this language. Using English.':'Extra languages need AI_API_KEY in the file. Using English.'));
-  }
-  render();if(greet)say(t('hello'),1,true);
-}
-function render(){
-  const set=(id,k)=>{$(id).textContent=t(k)};
-  set('ok','ok');set('cancel','cancel');set('back','back');set('stopBtn','stop');set('settingsNavBtn','settings');set('setTitle','settings');
-  set('aboutNavBtn','about');set('aboutTitle','about');set('backToHomeBtn','home');set('backFromAboutBtn','home');set('waBtn','wa');set('langLbl','lang');set('aboutTxt','aboutTxt');
-  set('startBtn',state==='idle'?'start':'ok');
-  document.documentElement.dir=!fb()&&/^(ar|fa|he|ur|ps|sd|yi)/.test(code)?'rtl':'ltr';
-  if(!haveSel)info('No installed voice for this language - using English. Install it: Settings > System > Languages & input > Text-to-speech output > Speech Services by Google.');
+function setLang(c,greet){
+  L=LANGS.find(l=>l[0]===c)||LANGS[0];code=L[0];ls.set('sc_lang',code);pickVoice();info('');
+  if(greet)say(t('hello'),1,true);
 }
 
-/* ===== SPEECH & QUEUE FIX ===== */
+/* ===== SPEECH QUEUE & GOOGLE TTS ===== */
 let q=[],lastSaid='',lastSaidT=0;
-const voice=()=>fb()?voiceEn:voiceSel;
+const voice=()=>voiceSel||voiceEn||speechSynthesis.getVoices()[0];
 function speak(s){
   stEl.textContent=s;
-  // پرانے سপীচ کینسل کریں تاکہ اوورلیپ نہ ہو
   try { speechSynthesis.cancel(); } catch(e) {}
   const u=new SpeechSynthesisUtterance(s),v=voice();
-  u.lang=v?v.lang:(fb()?'en-US':code);
   if(v) u.voice=v;
+  u.lang=code;
   u.rate=1.15;
   speechSynthesis.speak(u);
 }
 function say(s,pri,instr){   
   if(!s)return;pri=pri===undefined?1:pri;if(instr)lastInstr=s;
   const n=performance.now();
-  if(pri!==1&&s===lastSaid&&n-lastSaidT<4000)return;
+  if(pri!==1&&s===lastSaid&&n-lastSaidT<3000)return;
   if(pri===0)q=q.filter(x=>x.p!==0);                       
   q.push({s,p:pri,t:n});
 }
@@ -361,7 +279,7 @@ function pump(){
   let b=0;q.forEach((x,i)=>{if(x.p<q[b].p)b=i});
   const x=q.splice(b,1)[0];lastSaid=x.s;lastSaidT=n;speak(x.s);
 }
-(function tick(){pump();setTimeout(tick,saver?200:60)})();
+(function tick(){pump();setTimeout(tick,saver?200:50)})();
 const idle=()=>new Promise(r=>{let n=0;const i=setInterval(()=>{if((!speechSynthesis.speaking&&!speechSynthesis.pending&&!q.length)||++n>150){clearInterval(i);r()}},80)});
 function beep(f,d){
   try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();
@@ -374,10 +292,12 @@ function listenOnce(){
   return new Promise(res=>{
     const R=window.SpeechRecognition||window.webkitSpeechRecognition;
     if(!R)return res({e:'unsupported'});
+    if(rec){try{rec.abort();}catch(e){}}
     const r=rec=new R();r.lang=code;r.interimResults=true;r.maxAlternatives=1;r.continuous=false;let out='',err='';
     r.onresult=e=>{let s='';for(let i=0;i<e.results.length;i++)s+=e.results[i][0].transcript;out=s.trim()};
-    r.onerror=e=>{err=e.error||'error'};r.onend=()=>{rec=null;res({t:out,e:err})};
-    try{r.start()}catch(e){return res({e:'start'})}
+    r.onerror=e=>{err=e.error||'error'};
+    r.onend=()=>{rec=null;res({t:out,e:err})};
+    try{r.start()}catch(e){rec=null;return res({e:'start'})}
     setTimeout(()=>{try{r.stop()}catch(e){}},9000);
   });
 }
@@ -388,7 +308,7 @@ async function listen(id){
     const r=await listenOnce();listening=false;if(id!==SID)return '';
     if(r.e==='unsupported'){say(t('noStt'));return ''}
     if(r.e==='not-allowed'||r.e==='service-not-allowed'){say(t('perm'));return ''}
-    if(r.e==='network'){say(t('net'));return ''}
+    if(r.e==='network'){say(t('noNet'));return ''}
     if(r.t)return r.t;
   }
   return '';
@@ -413,7 +333,7 @@ function route(a,b){
   return out;
 }
 
-/* ===== MEDIAPIPE DETECTOR & VIDEO FIX ===== */
+/* ===== MEDIAPIPE & IMMEDIATE REAL-TIME DETECTION ===== */
 async function loadDet(){
   if(!window.ObjectDetector){
     await new Promise((ok,no)=>{
@@ -423,7 +343,7 @@ async function loadDet(){
     });
   }
   const v=await FilesetResolver.forVisionTasks(WASM);
-  for(const d of['GPU','CPU'])try{return await ObjectDetector.createFromOptions(v,{baseOptions:{modelAssetPath:MODEL,delegate:d},scoreThreshold:.5,maxResults:5,runningMode:'VIDEO'})}catch(e){}
+  for(const d of['GPU','CPU'])try{return await ObjectDetector.createFromOptions(v,{baseOptions:{modelAssetPath:MODEL,delegate:d},scoreThreshold:.4,maxResults:5,runningMode:'VIDEO'})}catch(e){}
   throw new Error('detector');
 }
 async function camStart(){
@@ -436,40 +356,45 @@ async function camStart(){
   return true;
 }
 function camStop(){camOn=false;if(stream){stream.getTracks().forEach(x=>x.stop());stream=null}video.srcObject=null;cur=null;hist=[]}
-const nextFrame=()=>{if(camOn)video.requestVideoFrameCallback?video.requestVideoFrameCallback(onFrame):requestAnimationFrame(onFrame)};
+const nextFrame=()=>{if(camOn)requestAnimationFrame(onFrame)};
 function onFrame(){
+  if(!camOn)return;
   nextFrame();
   const n=performance.now();
-  if(!det||video.readyState<2||n-lastProc<(saver?(n-lastStepT>3000?1000:200):0))return;
+  if(!det||video.readyState<2||n-lastProc<(saver?300:50))return;
   
-  // ویڈیو ڈتھ اور ہائٹ سیفٹی چیک (زیرو ڈینومینیٹر ایرر سے بچاؤ)
   const W=video.videoWidth,H=video.videoHeight;
   if(!W || !H) return;
 
   lastProc=n;
   let best=null;
-  for(const d of det.detectForVideo(video,n).detections){
+  for(const d of det.detectForVideo(video,performance.now()).detections){
     const c=d.categories[0],o=OBJ[c.categoryName];if(!o)continue;
     const b=d.boundingBox;let m=o[0]*.77*Math.max(W,H)/b.height;          
     if(b.originY<2||b.originY+b.height>H-2)m=Math.min(m,1);               
     if(m>RANGE)continue;
-    const near=m<.5,cx=(b.originX+b.width/2)/W,side=cx<.4?'L':cx>.6?'R':'F';
-    m=Math.max(.5,Math.round(m*2)/2);
+    const near=m<.6,cx=(b.originX+b.width/2)/W,side=cx<.4?'L':cx>.6?'R':'F';
+    m=Math.max(.4,Math.round(m*2)/2);
     if(!best||m<best.m)best={m,near,side,o:o[1],key:c.categoryName+side};
   }
-  hist.push(best?best.key:0);if(hist.length>3)hist.shift();
-  if(best&&hist.filter(k=>k===best.key).length>=2){                       
+  
+  if(best){
     sawAt=n;
-    if(!cur||cur.key!==best.key||best.m<=cur.m-.5){cur={key:best.key,m:best.m};alertObs(best)}
-    else if(best.m>cur.m)cur.m=best.m;
-  }else if(cur&&n-sawAt>700){cur=null;say(t('clear'),2)}                    
+    if(!cur||cur.key!==best.key||Math.abs(cur.m-best.m)>=0.3){
+      cur={key:best.key,m:best.m};
+      alertObs(best);
+    }
+  }else if(cur&&n-sawAt>800){
+    cur=null;
+    say(t('clear'),2);
+  }
 }
 function alertObs(b){
   say(t(b.near?'obNear':'ob',{o:nm(b.o),d:t(b.side),m:b.m}),0);
   beep(b.m<=1?990:660);vib(b.m<=1?[100,50,100]:60);
 }
 
-/* ===== STEPS & IOS MOTION PERMISSION FIX ===== */
+/* ===== STEPS & IOS MOTION ===== */
 function onMotion(e){
   const a=e.accelerationIncludingGravity,r=e.rotationRate;if(!a||a.x==null)return;
   const n=performance.now(),dt=Math.min(n-lastMT,100)/1000,mag=Math.hypot(a.x,a.y,a.z)||1;
@@ -489,7 +414,7 @@ function motionOn(){motionOk=false;lastMT=0;addEventListener('devicemotion',onMo
 const motionOff=()=>removeEventListener('devicemotion',onMotion);
 const hav=(a,b)=>{const r=Math.PI/180,x=(b[0]-a[0])*r,y=(b[1]-a[1])*r,s=Math.sin(x/2)**2+Math.cos(a[0]*r)*Math.cos(b[0]*r)*Math.sin(y/2)**2;return 12742000*Math.atan2(Math.sqrt(s),Math.sqrt(1-s))};
 
-/* ===== GEOLOCATION WITH ERROR HANDLING FIX ===== */
+/* ===== GEOLOCATION ===== */
 function geoOn(){   
   if(!navigator.geolocation||saver||gid!==null)return;gp=null;
   gid=navigator.geolocation.watchPosition(p=>{
@@ -497,26 +422,26 @@ function geoOn(){
     if(!gp){gp=a;gs=steps;return}
     const d=hav(gp,a),n=steps-gs;
     if(d>=30&&n>=20){const s=d/n;if(s>.4&&s<1.1){STRIDE=+(STRIDE*.7+s*.3).toFixed(3);ls.set('sc_stride',STRIDE)}gp=a;gs=steps}
-  },(err)=>{
-    // جیو لوکیشن ایرر ہینڈلنگ (بیٹری یا پروسیسنگ بچانے کے لیے واچ کلیر کرنا)
-    console.warn('Geolocation error:', err.message);
-    geoOff();
-  },{enableHighAccuracy:false,maximumAge:5000});
+  },(err)=>{geoOff();},{enableHighAccuracy:false,maximumAge:5000});
 }
 const geoOff=()=>{if(gid!==null){navigator.geolocation.clearWatch(gid);gid=null}};
 async function lock(on){try{if(on&&!wake&&navigator.wakeLock){wake=await navigator.wakeLock.request('screen');wake.onrelease=()=>{wake=null}}else if(!on&&wake){await wake.release();wake=null}}catch(e){}}
 
-/* ===== BATTERY SAVER ===== */
+/* ===== BATTERY SAVER TOGGLE & LOGIC ===== */
+function toggleBatterySaver(){
+  saver=!saver;
+  $('batterySaverBtn').textContent=`BATTERY SAVER: ${saver ? 'ON' : 'OFF'}`;
+  setSaver(saver, false);
+}
 function setSaver(on,low){
-  if(on===saver)return;saver=on;document.body.classList.toggle('saver',on);
+  saver=on;document.body.classList.toggle('saver',on);
   say((low?t('low')+' ':'')+t(on?'sOn':'sOff'),2);
   const tr=stream&&stream.getVideoTracks()[0];
   if(tr)tr.applyConstraints({width:{ideal:on?240:320},height:{ideal:on?180:240},frameRate:{ideal:on?10:30}}).catch(()=>{});
   if(on)geoOff();else if(state!=='idle')geoOn();
 }
-if(navigator.getBattery)navigator.getBattery().then(b=>{const f=()=>setSaver(!b.charging&&b.level<=.2,true);b.onlevelchange=f;b.onchargingchange=f;f()}).catch(()=>{});
 
-/* ===== FLOWS & MOTION PERMISSION FIX ===== */
+/* ===== FLOWS & MOTION PERMISSION ===== */
 async function motionPerm(){
   const D=window.DeviceMotionEvent;
   if(D&&typeof D.requestPermission==='function'){
@@ -526,7 +451,6 @@ async function motionPerm(){
 }
 async function startSession(){
   state='free';
-  // آئی او ایس کے لیے یوزر ٹچ کے فورا بعد پرمیشن ریکوئسٹ کا درست طریقہ
   const mp=await motionPerm();
   if(!mp) say(t('noSens'));
 
@@ -608,7 +532,7 @@ async function perms(){
   return ok;
 }
 
-/* ===== UI ===== */
+/* ===== UI ACTIONS & EVENTS ===== */
 function onOK(){
   vib(30);
   if(state==='idle')startSession();
@@ -622,24 +546,42 @@ async function onBack(){
   if(camOn&&!det){try{det=await loadDet()}catch(e){}}
   if(retry)retry();else if(lastInstr)say(lastInstr,1);
 }
-$('ok').onclick=onOK;$('cancel').onclick=onCancel;$('back').onclick=onBack;
-$('startBtn').onclick=onOK;$('stopBtn').onclick=onCancel;stEl.onclick=onBack;     
+
+$('ok').onclick=onOK;
+$('cancel').onclick=onCancel;
+$('back').onclick=onBack;
+$('batterySaverBtn').onclick=toggleBatterySaver;
+$('startBtn').onclick=onOK;
+$('stopBtn').onclick=onCancel;
+stEl.onclick=onBack;     
+
 const show=v=>['homeView','settingsView','aboutView'].forEach(i=>$(i).classList.toggle('active',i===v));
 $('settingsNavBtn').onclick=()=>{vib(15);show('settingsView')};
 $('aboutNavBtn').onclick=()=>{vib(15);show('aboutView')};
 $('backToHomeBtn').onclick=$('backFromAboutBtn').onclick=()=>{vib(15);show('homeView')};
+
 document.addEventListener('keydown',e=>{   
   if(e.target.tagName==='SELECT')return;
   const k={Enter:'ok',Escape:'cancel',Backspace:'back'}[e.key];if(k){e.preventDefault();$(k).click()}
 });
-document.addEventListener('pointerdown',e=>{if(!greeted){greeted=true;if(!/^(startBtn|ok)$/.test(e.target.id))say(t('hello'),1,true)}},true);
+document.addEventListener('pointerdown',e=>{if(!greeted){greeted=true;if(!/^(startBtn|ok|cancel|back|batterySaverBtn)$/.test(e.target.id))say(t('hello'),1,true)}},true);
+
 sel.innerHTML=LANGS.map((l,i)=>`<option value="${i}">${l[1]}${l[2]?' - '+l[2]:''}</option>`).join('');
 sel.value=LANGS.indexOf(L);
 sel.onchange=()=>{vib(15);setLang(LANGS[+sel.value][0],true)};                      
-setInterval(()=>{const on=state!=='idle';$('stopBtn').style.display=on?'block':'none';const k=on?'ok':'start';if($('startBtn').textContent!==t(k))$('startBtn').textContent=t(k)},300);
+
+setInterval(()=>{
+  const on=state!=='idle';
+  $('stopBtn').style.display=on?'block':'none';
+  $('startBtn').textContent=on?'OK':'START';
+},300);
+
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&camOn){lock(true);nextFrame()}});
-speechSynthesis.onvoiceschanged=pickVoice;
-setLang(code,false);lastInstr=t('hello');stEl.textContent=t('hello');
+if(speechSynthesis.onvoiceschanged!==undefined)speechSynthesis.onvoiceschanged=pickVoice;
+
+setLang(code,false);
+lastInstr=t('hello');
+stEl.textContent=t('hello');
 permP=perms();
 </script>
 </body>
