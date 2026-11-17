@@ -39,7 +39,7 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 
 <div id="homeView" class="view active">
   <h2>SMART CANE</h2>
-  <div class="sub">Your Eyes Smart Cane created by Humaira Sardar</div>
+  <div class="sub">Your Eyes Smart Cane</div>
   <label for="lang">SELECT LANGUAGE</label>
   <select id="lang"></select>
   <div id="info"></div>
@@ -58,7 +58,7 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
   <label for="voiceSelect">PREFERRED TTS VOICE</label>
   <select id="voiceSelect"></select>
 
-  <label>RATE EXPERIENCE</label>
+  <label>RATE EXPERIENCE (Sends via Email)</label>
   <div class="rating-container">
     <button class="rating-btn" onclick="rateApp(1)">★ 1</button>
     <button class="rating-btn" onclick="rateApp(2)">★ 2</button>
@@ -73,7 +73,7 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 
 <div id="aboutView" class="view">
   <h2>ABOUT APP</h2>
-  <div class="sub">Your Eyes Smart Cane v4.2</div>
+  <div class="sub">Your Eyes Smart Cane v5.1</div>
   <p class="txt">Smart Cane helps you walk with confidence. It spots nearby obstacles, tells their distance in meters, and guides you in real time.<br><br><strong>Created by Humaira Sardar, Okara, Pakistan</strong></p>
   <button id="backFromAboutBtn" class="sec">BACK</button>
 </div>
@@ -81,10 +81,17 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 </div>
 
 <script>
+/* ===== OFFLINE SERVICE WORKER REGISTRATION ===== */
+if('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  });
+}
+
 /* ===== CONFIG ===== */
 const WASM="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.2/wasm";
 const MODEL="https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite";
-const RANGE=2.0;   
+const RANGE=2.2;   
 const IDX={en:0,ur:1,hi:2,ar:3,'pa-IN':4,ps:5};   
 const LANGS=`en-US|English (United States)|
 en-GB|English (United Kingdom)|
@@ -137,7 +144,7 @@ fil-PH|Filipino (Philippines)|Filipino
 sw-KE|Swahili (Kenya)|Kiswahili
 sw-TZ|Swahili (Tanzania)|Kiswahili
 af-ZA|Afrikaans (South Africa)|Afrikaans
-sq-AL|Albanian (Albania)|Shqip
+sq-AL|Albanian (Albania)|Shقip
 am-ET|Amharic (Ethiopia)|አማርኛ
 hy-AM|Armenian (Armenia)|Հայերեն
 az-AZ|Azerbaijani (Azerbaijan)|Azərbaycan dili
@@ -193,13 +200,13 @@ zu-ZA|Zulu (South Africa)|isiZulu`.split('\n').map(r=>{const a=r.split('|');retu
 /* ===== VOICE & GUIDANCE TEXT PACKS ===== */
 const S={
 hello:['Smart Cane is ready. Press Start to begin.','اسمارٹ کین تیار ہے۔ شروع کرنے کے لیے اسپاٹ دبائیں۔','स्मार्ट केन तैयार है। शुरू करने के लिए स्टार्ट दबाएँ।','العصا الذكية جاهزة. اضغط ابدأ للبدء.','ਸਮਾਰਟ ਕੇਨ ਤਿਆਰ ਹੈ। ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਸਟਾਰਟ ਦਬਾਓ۔','سمارټ کین چمتو دی. د پیل لپاره پیل کېکاږئ.'],
-obsGeneral:['Obstacle ahead, about {m} meters','سامنے رکاوٹ ہے، تقریباً {m} میٹر','सामने बाधा है, लगभग {m} मीटर','هناك عوائق أمامك، حوالي {m} متر','ਸਾਹਮਣੇ ਰੁਕਾਵਟ ਹੈ, ਲਗਭਗ {m} ਮੀਟਰ','مخکې خنډ دی، شاوخوا {m} متره'],
-obsNear:['Obstacle very close. Stop.','رکاوٹ بہت قریب ہے۔ رک جائیں۔','बाधा बहुत पास है। रुकें।','خطر! العائق قريب جدا. توقف.','ਰੁਕਾਵਟ ਬਹੁਤ ਨੇੜੇ ਹੈ। ਰੁਕੋ۔','خنډ ډېر نږدې دی. ودرېږئ.'],
-clear:['Path is clear. Keep walking.','راستا صاف ہے۔ چلتے رہیں۔','रास्ता साफ है। चलते रहें।','الطريق واضح. واصل المشي.','ਰਸਤਾ ਸਾਫ ਹੈ। ਤੁਰਦੇ ਰਹੋ۔','لار پاکه ده. روان اوسئ.'],
+obsNear:['Danger! Obstacle very close at {m} meters. Stop!','خطر! رکاوٹ بہت قریب ہے، تقریباً {m} میٹر دور ہے۔ رک جائیں!','खतरा! बाधा बहुत पास है, लगभग {m} मीटर दूर। रुकें!','خطر! العائق قريب جدا على بعد {m} متر. توقف!','ਖਤਰਾ! ਰੁਕਾਵਟ ਬਹੁਤ ਨੇੜੇ ਹੈ, ਲਗਭਗ {m} ਮੀਟਰ। ਰੁਕੋ!','خطر! خنډ ډېر نږدې دی، شاوخوا {m} متره. ودرېږئ!'],
+obsFar:['Caution, obstacle ahead at {m} meters','احتیاط کریں، सामने رکاوٹ ہے، تقریباً {m} میٹر دور','सावधानी, सामने बाधा है, लगभग {m} मीटर दूर','انتبه، هناك عوائق أمامك على بعد {m} متر','ਧਿਆਨ ਰੱਖੋ, ਸਾਹመਣੇ ਰੁਕਾਵਟ ہے, ਲਗਭਗ {m} ਮੀਟਰ','پامال, مخکې خنډ دی، شاوخوا {m} متره'],
+clear:['Path is clear. Keep walking.','راستا صاف ہے۔ چلتے رہیں۔','रास्ता साफ है। चलते रहें।','الطريق واضح. واصل المشي.','ਰਸਤਾ ਸਾفا ਹੈ। ਤੁਰਦੇ ਰਹੋ۔','لار پاکه ده. روان اوسئ.'],
 sOn:['Battery saver on.','بیٹری سیور آن۔','बैटरी सेवर चालू।','وضع توفير البطارية قيد التشغيل.','ਬੈਟਰੀ ਸੇਵਰ ਚਾਲੂ۔','د بیټرۍ سیور فعال شو.'],
 sOff:['Battery saver off.','بیٹری سیور بند۔','बैटरी सेवर बंद।','تم إيقاف توفير البطارية.','ਬੈਟਰੀ ਸੇਵਰ ਬੰਦ۔','د بیټرۍ سیور بند شو.'],
 low:['Battery low.','بیٹری کم ہے۔','बैटरी कम है।','البطارية منخفضة.','ਬੈਟਰੀ ਘੱਟ ਹੈ۔','بیټرۍ کمه ده.'],
-det:['Camera or detector is not working. Walk carefully.','کیمرہ یا ڈیٹیکٹر کام نہیں کر رہا۔ احتیاط سے چلیں۔','कैमरा या डिटेक्टर काम नहीं कर रहा। सावधानी से चलें।','الكاميرا أو كشف العوائق لا يعمل. امش بحذر.','ਕੈਮਰਾ ਜਾਂ ਡਿਟੈਕਟਰ ਕੰਮ ਨਹੀਂ ਕਰ ਰਿਹਾ। ਧਿਆਨ ਨਾਲ ਤੁਰੋ۔','کمره یا کشف کو کار نه کوي. په احتیاط روان شئ.'],
+det:['Camera or detector is not working. Walk carefully.','کیمرہ یا ڈیٹیکٹر کام نہیں کر رہا۔ احتیاط سے چلیں۔','कैमरा या डिटेक्टर काम नहीं कर रहा। सावधानी से चलें।','الكاميرا أو كشف العوائق لا يعمل. امش بحذر.','ਕੈਮਰਾ ਜਾਂ ਡਿਟੈকਟਰ ਕੰਮ ਨਹੀਂ ਕਰ ਰਿਹਾ۔ ਧਿਆਨ ਨਾਲ ਤੁਰੋ۔','کمره یا کشف کو کار نه کوي. په احتیاط روان شئ.'],
 perm:['Please allow camera in browser settings.','براہ کرم براؤزر کی سیٹنگز میں کیمرے کی اجازت دیں۔','कृपया ब्राउज़र सेटिंग्स में कैमरे की अनुमति दें।','يرجى السماح بالكاميرا من إعدادات المتصفح.','ਕਿਰਪਾ ਕਰਕੇ ਬ੍ਰਾਊਜ਼ਰ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਕੈਮਰੇ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ۔','مهرباني وکړئ د براوزر په ترتیباتو کې کامرې ته اجازه ورکړئ.'],
 https:['Open this app from an https address.','اس ایپ کو https ایڈریس سے کھولیں۔','इस ऐप को https पते से खोलें।','افتح هذا التطبيق من عنوان https.','ਇਸ ਐਪ ਨੂੰ https ਪਤੇ ਤੋਂ ਖੋల్੍ਹੋ۔','دا اپ د https پتې څخه پرانیزئ.']
 };
@@ -274,13 +281,39 @@ function pump(){
   const x=q.splice(b,1)[0];lastSaid=x.s;lastSaidT=n;speak(x.s);
 }
 (function tick(){pump();setTimeout(tick,saver?200:30)})();
-function beep(f,d){
-  try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();
-    const o=ac.createOscillator(),gn=ac.createGain(),n=ac.currentTime;d=d||.05;o.frequency.value=f;o.connect(gn);gn.connect(ac.destination);
-    gn.gain.setValueAtTime(.2,n);gn.gain.linearRampToValueAtTime(0,n+d);o.start(n);o.stop(n+d)}catch(e){}
+
+/* ===== CUSTOM DISTINCT AUDIO BEEPS ===== */
+function playHeartbeatBeep(){
+  try{
+    ac=ac||new(window.AudioContext||window.webkitAudioContext)();
+    if(ac.state==='suspended')ac.resume();
+    const n=ac.currentTime;
+    [0, 0.1].forEach(offset => {
+      const o=ac.createOscillator(),gn=ac.createGain();
+      o.frequency.value=950;
+      o.connect(gn); gn.connect(ac.destination);
+      gn.gain.setValueAtTime(0.25, n+offset);
+      gn.gain.linearRampToValueAtTime(0, n+offset+0.06);
+      o.start(n+offset); o.stop(n+offset+0.06);
+    });
+  }catch(e){}
 }
 
-/* ===== MEDIAPIPE OBJECT DETECTION WITH STABILITY FILTER ===== */
+function playClearBeep(){
+  try{
+    ac=ac||new(window.AudioContext||window.webkitAudioContext)();
+    if(ac.state==='suspended')ac.resume();
+    const n=ac.currentTime;
+    const o=ac.createOscillator(),gn=ac.createGain();
+    o.frequency.value=550;
+    o.connect(gn); gn.connect(ac.destination);
+    gn.gain.setValueAtTime(0.15, n);
+    gn.gain.linearRampToValueAtTime(0, n+0.08);
+    o.start(n); o.stop(n+0.08);
+  }catch(e){}
+}
+
+/* ===== MEDIAPIPE OBJECT DETECTION ===== */
 async function loadDet(){
   if(!window.ObjectDetector){
     await new Promise((ok,no)=>{
@@ -305,7 +338,7 @@ async function camStart(){
 function camStop(){camOn=false;if(stream){stream.getTracks().forEach(x=>x.stop());stream=null}video.srcObject=null;curKey='';consecutiveObstacleFrames=0;}
 const nextFrame=()=>{if(camOn&&running)requestAnimationFrame(onFrame)};
 
-const CLEAR_INTERVAL = 4000;
+const CLEAR_INTERVAL = 6000;
 
 function onFrame(){
   if(!camOn||!running)return;
@@ -328,7 +361,7 @@ function onFrame(){
       let m = 0.85 * Math.max(W, H) / b.height;
       if(m > RANGE) continue; 
 
-      const near = m < .55;
+      const near = m < 1.0; 
       m = Math.max(0.3, Math.round(m * 2) / 2);
 
       if(!best || m < best.m) {
@@ -341,7 +374,7 @@ function onFrame(){
     consecutiveObstacleFrames++;
     if(consecutiveObstacleFrames >= 2) {
       sawAt=n;
-      const currentKey = (best.near ? 'near_' : 'gen_') + best.m;
+      const currentKey = (best.near ? 'near_' : 'far_') + best.m;
       if(curKey !== currentKey) {
         curKey = currentKey;
         alertObs(best);
@@ -349,10 +382,11 @@ function onFrame(){
     }
   }else{
     consecutiveObstacleFrames = 0;
-    if(n - sawAt > 700){ 
+    if(n - sawAt > 800){ 
       curKey = '';
       if(n - lastClearSpoken > CLEAR_INTERVAL) {
         lastClearSpoken = n;
+        playClearBeep();
         say(t('clear'), 2);
       }
     }
@@ -360,15 +394,23 @@ function onFrame(){
 }
 
 function alertObs(b){
-  say(t(b.near?'obsNear':'obsGeneral',{m:b.m}),0);
-  beep(b.m<=1?990:660);
-  try{navigator.vibrate&&navigator.vibrate(b.m<=1?[100,50,100]:60)}catch(e){}
+  const key = b.near ? 'obsNear' : 'obsFar';
+  say(t(key, {m: b.m}), 0);
+  playHeartbeatBeep();
+  try{navigator.vibrate&&navigator.vibrate(b.near ? [100, 50, 100] : 60);}catch(e){}
 }
 
-/* ===== RATING SYSTEM ===== */
+/* ===== RATING SYSTEM (Direct Email Feature) ===== */
 function rateApp(score){
   ls.set('sc_rating', score);
-  speak(code.startsWith('ur') ? `شکریہ! آپ نے ${score} اسٹار دیے ہیں۔` : `Thank you for rating ${score} stars!`);
+  const email = "humairasardar@gmail.com";
+  const subject = encodeURIComponent("Smart Cane App Rating");
+  const body = encodeURIComponent(`Hello Humaira,\n\nI have rated your Smart Cane application: ${score} Stars.`);
+  
+  speak(code.startsWith('ur') ? `شکریہ! آپ نے ${score} اسٹار دیے ہیں۔ ای میل تیار کی جا رہی ہے۔` : `Thank you for rating ${score} stars! Opening email.`);
+  setTimeout(() => {
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+  }, 1500);
 }
 
 /* ===== BATTERY SAVER ===== */
@@ -400,18 +442,24 @@ function stopSession(){
   $('startBtn').style.display='block';
   speechSynthesis.cancel();
   q=[];
+  playClearBeep();
   say(t('clear'),1);
 }
 
-/* ===== UI EVENTS ===== */
-$('batterySaverBtn').onclick=toggleBatterySaver;
-$('startBtn').onclick=startSession;
-$('stopBtn').onclick=stopSession;
-
+/* ===== UI NAVIGATION & CONFIRM EXIT (YES / NO) ===== */
 const show=v=>['homeView','settingsView','aboutView'].forEach(i=>$(i).classList.toggle('active',i===v));
+
 $('settingsNavBtn').onclick=()=>{show('settingsView')};
 $('aboutNavBtn').onclick=()=>{show('aboutView')};
-$('backToHomeBtn').onclick=$('backFromAboutBtn').onclick=()=>{show('homeView')};
+
+// بیک یا ہوم جانے پر کنفرمیشن (Yes / No پرمیشن)
+$('backToHomeBtn').onclick=$('backFromAboutBtn').onclick=()=>{
+  const msg = code.startsWith('ur') ? "کیا آپ واقعی واپس ہوم اسکرین پر جانا چاہتی ہیں؟" : "Do you really want to go back to Home?";
+  if(confirm(msg)) {
+    if(running) stopSession();
+    show('homeView');
+  }
+};
 
 sel.innerHTML=LANGS.map((l,i)=>`<option value="${i}">${l[1]}${l[2]?' - '+l[2]:''}</option>`).join('');
 sel.value=LANGS.indexOf(L);
