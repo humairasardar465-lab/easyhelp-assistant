@@ -177,341 +177,122 @@ yi|Yiddish|ייִדיש
 yo-NG|Yoruba (Nigeria)|Yorùbá
 zu-ZA|Zulu (South Africa)|isiZulu`.split('\n').map(r=>{const a=r.split('|');return[a[0],a[1],a[2]||'']});
 
-/* ===== VOICE & GUIDANCE TEXT PACKS (With Fallbacks for all Languages) ===== */
+/* ===== VOICE & GUIDANCE TEXT PACKS ===== */
 const S={
-hello:[
-  'Smart Cane is ready. Press Start to begin.',
-  'اسمارٹ کین تیار ہے۔ شروع کرنے کے لیے اسپاٹ دبائیں۔',
-  'स्मार्ट केन तैयार है। शुरू करने के लिए स्टार्ट दबाएँ।',
-  'العصا الذكية جاهزة. اضغط ابدأ للبدء.',
-  'ਸਮਾਰਟ ਕੇਨ ਤਿਆਰ ਹੈ। ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਸਟਾਰਟ ਦਬਾਓ।',
-  'سمارټ کین چمتو دی. د پیل لپاره پیل کېکاږئ.'
-],
-obsGeneral:[
-  'Obstacle ahead, about {m} meters',
-  'سامنے رکاوٹ ہے، تقریباً {m} میٹر',
-  'सामने बाधा है, लगभग {m} मीटर',
-  'هناك عوائق أمامك، حوالي {m} متر',
-  'ਸਾਹਮਣੇ ਰੁਕਾਵਟ ਹੈ, ਲਗਭਗ {m} ਮੀਟਰ',
-  'مخکې خنډ دی، شاوخوا {m} متره'
-],
-obsNear:[
-  'Obstacle very close. Stop.',
-  'رکاوٹ بہت قریب ہے۔ رک جائیں۔',
-  'बाधा बहुत पास है। रुकें।',
-  'خطر! العائق قريب جدا. توقف.',
-  'ਰੁਕਾਵਟ ਬਹੁਤ ਨੇੜੇ ਹੈ। ਰੁਕੋ۔',
-  'خنډ ډېر نږدې دی. ودرېږئ.'
-],
-ob:[
-  '{o}, {d}, about {m} meters',
-  '{o}، {d}، تقریباً {m} میٹر',
-  '{o}, {d}, लगभग {m} मीटर',
-  '{o}، {d}، حوالي {m} متر',
-  '{o}, {d}, ਲਗਭਗ {m} ਮੀਟਰ',
-  '{o}، {d}، شاوخوا {m} متره'
-],
-obNear:[
-  '{o}, {d}, very close. Stop.',
-  '{o}، {d}، بہت قریب۔ رک جائیں።',
-  '{o}, {d}, बहुत पास। रुकें।',
-  '{o}، {d}، قريب جدًا. توقف.',
-  '{o}, {d}, ਬਹੁਤ ਨੇੜੇ। ਰੁਕੋ۔',
-  '{o}، {d}, ډېر نږدې. ودرېږئ.'
-],
-clear:[
-  'Path is clear. Keep walking.',
-  'راستا صاف ہے۔ چلتے رہیں۔',
-  'रास्ता साफ है। चलते रहें।',
-  'الطريق واضح. واصل المشي.',
-  'ਰਸਤਾ ਸਾਫ ਹੈ। ਤੁਰਦੇ ਰਹੋ।',
-  'لار پاکه ده. روان اوسئ.'
-],
-sOn:[
-  'Battery saver on.',
-  'بیٹری سیور آن۔',
-  'बैटरी सेवर चालू।',
-  'وضع توفير البطارية قيد التشغيل.',
-  'ਬੈਟਰੀ ਸੇਵਰ ਚਾਲੂ۔',
-  'د بیټرۍ سیور فعال شو.'
-],
-sOff:[
-  'Battery saver off.',
-  'بیٹری سیور بند۔',
-  'बैटरी सेवर बंद।',
-  'تم إيقاف توفير البطارية.',
-  'ਬੈਟਰੀ ਸੇਵਰ ਬੰਦ۔',
-  'د بیټرۍ سیور بند شو.'
-],
-low:[
-  'Battery low.',
-  'بیٹری کم ہے۔',
-  'बैटरी कम है।',
-  'البطارية منخفضة.',
-  'ਬੈਟਰੀ ਘੱਟ ਹੈ۔',
-  'بیټرۍ کمه ده.'
-],
-det:[
-  'Camera or detector is not working. Walk carefully.',
-  'کیمرہ یا ڈیٹیکٹر کام نہیں کر رہا۔ احتیاط سے چلیں۔',
-  'कैमरा या डिटेक्टर काम नहीं कर रहा। सावधानी से चलें।',
-  'الكاميرا أو كشف العوائق لا يعمل. امش بحذر.',
-  'ਕੈਮਰਾ ਜਾਂ ਡਿਟੈਕਟਰ ਕੰਮ ਨਹੀਂ ਕਰ ਰਿਹਾ। ਧਿਆਨ ਨਾਲ ਤੁਰੋ۔',
-  'کمره یا کشف کو کار نه کوي. په احتیاط روان شئ.'
-],
-perm:[
-  'Please allow camera in browser settings.',
-  'براہ کرم براؤزر کی سیٹنگز میں کیمرے کی اجازت دیں۔',
-  'कृपया ब्राउज़र सेटिंग्स में कैमरे की अनुमति दें।',
-  'يرجى السماح بالكاميرا من إعدادات المتصفح.',
-  'ਕਿਰਪਾ ਕਰਕੇ ਬ੍ਰਾਊਜ਼ਰ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਕੈਮਰੇ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ۔',
-  'مهرباني وکړئ د براوزر په ترتیباتو کې کامرې ته اجازه ورکړئ.'
-],
-https:[
-  'Open this app from an https address.',
-  'اس ایپ کو https ایڈریس سے کھولیں۔',
-  'इस ऐप को https पते से खोलें।',
-  'افتح هذا التطبيق من عنوان https.',
-  'ਇਸ ਐਪ ਨੂੰ https ਪਤੇ ਤੋਂ ਖੋਲ੍ਹੋ۔',
-  'دا اپ د https پتې څخه پرانیزئ.'
-]
+hello:['Smart Cane is ready. Press Start to begin.','اسمارٹ کین تیار ہے۔ شروع کرنے کے لیے اسپاٹ دبائیں۔','स्मार्ट केन तैयार है। शुरू करने के लिए स्टार्ट दबाएँ।','العصا الذكية جاهزة. اضغط ابدأ للبدء.','ਸਮਾਰਟ ਕੇਨ ਤਿਆਰ ਹੈ। ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਸਟਾਰਟ ਦਬਾਓ।','سمارټ کین چمتو دی. د پیل لپاره پیل کېکاږئ.'],
+obsGeneral:['Obstacle ahead, about {m} meters','سامنے رکاوٹ ہے، تقریباً {m} میٹر','सामने बाधा है, लगभग {m} मीटर','هناك عوائق أمامك، حوالي {m} متر','ਸਾਹਮਣੇ ਰੁਕਾਵਟ ਹੈ, ਲਗਭਗ {m} ਮੀਟਰ','مخکې خنډ دی، شاوخوا {m} متره'],
+obsNear:['Obstacle very close. Stop.','رکاوٹ بہت قریب ہے۔ رک جائیں۔','बाधा बहुत पास है। रुकें।','خطر! العائق قريب جدا. توقف.','ਰੁਕਾਵਟ ਬਹੁਤ ਨੇੜੇ ਹੈ। ਰੁਕੋ۔','خنډ ډېر نږدې دی. ودرېږئ.'],
+ob:['{o}, {d}, about {m} meters','{o}، {d}، تقریباً {m} میٹر','{o}, {d}, लगभग {m} मीटर','{o}، {d}، حوالي {m} متر','{o}, {d}, ਲਗਭਗ {m} ਮੀਟਰ','{o}، {d}، شاوخوا {m} متره'],
+obNear:['{o}, {d}, very close. Stop.','{o}، {d}، بہت قریب۔ رک جائیں۔','{o}, {d}, बहुत पास। रुकें።','{o}، {d}، قريب جدًا. توقف.','{o}, {d}, ਬਹੁਤ ਨੇੜੇ। ਰੁਕੋ።','{o}، {d}، ډېر نږدې. ودرېږئ.'],
+clear:['Path is clear. Keep walking.','راستا صاف ہے۔ چلتے رہیں۔','रास्ता साफ है। चलते रहें।','الطريق واضح. واصل المشي.','ਰਸਤਾ ਸਾਫ ਹੈ। ਤੁਰਦੇ ਰਹੋ।','لار پاکه ده. روان اوسئ.'],
+sOn:['Battery saver on.','بیٹری سیور آن۔','बैटरी सेवर चालू।','وضع توفير البطارية قيد التشغيل.','ਬੈਟਰੀ ਸੇਵਰ ਚਾਲੂ۔','د بیټرۍ سیور فعال شو.'],
+sOff:['Battery saver off.','بیٹری سیور بند۔','बैटरी सेवर बंद।','تم إيقاف توفير البطارية.','ਬੈਟਰੀ ਸੇਵਰ ਬੰਦ۔','د بیټرۍ سیور بند شو.'],
+low:['Battery low.','بیٹری کم ہے۔','बैटरी कम है।','البطارية منخفضة.','ਬੈਟਰੀ ਘੱਟ ਹੈ۔','بیټرۍ کمه ده.'],
+det:['Camera or detector is not working. Walk carefully.','کیمرہ یا ڈیٹیکٹر کام نہیں کر رہا۔ احتیاط سے چلیں۔','कैमरा या डिटेक्टर काम नहीं कर रहा। सावधानी से चलें।','الكاميرا أو كشف العوائق لا يعمل. امش بحذر.','ਕੈਮਰਾ ਜਾਂ ਡਿਟੈਕਟਰ ਕੰਮ ਨਹੀਂ ਕਰ ਰਿਹਾ। ਧਿਆਨ ਨਾਲ ਤੁਰੋ۔','کمره یا کشف کو کار نه کوي. په احتیاط روان شئ.'],
+perm:['Please allow camera in browser settings.','براہ کرم براؤزر کی سیٹنگز میں کیمرے کی اجازت دیں۔','कृपया ब्राउज़र सेटिंग्स में कैमरे की अनुमति दें।','يرجى السماح بالكاميرا من إعدادات المتصفح.','ਕਿਰਪਾ ਕਰਕੇ ਬ੍ਰਾਊਜ਼ਰ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਕੈਮਰੇ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ۔','مهرباني وکړئ د براوزر په ترتیباتو کې کامرې ته اجازه ورکړئ.'],
+https:['Open this app from an https address.','اس ایپ کو https ایڈریس سے کھولیں۔','इस ऐप को https पते से खोलें।','افتح هذا التطبيق من عنوان https.','ਇਸ ਐਪ ਨੂੰ https ਪਤੇ ਤੋਂ ਖੋల్੍ਹੋ۔','دا اپ د https پتې څخه پرانیزئ.']
 };
 
-const NAMES=[
-  ['person','شخص','व्यक्ति','شخص','ਵਿਅਕਤੀ','سړی'],
-  ['chair','کرسی','कुर्सी','كرسي','ਕੁਰਸੀ','کرسۍ'],
-  ['sofa','صوفہ','सोफ़ा','أريكة','ਸੋਫ਼ਾ','صوفه'],
-  ['bed','بستر','बिस्तर','سرير','ਬਿਸਤਰਾ','بستره'],
-  ['table','میز','मेज़','طاولة','ਮੇਜ਼','میز'],
-  ['plant pot','گملا','गमला','أصيص نبات','ਗਮਲਾ','ګلدان'],
-  ['dog','کتا','कुत्ता','كلب','ਕੁੱਤਾ','سپی'],
-  ['cat','بلی','बिल्ली','قطة','ਬਿੱਲੀ','پیشو'],
-  ['bicycle','سائیکل','साइकिल','دراجة','ਸਾਈਕਲ','بایسکل'],
-  ['car','گاڑی','गाड़ी','سيارة','ਗੱਡੀ','موټر'],
-  ['motorcycle','موٹر سائیکل','मोटरसाइकिल','دراجة نارية','ਮੋਟਰਸਾਈਕਲ','موټرسایکل'],
-  ['large vehicle','بڑی گاڑی','بड़ी گاڑی','مركبة كبيرة','ਵੱਡੀ ਗੱਡੀ','لوی موټر']
-];
+const NAMES=[['person','شخص','व्यक्ति','شخص','ਵਿਅਕਤੀ','سړی'],['chair','کرسی','कुर्सी','كرسي','ਕੁਰਸੀ','کرسۍ'],['sofa','صوفہ','सोफ़ा','أريكة','ਸੋਫ਼ਾ','صوفه'],['bed','بستر','बिस्तर','سرير','ਬਿਸਤਰਾ','بستره'],['table','میز','मेज़','طاولة','ਮੇਜ਼','میز'],['plant pot','گملا','गमला','أصيص نبات','ਗਮਲਾ','ګلدان'],['dog','کتا','कुत्ता','كلب','ਕੁੱਤਾ','سپی'],['cat','بلی','बिल्ली','قطة','ਬਿੱਲੀ','پیشو'],['bicycle','سائیکل','साइकिल','دراجة','ਸਾਈਕਲ','بایسکل'],['car','گاڑی','गाड़ी','سيارة','ਗੱਡੀ','موټر'],['motorcycle','موٹر سائیکل','मोटरसाइकिल','دراجة نارية','ਮੋਟਰਸਾਈਕਲ','موټرسایکل'],['large vehicle','بڑی گاڑی','بड़ी گاڑی','مركبة كبيرة','ਵੱਡੀ ਗੱਡੀ','لوی موټر']];
+const OBJ={person:[1.7,0],chair:[.9,1],couch:[.85,2],bed:[.55,3],'dining table':[.75,4],'potted plant':[.5,5],dog:[.5,6],cat:[.3,7],bicycle:[1,8],car:[1.5,9],motorcycle:[1.2,10],bus:[3,11],truck:[2.8,11]};
 
-const OBJ={
-  person:[1.7,0],
-  chair:[.9,1],
-  couch:[.85,2],
-  bed:[.55,3],
-  'dining table':[.75,4],
-  'potted plant':[.5,5],
-  dog:[.5,6],
-  cat:[.3,7],
-  bicycle:[1,8],
-  car:[1.5,9],
-  motorcycle:[1.2,10],
-  bus:[3,11],
-  truck:[2.8,11]
-};
-
-/* ===== STATE & HELPERS ===== */
-const $=id=>document.getElementById(id);
-const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const ls={
-  get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},
-  set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}
-};
-
-const stEl=$('status');
-const infoEl=$('info');
-const video=$('cam');
-const sel=$('lang');
-
-let code=ls.get('sc_lang')||'en-US';
-let L=LANGS.find(l=>l[0]===code)||LANGS[0];
-code=L[0];
-
-let voiceSel=null, voiceEn=null, haveSel=true, saver=false, running=false;
-let stream=null, det=null, camOn=false, lastProc=0, cur=null, sawAt=0, ac=null;
+/* ===== STATE ===== */
+const $=id=>document.getElementById(id),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const stEl=$('status'),infoEl=$('info'),video=$('cam'),sel=$('lang');
+let code=ls.get('sc_lang')||'en-US',L=LANGS.find(l=>l[0]===code)||LANGS[0];code=L[0];
+let voiceSel=null,voiceEn=null,haveSel=true,saver=false,running=false;
+let stream=null,det=null,camOn=false,lastProc=0,cur=null,sawAt=0,ac=null;
 
 /* ===== LANGUAGE & GOOGLE TTS ENGINE ===== */
 const bi=c=>IDX[c]??IDX[c.split('-')[0]]??-1;
 const fb=()=>!haveSel||bi(code)<0;                       
 const pk=()=>fb()?0:(bi(code)>=0?bi(code):0);
-
-const t=(k,v)=>{
-  const p=pk();
-  const arr=S[k] || S['clear'];
-  const s=(arr[p]!==undefined)?arr[p]:(arr[0]||k);
-  if(!v) return s;
-  return s.replace(/\{(\w+)\}/g,(_,x)=>v[x]||'');
-};
-
-const nm=i=>{
-  const p=pk();
-  return NAMES[i][p]||NAMES[i][0];
-};
-
+const t=(k,v)=>{const p=pk(),s=S[k]?.[p]!==undefined?S[k][p]:S[k]?.[0]||k;return s.replace(/\{(\w+)\}/g,(_,x)=>v[x])};
+const nm=i=>{const p=pk();return NAMES[i][p]||NAMES[i][0]};
 const info=s=>{infoEl.textContent=s||''};
 
 function pickVoice(){   
   const vs=speechSynthesis.getVoices();
-  const f=c=>{
-    const pre=c.split('-')[0];
-    const sc=v=>{
-      const l=v.lang.replace('_','-');
-      return (l===c?4:l.split('-')[0]===pre?2:0)+(/google|-x-/i.test(v.name+' '+v.voiceURI)?2:0)+(v.localService?1:0);
-    };
-    const a=vs.map(v=>[sc(v),v]).filter(x=>x[0]>=2).sort((x,y)=>y[0]-x[0]);
-    return a.length?a[0][1]:null;
-  };
-  voiceSel=f(code);
-  voiceEn=f('en-US');
-  haveSel=!vs.length||!!voiceSel;
+  const f=c=>{const pre=c.split('-')[0],sc=v=>{const l=v.lang.replace('_','-');return(l===c?4:l.split('-')[0]===pre?2:0)+(/google|-x-/i.test(v.name+' '+v.voiceURI)?2:0)+(v.localService?1:0)};
+    const a=vs.map(v=>[sc(v),v]).filter(x=>x[0]>=2).sort((x,y)=>y[0]-x[0]);return a.length?a[0][1]:null};
+  voiceSel=f(code);voiceEn=f('en-US');haveSel=!vs.length||!!voiceSel;
 }
-
 function setLang(c,greet){
-  L=LANGS.find(l=>l[0]===c)||LANGS[0];
-  code=L[0];
-  ls.set('sc_lang',code);
-  pickVoice();
-  info('');
-  if(greet) say(t('hello'),1);
+  L=LANGS.find(l=>l[0]===c)||LANGS[0];code=L[0];ls.set('sc_lang',code);pickVoice();info('');
+  if(greet)say(t('hello'),1,true);
 }
 
 /* ===== SPEECH & GOOGLE TTS QUEUE ===== */
-let q=[], lastSaid='', lastSaidT=0;
+let q=[],lastSaid='',lastSaidT=0;
 const voice=()=>voiceSel||voiceEn||speechSynthesis.getVoices()[0];
-
 function speak(s){
   stEl.textContent=s;
-  try{ speechSynthesis.cancel(); }catch(e){}
-  const u=new SpeechSynthesisUtterance(s), v=voice();
+  try { speechSynthesis.cancel(); } catch(e) {}
+  const u=new SpeechSynthesisUtterance(s),v=voice();
   if(v) u.voice=v;
   u.lang=code;
   u.rate=1.15;
   speechSynthesis.speak(u);
 }
-
 function say(s,pri){   
-  if(!s) return;
-  pri=pri===undefined?1:pri;
+  if(!s)return;pri=pri===undefined?1:pri;
   const n=performance.now();
-  if(pri!==1 && s===lastSaid && n-lastSaidT<2500) return;
-  if(pri===0) q=q.filter(x=>x.p!==0);                       
+  if(pri!==1&&s===lastSaid&&n-lastSaidT<2500)return;
+  if(pri===0)q=q.filter(x=>x.p!==0);                       
   q.push({s,p:pri,t:n});
 }
-
 function pump(){
-  if(!q.length || speechSynthesis.speaking || speechSynthesis.pending) return;
-  const n=performance.now();
-  q=q.filter(x=>x.p!==0 || n-x.t<2000);
-  if(!q.length) return;
-  let b=0;
-  q.forEach((x,i)=>{if(x.p<q[b].p) b=i});
-  const x=q.splice(b,1)[0];
-  lastSaid=x.s;
-  lastSaidT=n;
-  speak(x.s);
+  if(!q.length||speechSynthesis.speaking||speechSynthesis.pending)return;
+  const n=performance.now();q=q.filter(x=>x.p!==0||n-x.t<2000);if(!q.length)return;
+  let b=0;q.forEach((x,i)=>{if(x.p<q[b].p)b=i});
+  const x=q.splice(b,1)[0];lastSaid=x.s;lastSaidT=n;speak(x.s);
 }
-
-(function tick(){
-  pump();
-  setTimeout(tick, saver?200:40);
-})();
-
+(function tick(){pump();setTimeout(tick,saver?200:40)})();
 function beep(f,d){
-  try{
-    ac=ac||new(window.AudioContext||window.webkitAudioContext)();
-    if(ac.state==='suspended') ac.resume();
-    const o=ac.createOscillator(), gn=ac.createGain(), n=ac.currentTime;
-    d=d||.06;
-    o.frequency.value=f;
-    o.connect(gn);
-    gn.connect(ac.destination);
-    gn.gain.setValueAtTime(.2,n);
-    gn.gain.linearRampToValueAtTime(0,n+d);
-    o.start(n);
-    o.stop(n+d);
-  }catch(e){}
+  try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();if(ac.state==='suspended')ac.resume();
+    const o=ac.createOscillator(),gn=ac.createGain(),n=ac.currentTime;d=d||.06;o.frequency.value=f;o.connect(gn);gn.connect(ac.destination);
+    gn.gain.setValueAtTime(.2,n);gn.gain.linearRampToValueAtTime(0,n+d);o.start(n);o.stop(n+d)}catch(e){}
 }
 
-/* ===== MEDIAPIPE & IMMEDIATE REAL-TIME DETECTION (WITH UNIVERSAL OBSTACLE FALLBACK) ===== */
+/* ===== MEDIAPIPE & IMMEDIATE REAL-TIME DETECTION ===== */
 async function loadDet(){
   if(!window.ObjectDetector){
     await new Promise((ok,no)=>{
       const h=setTimeout(()=>no(new Error('timeout')),15000);
-      if(window.mediapipeLoaded){clearTimeout(h); ok(); return;}
-      addEventListener('mediapipe-loaded',()=>{clearTimeout(h); ok();},{once:true});
+      if(window.mediapipeLoaded){clearTimeout(h);ok();return;}
+      addEventListener('mediapipe-loaded',()=>{clearTimeout(h);ok()},{once:true})
     });
   }
   const v=await FilesetResolver.forVisionTasks(WASM);
-  for(const d of['GPU','CPU']){
-    try{
-      return await ObjectDetector.createFromOptions(v,{
-        baseOptions:{modelAssetPath:MODEL, delegate:d},
-        scoreThreshold:.35,
-        maxResults:5,
-        runningMode:'VIDEO'
-      });
-    }catch(e){}
-  }
+  for(const d of['GPU','CPU'])try{return await ObjectDetector.createFromOptions(v,{baseOptions:{modelAssetPath:MODEL,delegate:d},scoreThreshold:.35,maxResults:5,runningMode:'VIDEO'})}catch(e){}
   throw new Error('detector');
 }
-
 async function camStart(){
-  if(camOn) return true;
-  try{
-    stream=await navigator.mediaDevices.getUserMedia({
-      video:{
-        facingMode:{ideal:'environment'},
-        width:{ideal:saver?240:320},
-        height:{ideal:saver?180:240},
-        frameRate:{ideal:saver?10:30}
-      },
-      audio:false
-    });
-  }catch(e){
-    stream=null;
-    say(t(window.isSecureContext?'perm':'https'),1);
-    info('Camera: '+((e&&e.name)||'error'));
-    return false;
-  }
-  video.srcObject=stream;
-  try{await video.play()}catch(e){}
-  camOn=true;
-  nextFrame();
-  if(!det){
-    try{det=await loadDet()}catch(e){say(t('det'),1)}
-  }
+  if(camOn)return true;
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:saver?240:320},height:{ideal:saver?180:240},frameRate:{ideal:saver?10:30}},audio:false})}
+  catch(e){stream=null;say(t(window.isSecureContext?'perm':'https'));info('Camera: '+((e&&e.name)||'error'));return false}
+  video.srcObject=stream;try{await video.play()}catch(e){}
+  camOn=true;nextFrame();
+  if(!det){try{det=await loadDet()}catch(e){say(t('det'))}}
   return true;
 }
-
-function camStop(){
-  camOn=false;
-  if(stream){
-    stream.getTracks().forEach(x=>x.stop());
-    stream=null;
-  }
-  video.srcObject=null;
-  cur=null;
-}
-
-const nextFrame=()=>{
-  if(camOn && running) requestAnimationFrame(onFrame);
-};
-
+function camStop(){camOn=false;if(stream){stream.getTracks().forEach(x=>x.stop());stream=null}video.srcObject=null;cur=null;}
+const nextFrame=()=>{if(camOn&&running)requestAnimationFrame(onFrame)};
 function onFrame(){
-  if(!camOn || !running) return;
+  if(!camOn||!running)return;
   nextFrame();
   const n=performance.now();
-  if(!det || video.readyState<2 || n-lastProc<(saver?250:40)) return;
+  if(!det||video.readyState<2||n-lastProc<(saver?250:40))return;
   
-  const W=video.videoWidth, H=video.videoHeight;
+  const W=video.videoWidth,H=video.videoHeight;
   if(!W || !H) return;
 
   lastProc=n;
   let best=null;
-  let detections=[];
-  try{
-    detections=det.detectForVideo(video,performance.now()).detections;
-  }catch(e){}
+  const detections=det.detectForVideo(video,performance.now()).detections;
 
-  if(detections && detections.length>0){
+  if(detections && detections.length > 0){
     for(const d of detections){
       const c=d.categories[0];
       const o=OBJ[c.categoryName];
@@ -519,7 +300,7 @@ function onFrame(){
       
       let objHeight = o ? o[0] : 1.2; 
       let m = objHeight *.77 * Math.max(W, H) / b.height;
-      if(b.originY<2 || b.originY+b.height>H-2) m = Math.min(m, 1);
+      if(b.originY<2||b.originY+b.height>H-2) m = Math.min(m, 1);
       if(m > RANGE) continue;
 
       const near = m < .6;
@@ -527,7 +308,7 @@ function onFrame(){
       const side = cx < .4 ? 'L' : cx > .6 ? 'R' : 'F';
       m = Math.max(.4, Math.round(m * 2) / 2);
 
-      if(!best || m < best.m){
+      if(!best || m < best.m) {
         best = {
           m, near, side, 
           name: o ? nm(o[1]) : null, 
@@ -539,24 +320,24 @@ function onFrame(){
 
   if(best){
     sawAt=n;
-    if(!cur || cur.key!==best.key || Math.abs(cur.m-best.m)>=0.2){
-      cur={key:best.key, m:best.m};
+    if(!cur||cur.key!==best.key||Math.abs(cur.m-best.m)>=0.2){
+      cur={key:best.key,m:best.m};
       alertObs(best);
     }
-  }else if(cur && n-sawAt>600){
+  }else if(cur&&n-sawAt>600){
     cur=null;
-    say(t('clear'), 2);
+    say(t('clear'),2);
   }
 }
 
 function alertObs(b){
   if(b.name){
-    say(t(b.near?'obNear':'ob', {o:b.name, d:t(b.side), m:b.m}), 0);
-  }else{
-    say(t(b.near?'obsNear':'obsGeneral', {m:b.m}), 0);
+    say(t(b.near?'obNear':'ob',{o:b.name,d:t(b.side),m:b.m}),0);
+  } else {
+    say(t(b.near?'obsNear':'obsGeneral',{m:b.m}),0);
   }
   beep(b.m<=1?990:660);
-  try{navigator.vibrate && navigator.vibrate(b.m<=1?[100,50,100]:60)}catch(e){}
+  try{navigator.vibrate&&navigator.vibrate(b.m<=1?[100,50,100]:60)}catch(e){}
 }
 
 /* ===== BATTERY SAVER TOGGLE ===== */
@@ -565,19 +346,11 @@ function toggleBatterySaver(){
   $('batterySaverBtn').textContent=`BATTERY SAVER: ${saver ? 'ON' : 'OFF'}`;
   setSaver(saver, false);
 }
-
 function setSaver(on,low){
-  saver=on;
-  document.body.classList.toggle('saver', on);
-  say((low?t('low')+' ':'')+t(on?'sOn':'sOff'), 2);
-  const tr=stream && stream.getVideoTracks()[0];
-  if(tr){
-    tr.applyConstraints({
-      width:{ideal:on?240:320},
-      height:{ideal:on?180:240},
-      frameRate:{ideal:on?10:30}
-    }).catch(()=>{});
-  }
+  saver=on;document.body.classList.toggle('saver',on);
+  say((low?t('low')+' ':'')+t(on?'sOn':'sOff'),2);
+  const tr=stream&&stream.getVideoTracks()[0];
+  if(tr)tr.applyConstraints({width:{ideal:on?240:320},height:{ideal:on?180:240},frameRate:{ideal:on?10:30}}).catch(()=>{});
 }
 
 /* ===== APP START & STOP FLOWS ===== */
@@ -585,11 +358,8 @@ async function startSession(){
   running=true;
   $('startBtn').style.display='none';
   $('stopBtn').style.display='block';
-  if(ac && ac.state==='suspended'){
-    try{ await ac.resume(); }catch(e){}
-  }
   await camStart();
-  say(t('hello'), 1);
+  say(t('hello'),1,true);
 }
 
 function stopSession(){
@@ -597,9 +367,9 @@ function stopSession(){
   camStop();
   $('stopBtn').style.display='none';
   $('startBtn').style.display='block';
-  try{ speechSynthesis.cancel(); }catch(e){}
+  speechSynthesis.cancel();
   q=[];
-  say(t('clear'), 1);
+  say(t('clear'),1);
 }
 
 /* ===== UI ACTIONS & EVENTS ===== */
@@ -607,20 +377,18 @@ $('batterySaverBtn').onclick=toggleBatterySaver;
 $('startBtn').onclick=startSession;
 $('stopBtn').onclick=stopSession;
 
-const show=v=>['homeView','settingsView','aboutView'].forEach(i=>$(i).classList.toggle('active', i===v));
-$('settingsNavBtn').onclick=()=>{ show('settingsView'); };
-$('aboutNavBtn').onclick=()=>{ show('aboutView'); };
-$('backToHomeBtn').onclick=$('backFromAboutBtn').onclick=()=>{ show('homeView'); };
+const show=v=>['homeView','settingsView','aboutView'].forEach(i=>$(i).classList.toggle('active',i===v));
+$('settingsNavBtn').onclick=()=>{show('settingsView')};
+$('aboutNavBtn').onclick=()=>{show('aboutView')};
+$('backToHomeBtn').onclick=$('backFromAboutBtn').onclick=()=>{show('homeView')};
 
 sel.innerHTML=LANGS.map((l,i)=>`<option value="${i}">${l[1]}${l[2]?' - '+l[2]:''}</option>`).join('');
 sel.value=LANGS.indexOf(L);
-sel.onchange=()=>{ setLang(LANGS[+sel.value][0], true); };                      
+sel.onchange=()=>{setLang(LANGS[+sel.value][0],true)};                      
 
-if(speechSynthesis.onvoiceschanged!==undefined){
-  speechSynthesis.onvoiceschanged=pickVoice;
-}
+if(speechSynthesis.onvoiceschanged!==undefined)speechSynthesis.onvoiceschanged=pickVoice;
 
-setLang(code, false);
+setLang(code,false);
 stEl.textContent=t('hello');
 </script>
 </body>
