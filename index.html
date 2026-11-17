@@ -39,7 +39,7 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 
 <div id="homeView" class="view active">
   <h2>SMART CANE</h2>
-  <div class="sub">Your Eyes Smart Cane | Created by Humaira Sardar, Okara, Pakistan</div>
+  <div class="sub">Amazon Collection | Created by Humaira Sardar, Okara, Pakistan</div>
   <label for="lang">SELECT LANGUAGE</label>
   <select id="lang"></select>
   <div id="info"></div>
@@ -76,8 +76,8 @@ p.txt{font-size:14px;line-height:1.6;color:#94a3b8}
 
 <div id="aboutView" class="view">
   <h2>ABOUT APP</h2>
-  <div class="sub">Your Eyes Smart Cane v6.0</div>
-  <p class="txt">Smart Cane helps you walk with confidence. It spots nearby obstacles, tells their distance in meters, and guides you in real time.<br><br><strong>Created by Humaira Sardar, Okara, Pakistan</strong></p>
+  <div class="sub">Your Eyes Smart Cane v7.0</div>
+  <p class="txt">Smart Cane helps you walk with confidence. It spots nearby obstacles, tells their distance in meters, and guides you in real time.<br><br><strong>Amazon Collection<br>Created by Humaira Sardar, Okara, Pakistan</strong></p>
   <button id="backFromAboutBtn" class="sec">BACK</button>
 </div>
 
@@ -200,18 +200,18 @@ yi|Yiddish|ייִדיש
 yo-NG|Yoruba (Nigeria)|Yorùbá
 zu-ZA|Zulu (South Africa)|isiZulu`.split('\n').map(r=>{const a=r.split('|');return[a[0],a[1],a[2]||'']});
 
-/* ===== VOICE & GUIDANCE TEXT PACKS (Rich Distance & Walk Guidance) ===== */
+/* ===== VOICE & GUIDANCE TEXT PACKS ===== */
 const S={
 hello:['Smart Cane is ready. Press Start to begin.','اسمارٹ کین تیار ہے۔ شروع کرنے کے لیے اسپاٹ دبائیں۔','स्मार्ट केन तैयार है। शुरू करने के लिए स्टार्ट दबाएँ।','العصا الذكية جاهزة. اضغط ابدأ للبدء.','ਸਮਾਰਟ ਕੇਨ ਤਿਆਰ ਹੈ। ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਸਟਾਰਟ ਦਬਾਓ۔','سمارټ کین چمتو دی. د پیل لپاره پیل کېکاږئ.'],
 obsNear:['Danger! Obstacle very close at {m} meters. Stop!','خطر! رکاوٹ بہت قریب ہے، تقریباً {m} میٹر دور ہے۔ رک جائیں!','खतरा! बाधा बहुत पास है, लगभग {m} मीटर दूर। रुकें!','خطر! العائق قريب جدا على بعد {m} متر. توقف!','ਖਤਰਾ! ਰੁਕਾਵਟ ਬਹੁਤ ਨੇੜੇ ਹੈ, ਲਗਭਗ {m} ਮੀਟਰ। ਰੁਕੋ!','خطر! خنډ ډېر نږدې دی، شاوخوا {m} متره. ودرېږئ!'],
-obsFar:['Caution, obstacle ahead at {m} meters. Walk carefully.','احتیاط کریں، سامنے رکاوٹ ہے، تقریباً {m} میٹر دور۔ دھیان سے چلیں۔','सावधानी, सामने बाधा है, लगभग {m} मीटर दूर। सावधानी से चलें।','انتبه، هناك عوائق أمامك على بعد {m} متر','ਧਿਆਨ ਰੱਖੋ, ਸਾਹਮਣੇ ਰੁਕਾਵਟ ਹੈ, ਲਗਭਗ {m} ਮੀਟਰ۔ ਧਿਆਨ ਨਾਲ ਤੁਰੋ۔','پامال, مخکې خنډ دی، شاوخوا {m} متره'],
-clear:['Path is clear. Keep walking.','راستا صاف ہے۔ چلتے رہیں۔','रास्ता साफ है। चलते रहें।','الطريق واضح. واصل المشي.','ਰਸਤਾ ਸਾਫ ਹੈ। ਤੁਰਦੇ ਰਹੋ۔','لار پاکه ده. روان اوسئ.'],
+obsFar:['Caution, obstacle ahead at {m} meters. Walk carefully.','احتیاط کریں، سامنے رکاوٹ ہے، تقریباً {m} میٹر دور۔ دھیان سے چلیں۔','सावधानी, सामने बाधा है, लगभग {m} मीटर दूर। सावधानी से चलें।','انتبه، هناك عوائق أمامك على بعد {m} متر','ਧਿਆਨ ਰੱਖੋ, ਸਾਹਮਣੇ ਰੁਕਾਵਟ ہے, ਲਗਭਗ {m} ਮੀਟਰ۔ ਧਿਆਨ ਨਾਲ ਤੁਰੋ۔','پامال, مخکې خنډ دی، شاوخوا {m} متره'],
+clear:['Path is clear. Keep walking.','راستا صاف ہے۔ چلتے رہیں۔','रास्ता साफ है। चलते रहें।','الطريق واضح. واصل المشي.','ਰਸਤਾ ਸਾفا ਹੈ। ਤੁਰਦੇ ਰਹੋ۔','لار پاکه ده. روان اوسئ.'],
 sOn:['Battery saver on.','بیٹری سیور آن۔','बैटरी सेवर चालू।','وضع توفير البطارية قيد التشغيل.','ਬੈਟਰੀ ਸੇਵਰ ਚਾਲੂ۔','د بیټرۍ سیور فعال شو.'],
 sOff:['Battery saver off.','بیٹری سیور بند۔','बैटरी सेवर बंद।','تم إيقاف توفير البطارية.','ਬੈਟਰੀ ਸੇਵਰ ਬੰਦ۔','د بیټرۍ سیور بند شو.'],
-low:['Battery low.','بیٹری کم ہے۔','बैटरी कम है۔','البطارية منخفضة.','ਬੈਟਰੀ ਘੱਟ ਹੈ۔','بیټرۍ کمه ده.'],
-det:['Camera or detector is not working. Walk carefully.','کیمرہ یا ڈیٹیکٹر کام نہیں کر رہا۔ احتیاط سے چلیں۔','कैमरा या डिटेक्टर काम नहीं कर रहा। सावधानी से चलें।','الكاميرا أو كشف العوائق لا يعمل. امش بحذر.','ਕੈਮਰਾ ਜਾਂ ਡਿਟੈਕਟਰ ਕੰਮ ਨਹੀਂ ਕਰ ਰਿਹਾ। ਧਿਆਨ ਨਾਲ ਤੁਰੋ۔','کمره یا کشف کو کار نه کوي. په احتیاط روان شئ.'],
-perm:['Please allow camera in browser settings.','براہ کرم براؤزر کی سیٹنگز میں کیمرے کی اجازت دیں۔','कृपया ब्राउज़र सेटिंग्स में कैमरे की अनुमति दें।','يرجى السماح بالكاميرا من إعدادات المتصفح.','ਕਿਰਪਾ ਕਰਕੇ ਬ੍ਰਾਊਜ਼ਰ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਕੈਮਰੇ ਦੀ ਇਜਾਜ਼त ਦਿਓ۔','مهرباني وکړئ د براوزر په ترتیباتو کې کامرې ته اجازه ورکړئ.'],
-https:['Open this app from an https address.','اس ایپ کو https ایڈریس سے کھولیں۔','इस ऐप को https पते से खोलें።','افتح هذا التطبيق من عنوان https.','ਇਸ ਐਪ ਨੂੰ https ਪਤੇ ਤੋਂ ਖੋల్੍ਹੋ۔','دا اپ د https پتې څخه پرانیزئ.']
+low:['Battery low.','بیٹری کم ہے۔','बैटरी कम है।','البطارية منخفضة.','ਬੈਟਰੀ ਘੱਟ ਹੈ۔','بیټرۍ کمه ده.'],
+det:['Camera or detector is not working. Walk carefully.','کیمرہ یا ڈیٹیکٹر کام نہیں کر رہا۔ احتیاط سے چلیں۔','कैमरा या डिटेक्टर काम नहीं कर रहा। सावधानी से चलें।','الكاميرا أو كشف العوائق لا يعمل. امش بحذر.','ਕੈਮਰਾ ਜਾਂ ਡਿਟੈਕਟਰ ਕੰਮ ਨਹੀਂ ਕਰ ਰਿਹਾ۔ ਧਿਆਨ ਨਾਲ ਤੁਰੋ۔','کمره یا کشف کو کار نه کوي. په احتیاط روان شئ.'],
+perm:['Please allow camera in browser settings.','براہ کرم براؤزر کی سیٹنگز میں کیمرے کی اجازت دیں۔','कृपया ब्राउज़र सेटिंग्स में कैमरे की अनुमति दें።','يرجى السماح بالكاميرا من إعدادات المتصفح.','ਕਿਰਪਾ ਕਰਕੇ ਬ੍ਰਾਊਜ਼ਰ ਸੈਟਿੰਗਾਂ ਵਿੱਚ ਕੈਮਰੇ ਦੀ ਇਜਾਜ਼ਤ ਦਿਓ۔','مهرباني وکړئ د براوزر په ترتیباتو کې کامرې ته اجازه ورکړئ.'],
+https:['Open this app from an https address.','اس ایپ کو https ایڈریس سے کھولیں۔','इस ऐप को https पते से खोलें।','افتح هذا التطبيق من عنوان https.','ਇਸ ਐਪ ਨੂੰ https ਪਤੇ ਤੋਂ ਖੋల్੍ਹੋ۔','دا اپ د https پتې څخه پرانیزئ.']
 };
 
 /* ===== STATE & STORAGE ===== */
@@ -220,7 +220,7 @@ const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:
 const stEl=$('status'),infoEl=$('info'),video=$('cam'),sel=$('lang'),voiceSelEl=$('voiceSelect'),ttsEngineSelEl=$('ttsEngineSelect');
 let code=ls.get('sc_lang')||'en-US',L=LANGS.find(l=>l[0]===code)||LANGS[0];code=L[0];
 let voices=[],engines=[],selectedVoiceIdx=ls.get('sc_voice_idx')!==null?+ls.get('sc_voice_idx'):null;
-let selectedEngine=ls.get('sc_tts_engine')||'';
+let selectedEngine=ls.get('sc_tts_engine')||'all';
 let saver=false,running=false,stream=null,det=null,camOn=false,lastProc=0,curKey='',sawAt=0,lastClearSpoken=0,ac=null;
 let consecutiveObstacleFrames = 0;
 
@@ -235,11 +235,10 @@ function populateTTSOptions(){
   voices = speechSynthesis.getVoices();
   if(!voices.length) return;
 
-  // Extract unique TTS engines/providers from voice names (e.g., Google, Vocalizer, eSpeak, Microsoft, Samsung)
   const engineSet = new Set();
   voices.forEach(v => {
-    const nameParts = v.name.split(' ')[0];
-    engineSet.add(nameParts);
+    let nameParts = v.name.split(' ')[0];
+    if(nameParts) engineSet.add(nameParts);
   });
   engines = Array.from(engineSet);
 
@@ -270,12 +269,13 @@ ttsEngineSelEl.onchange = () => {
   selectedEngine = ttsEngineSelEl.value;
   ls.set('sc_tts_engine', selectedEngine);
   filterVoicesByEngine();
+  speak(code.startsWith('ur') ? 'ٹی ٹی ایس انجن تبدیل کر دیا گیا ہے' : 'TTS Engine updated');
 };
 
 voiceSelEl.onchange = () => {
   selectedVoiceIdx = +voiceSelEl.value;
   ls.set('sc_voice_idx', selectedVoiceIdx);
-  speak('Voice selected successfully');
+  speak(code.startsWith('ur') ? 'آواز منتخب کر لی گئی ہے' : 'Voice selected successfully');
 };
 
 function setLang(c,greet){
@@ -286,6 +286,7 @@ function setLang(c,greet){
 /* ===== SPEECH QUEUE & AUDIO BEEPS ===== */
 let q=[],lastSaid='',lastSaidT=0;
 const getActiveVoice=()=>(selectedVoiceIdx!==null && voices[selectedVoiceIdx]) ? voices[selectedVoiceIdx] : voices[0];
+
 function speak(s){
   stEl.textContent=s;
   try { if(!q.some(x=>x.p===0)) speechSynthesis.cancel(); } catch(e) {}
@@ -295,6 +296,7 @@ function speak(s){
   u.rate=1.15;
   speechSynthesis.speak(u);
 }
+
 function say(s,pri){   
   if(!s)return;pri=pri===undefined?1:pri;
   const n=performance.now();
@@ -302,6 +304,7 @@ function say(s,pri){
   if(pri===0)q=q.filter(x=>x.p!==0);                       
   q.push({s,p:pri,t:n});
 }
+
 function pump(){
   if(!q.length||speechSynthesis.speaking||speechSynthesis.pending)return;
   const n=performance.now();
@@ -503,7 +506,11 @@ function stopSession(){
   say(t('clear'),1);
 }
 
-/* ===== UI NAVIGATION & CONFIRM EXIT (YES / NO FOR BACK BUTTON & APP EXIT) ===== */
+/* ===== UI EVENTS & CONTROLS ===== */
+$('batterySaverBtn').onclick=toggleBatterySaver;
+$('startBtn').onclick=startSession;
+$('stopBtn').onclick=stopSession;
+
 const show=v=>['homeView','settingsView','aboutView'].forEach(i=>$(i).classList.toggle('active',i===v));
 
 $('settingsNavBtn').onclick=()=>{show('settingsView')};
@@ -511,19 +518,19 @@ $('aboutNavBtn').onclick=()=>{show('aboutView')};
 
 // سیٹنگز یا اباؤٹ سے واپس ہوم جانے پر کنفرمیشن
 $('backToHomeBtn').onclick=$('backFromAboutBtn').onclick=()=>{
-  const msg = code.startsWith('ur') ? "کیا آپ واقعی واپس ہوم اسکرین پر جانا چاہتی ہیں؟" : "Do you really want to go back to Home?";
+  const msg = code.startsWith('ur') ? "क्या आप वाकई वापस होम اسکرین پر جانا چاہتی ہیں؟ (Yes / No)" : "Do you really want to go back to Home?";
   if(confirm(msg)) {
     if(running) stopSession();
     show('homeView');
   }
 };
 
-// ہارڈویئر بیک بٹن (موبایل کی نیچے والی بیک کی) پریس کرنے پر پاپ اپ اور ایگزٹ کنفرمیشن
+// ہارڈویئر بیک بٹن (موبائل کی نیچے والی بیک کی) پر اوکے/کینسل (Yes/No) پرمیشن
 window.addEventListener('popstate', (e) => {
   const activeView = document.querySelector('.view.active').id;
   if(activeView !== 'homeView') {
     e.preventDefault();
-    const msg = code.startsWith('ur') ? "کیا آپ سیٹنگز سے باہر نکلنا چاہتی ہیں؟" : "Do you want to leave settings?";
+    const msg = code.startsWith('ur') ? "کیا آپ سیٹنگز سے باہر نکلنا چاہتی ہیں؟ (Yes / No)" : "Do you want to leave settings?";
     if(confirm(msg)) {
       show('homeView');
       history.pushState(null, '', window.location.href);
@@ -531,7 +538,7 @@ window.addEventListener('popstate', (e) => {
       history.pushState(null, '', window.location.href);
     }
   } else {
-    const msg = code.startsWith('ur') ? "کیا آپ اسمارٹ کین ایپ بند کرنا چاہتی ہیں؟" : "Do you want to exit Smart Cane App?";
+    const msg = code.startsWith('ur') ? "کیا آپ اسمارٹ کین ایپ بند کرنا چاہتی ہیں؟ (Yes / No)" : "Do you want to exit Smart Cane App?";
     if(confirm(msg)) {
       if(running) stopSession();
       window.close();
@@ -541,7 +548,6 @@ window.addEventListener('popstate', (e) => {
   }
 });
 
-// ہسٹری کو پش کریں تاکہ بیک بٹن کا ایونٹ ٹریگر ہو سکے
 history.pushState(null, '', window.location.href);
 
 sel.innerHTML=LANGS.map((l,i)=>`<option value="${i}">${l[1]}${l[2]?' - '+l[2]:''}</option>`).join('');
