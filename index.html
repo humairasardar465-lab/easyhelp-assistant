@@ -19,6 +19,7 @@
     .primary { background: #00ffcc; color: #000; }
     .stop { background: #ef4444; color: #fff; }
     .secondary { background: #374151; color: #fff; }
+    .selected-voice { background: #00ffcc !important; color: #000 !important; }
     video { display: block; width: 100%; height: 280px; margin: 14px 0 10px; border: 3px solid #00ffcc; border-radius: 12px; background: #000; object-fit: cover; }
     #status, #locationStatus { min-height: 28px; margin: 12px 0; font-size: 16px; font-weight: 700; line-height: 1.45; text-align: center; overflow-wrap: anywhere; }
     #status { color: #38bdf8; }
@@ -123,8 +124,10 @@
   </section>
   <section id="settingsView" class="view">
     <h2>Settings</h2>
-    <label for="voiceSelect">TTS</label>
-    <select id="voiceSelect" aria-label="Select text-to-speech voice"></select>
+    <label>TTS Voice</label>
+    <button id="voiceGoogleBtn" class="secondary selected-voice" type="button">Google Text-to-Speech</button>
+    <button id="voiceVocalizerBtn" class="secondary" type="button">Vocalizer</button>
+    <button id="voiceAutoBtn" class="secondary" type="button">Auto</button>
     <button id="testVoiceBtn" class="secondary" type="button">Test TTS</button>
     <button id="feedbackBtn" class="secondary" type="button">Feedback</button>
     <div id="ratings" class="hidden">
@@ -186,7 +189,6 @@
   const video = $("camera");
   const statusEl = $("status");
   const locationEl = $("locationStatus");
-  const voiceSelect = $("voiceSelect");
   const languageButton = $("languageSelect");
   const languageDropdown = $("languageDropdown");
   const languageSearch = $("languageSearch");
@@ -194,11 +196,7 @@
   const localeList = (window.SMART_CANE_LANGUAGES?.locales || []);
   const localeCodes = localeList.map((l) => l.code).filter((c) => typeof c === "string" && c.length);
   if (!localeCodes.includes("en-US")) localeCodes.unshift("en-US");
-  function labelFor(code) {
-    const found = localeList.find((l) => l.code === code);
-    if (found) return found.label;
-    return code;
-  }
+  function labelFor(code) { const found = localeList.find((l) => l.code === code); if (found) return found.label; return code; }
   let languageCode = readStorage("smartCaneLanguage") || "en-US";
   if (!localeCodes.includes(languageCode)) languageCode = "en-US";
   let model = null;
@@ -209,8 +207,7 @@
   let animationId = 0;
   let inFlight = false;
   let voices = [];
-  let selectedVoiceURI = readStorage("smartCaneVoiceURI") || "";
-  let manualVoiceChoice = false;
+  let voiceMode = readStorage("smartCaneVoiceMode") || "google";
   let lastSceneKey = "";
   let lastSceneSpeechAt = 0;
   let lastInferenceAt = 0;
@@ -225,27 +222,57 @@
     for (const [name, value] of Object.entries(values)) { message = message.replaceAll(`{${name}}`, String(value)); }
     return message;
   }
+  function isGoogleVoice(voice) { return /google/i.test(`${voice.name} ${voice.voiceURI}`); }
+  function isVocalizerVoice(voice) { return /vocalizer|nuance/i.test(`${voice.name} ${voice.voiceURI}`); }
+  function voiceMatchesLanguage(voice) { return voice.lang.toLowerCase().split("-")[0] === languageCode.toLowerCase().split("-")[0]; }
+  function pickVoice() {
+    if (!voices.length) return null;
+    if (voiceMode === "google") {
+      return voices.find((v) => isGoogleVoice(v) && voiceMatchesLanguage(v)) || voices.find(isGoogleVoice) || voices.find(voiceMatchesLanguage) || voices[0];
+    }
+    if (voiceMode === "vocalizer") {
+      return voices.find((v) => isVocalizerVoice(v) && voiceMatchesLanguage(v)) || voices.find(isVocalizerVoice) || voices.find((v) => isGoogleVoice(v) && voiceMatchesLanguage(v)) || voices.find(voiceMatchesLanguage) || voices[0];
+    }
+    return voices.find((v) => isGoogleVoice(v) && voiceMatchesLanguage(v)) || voices.find((v) => isVocalizerVoice(v) && voiceMatchesLanguage(v)) || voices.find(voiceMatchesLanguage) || voices[0];
+  }
+  function updateVoiceButtons() {
+    $("voiceGoogleBtn").classList.toggle("selected-voice", voiceMode === "google");
+    $("voiceVocalizerBtn").classList.toggle("selected-voice", voiceMode === "vocalizer");
+    $("voiceAutoBtn").classList.toggle("selected-voice", voiceMode === "auto");
+  }
+  function setVoiceMode(mode) { voiceMode = mode; writeStorage("smartCaneVoiceMode", mode); updateVoiceButtons(); }
   function speakText(message, display = true) {
     if (display) statusEl.textContent = message;
+    if (!("speechSynthesis" in window)) return;
+    try {
+      if (speechSynthesis.speaking || speechSynthesis.pending) return;
+      const utterance = new SpeechSynthesisUtterance(message);
+      utterance.lang = languageCode;
+      utterance.rate = 1;
+      const voice = pickVoice();
+      if (voice) utterance.voice = voice;
+      speechSynthesis.speak(utterance);
+    } catch (error) { console.warn("Speech synthesis error:", error); }
+  }
+  function say(key, values = {}, display = true) { speakText(translationFor(key, values), display); }
+  function sayForce(key, values = {}) {
+    const message = translationFor(key, values);
+    statusEl.textContent = message;
     if (!("speechSynthesis" in window)) return;
     try {
       speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(message);
       utterance.lang = languageCode;
       utterance.rate = 1;
-      const voice = voices.find((item) => item.voiceURI === selectedVoiceURI);
+      const voice = pickVoice();
       if (voice) utterance.voice = voice;
       speechSynthesis.speak(utterance);
     } catch (error) { console.warn("Speech synthesis error:", error); }
   }
-  function say(key, values = {}, display = true) { speakText(translationFor(key, values), display); }
   function showView(id) { document.querySelectorAll(".view").forEach((view) => { view.classList.toggle("active", view.id === id); }); }
   function renderLanguages(filter = "") {
     const query = filter.trim().toLocaleLowerCase();
-    const matches = localeList.filter((item) => {
-      const label = item.label.toLocaleLowerCase();
-      return !query || label.includes(query) || item.code.toLowerCase().includes(query);
-    });
+    const matches = localeList.filter((item) => { const label = item.label.toLocaleLowerCase(); return !query || label.includes(query) || item.code.toLowerCase().includes(query); });
     languageOptions.replaceChildren();
     for (const item of matches) {
       const option = document.createElement("button");
@@ -266,7 +293,6 @@
     languageDropdown.classList.add("hidden");
     languageButton.setAttribute("aria-expanded", "false");
     renderLanguages(languageSearch.value);
-    populateVoices();
   }
   function updateButtons() {
     $("startBtn").classList.toggle("hidden", running || starting);
@@ -274,39 +300,7 @@
     $("stopBtn").classList.toggle("hidden", !running && !starting);
     $("stopBtn").disabled = false;
   }
-  function isGoogleVoice(voice) { return /google/i.test(`${voice.name} ${voice.voiceURI}`); }
-  function isVocalizerVoice(voice) { return /vocalizer|nuance/i.test(`${voice.name} ${voice.voiceURI}`); }
-  function voiceMatchesLanguage(voice) { return voice.lang.toLowerCase().split("-")[0] === languageCode.toLowerCase().split("-")[0]; }
-  function voiceScore(voice) {
-    let score = 0;
-    if (isGoogleVoice(voice) && voiceMatchesLanguage(voice)) score += 100;
-    else if (isGoogleVoice(voice)) score += 90;
-    else if (isVocalizerVoice(voice) && voiceMatchesLanguage(voice)) score += 80;
-    else if (isVocalizerVoice(voice)) score += 70;
-    else if (voiceMatchesLanguage(voice)) score += 50;
-    if (voice.default) score += 5;
-    return score;
-  }
-  function populateVoices() {
-    if (!("speechSynthesis" in window)) return;
-    const all = speechSynthesis.getVoices() || [];
-    voices = [...all].sort((a, b) => voiceScore(b) - voiceScore(a));
-    voiceSelect.replaceChildren();
-    for (const voice of voices) {
-      const option = document.createElement("option");
-      option.value = voice.voiceURI;
-      option.textContent = `${isGoogleVoice(voice) ? "Google · " : isVocalizerVoice(voice) ? "Vocalizer · " : ""}${voice.name} (${voice.lang})`;
-      voiceSelect.append(option);
-    }
-    if (!voices.length) return;
-    let chosen = voices.find((voice) => voice.voiceURI === selectedVoiceURI);
-    if (!manualVoiceChoice || !chosen) {
-      chosen = voices[0];
-      selectedVoiceURI = chosen.voiceURI;
-      writeStorage("smartCaneVoiceURI", selectedVoiceURI);
-    }
-    voiceSelect.value = selectedVoiceURI;
-  }
+  function populateVoices() { if (!("speechSynthesis" in window)) return; voices = speechSynthesis.getVoices() || []; }
   async function loadModel() {
     if (model) return model;
     await loadLiteRt(LITERT_WASM_URL, { jspi: true });
@@ -330,7 +324,7 @@
     starting = true;
     const thisSession = ++sessionId;
     updateButtons();
-    say("starting");
+    sayForce("starting");
     try {
       if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) { throw new Error("Camera access requires HTTPS or localhost."); }
       const cameraPromise = navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: "environment" }, width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 30 } } });
@@ -345,14 +339,14 @@
       lastSceneKey = ""; lastSceneSpeechAt = 0; lastInferenceAt = 0; lastDarkSpeechAt = 0; consecutiveErrors = 0; inFlight = false;
       updateButtons();
       startLocation();
-      say("active");
+      sayForce("active");
       animationId = requestAnimationFrame(loop);
     } catch (error) {
       console.error(error);
-      if (thisSession === sessionId) { starting = false; running = false; inFlight = false; stopCamera(); stopLocation(); updateButtons(); say(error?.name === "NotAllowedError" || error?.message?.includes("HTTPS") ? "cameraError" : "modelError"); }
+      if (thisSession === sessionId) { starting = false; running = false; inFlight = false; stopCamera(); stopLocation(); updateButtons(); sayForce(error?.name === "NotAllowedError" || error?.message?.includes("HTTPS") ? "cameraError" : "modelError"); }
     }
   }
-  function stop() { sessionId++; starting = false; running = false; inFlight = false; cancelAnimationFrame(animationId); stopCamera(); stopLocation(); updateButtons(); say("stopped"); }
+  function stop() { sessionId++; starting = false; running = false; inFlight = false; cancelAnimationFrame(animationId); stopCamera(); stopLocation(); updateButtons(); sayForce("stopped"); }
   function prepareInput() {
     const sourceWidth = video.videoWidth;
     const sourceHeight = video.videoHeight;
@@ -495,7 +489,10 @@
   $("backHomeBtn").addEventListener("click", () => showView("homeView"));
   $("aboutBtn").addEventListener("click", () => showView("aboutView"));
   $("backAboutBtn").addEventListener("click", () => showView("settingsView"));
-  $("testVoiceBtn").addEventListener("click", () => say("testVoice"));
+  $("voiceGoogleBtn").addEventListener("click", () => { setVoiceMode("google"); sayForce("testVoice"); });
+  $("voiceVocalizerBtn").addEventListener("click", () => { setVoiceMode("vocalizer"); sayForce("testVoice"); });
+  $("voiceAutoBtn").addEventListener("click", () => { setVoiceMode("auto"); sayForce("testVoice"); });
+  $("testVoiceBtn").addEventListener("click", () => sayForce("testVoice"));
   $("feedbackBtn").addEventListener("click", () => { $("ratings").classList.toggle("hidden"); });
   $("ratings").addEventListener("click", (event) => {
     const button = event.target.closest("[data-rating]");
@@ -506,10 +503,10 @@
     const body = encodeURIComponent(`My rating: ${rating}/5 — ${descriptions[rating]}`);
     window.location.href = `mailto:humairasardar10@gmail.com?subject=${subject}&body=${body}`;
   });
-  voiceSelect.addEventListener("change", () => { selectedVoiceURI = voiceSelect.value; manualVoiceChoice = true; writeStorage("smartCaneVoiceURI", selectedVoiceURI); });
   renderLanguages();
   languageButton.textContent = labelFor(languageCode);
   updateButtons();
+  updateVoiceButtons();
   if ("speechSynthesis" in window) { populateVoices(); speechSynthesis.onvoiceschanged = populateVoices; }
   window.addEventListener("pagehide", stop);
 </script>
