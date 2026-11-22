@@ -4,760 +4,837 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0a0f1e">
-  <title>Your Eyes, Smart Cane, Created by Humaira Sattar</title>
+  <title>Your Eyes, Smart Cane</title>
 
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-    body {
-      margin: 0;
-      padding: 16px;
-      background: #0a0f1e;
-      color: #fff;
-      font-family: Arial, sans-serif;
-    }
-
-    main {
-      max-width: 620px;
-      margin: auto;
-      padding: 22px;
-      border-radius: 16px;
-      background: #111827;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, .45);
-    }
-
-    h1, h2 {
-      margin: 0;
-      color: #00ffcc;
-      text-align: center;
-    }
-
+    body { margin: 0; padding: 16px; background: #0a0f1e; color: #fff; font-family: Arial, sans-serif; }
+    main { max-width: 620px; margin: auto; padding: 22px; border-radius: 16px; background: #111827; box-shadow: 0 4px 20px rgba(0,0,0,.45); }
+    h1, h2 { margin: 0; color: #00ffcc; text-align: center; }
     h1 { font-size: 24px; }
     h2 { font-size: 22px; }
-
-    .sub {
-      margin: 7px 0 14px;
-      color: #94a3b8;
-      font-size: 13px;
-      text-align: center;
-    }
-
-    label {
-      display: block;
-      margin: 14px 0 6px;
-      color: #00ffcc;
-      font-size: 14px;
-      font-weight: 700;
-    }
-
-    select, input {
-      width: 100%;
-      padding: 12px;
-      border: 1px solid #374151;
-      border-radius: 10px;
-      background: #1f2937;
-      color: #fff;
-      font-size: 16px;
-    }
-
-    video {
-      display: block;
-      width: 100%;
-      height: 280px;
-      margin: 14px 0 10px;
-      border: 3px solid #00ffcc;
-      border-radius: 12px;
-      background: #000;
-      object-fit: cover;
-    }
-
-    body.saver video { height: 150px; }
-
-    button {
-      width: 100%;
-      margin-top: 10px;
-      padding: 14px;
-      border: 0;
-      border-radius: 10px;
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    button:active { opacity: .8; }
+    label { display: block; margin: 14px 0 6px; color: #00ffcc; font-size: 14px; font-weight: 700; }
+    input, select { width: 100%; padding: 12px; border: 1px solid #374151; border-radius: 10px; background: #1f2937; color: #fff; font-size: 16px; }
+    #languageSearch { margin-top: 14px; }
+    video { display: block; width: 100%; height: 280px; margin: 14px 0 10px; border: 3px solid #00ffcc; border-radius: 12px; background: #000; object-fit: cover; }
+    button { width: 100%; margin-top: 10px; padding: 14px; border: 0; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; }
+    button:disabled { opacity: .65; cursor: wait; }
     .primary { background: #00ffcc; color: #000; }
     .stop { background: #ef4444; color: #fff; }
     .secondary { background: #374151; color: #fff; }
     .gold { background: #ca8a04; color: #fff; }
-
-    #status {
-      min-height: 48px;
-      margin: 12px 0;
-      color: #38bdf8;
-      font-size: 16px;
-      font-weight: 700;
-      line-height: 1.45;
-      text-align: center;
-    }
-
-    .notice, .small {
-      color: #94a3b8;
-      font-size: 13px;
-      line-height: 1.55;
-    }
-
-    .notice {
-      margin-top: 14px;
-      padding: 11px;
-      border: 1px solid #374151;
-      border-radius: 9px;
-    }
-
+    #status, #locationStatus { min-height: 28px; margin: 12px 0; font-size: 16px; font-weight: 700; line-height: 1.45; text-align: center; overflow-wrap: anywhere; }
+    #status { color: #38bdf8; }
+    #locationStatus { color: #cbd5e1; font-size: 13px; }
     .view { display: none; }
     .view.active { display: block; }
-
     .hidden { display: none !important; }
-    .creator { margin-top: 18px; color: #cbd5e1; }
+    .rating-option { margin-top: 8px; padding: 12px; border: 1px solid #374151; border-radius: 8px; background: #1f2937; }
+    .rating-option button { margin: 0; background: transparent; color: #00ffcc; text-align: left; }
   </style>
 
-  <!-- Must be in the same folder as this HTML file. -->
   <script src="./languages.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/dist/tf-tflite.min.js"></script>
 </head>
 
 <body>
 <main>
   <section id="homeView" class="view active">
-    <!-- The creator credit is shown in About, not in this home-page heading. -->
     <h1>Your Eyes, Smart Cane</h1>
-    <div class="sub" data-i18n="homeSubtitle">Camera-based obstacle alerts</div>
-
-    <label for="languageSelect" data-i18n="languageLabel">Select language</label>
+    <input id="languageSearch" type="search" aria-label="Search languages">
     <select id="languageSelect" aria-label="Select language"></select>
 
     <video id="camera" autoplay playsinline muted aria-label="Camera preview"></video>
     <div id="status" aria-live="polite"></div>
+    <div id="locationStatus" aria-live="polite"></div>
 
-    <button id="startBtn" class="primary" data-i18n="start">Start</button>
-    <button id="stopBtn" class="stop hidden" data-i18n="stop">Stop</button>
-    <button id="settingsBtn" class="secondary" data-i18n="settings">Settings</button>
-
-    <div class="notice" data-i18n="safetyNotice">
-      This app can miss hazards. No detection does not prove that a path is safe.
-      Keep using your usual mobility aid.
-    </div>
+    <button id="startBtn" class="primary">Start Live AI</button>
+    <button id="stopBtn" class="stop hidden">Stop</button>
+    <button id="settingsBtn" class="secondary">Settings</button>
   </section>
 
   <section id="settingsView" class="view">
-    <h2 data-i18n="settings">Settings</h2>
-    <div class="sub" data-i18n="settingsSubtitle">Smart Cane settings</div>
+    <h2>Settings</h2>
+    <button id="batteryBtn" class="gold">Battery Saver: OFF</button>
 
-    <button id="batteryBtn" class="gold"></button>
-    <button id="aiBtn" class="secondary"></button>
+    <label for="voiceSelect">TTS</label>
+    <select id="voiceSelect" aria-label="Select text-to-speech voice"></select>
+    <button id="testVoiceBtn" class="secondary">Test TTS</button>
 
-    <div id="aiPanel" class="hidden">
-      <p class="small" data-i18n="aiDescription">
-        Smart Cane uses on-device object detection. It is not a general chat bot.
-        Keep the camera running to receive detection and approximate-distance alerts.
-      </p>
-      <label for="agentQuestion" data-i18n="askLabel">Ask Smart Cane about its identity or current detection</label>
-      <input id="agentQuestion" type="text" autocomplete="off">
-      <button id="askBtn" class="secondary" data-i18n="ask">Ask</button>
-      <div id="agentAnswer" class="small" aria-live="polite"></div>
+    <button id="feedbackBtn" class="secondary">Feedback</button>
+    <div id="ratings" class="hidden">
+      <div class="rating-option"><button data-rating="1">1 — Major improvement needed</button></div>
+      <div class="rating-option"><button data-rating="2">2 — Considerable improvement needed</button></div>
+      <div class="rating-option"><button data-rating="3">3 — Some improvement needed</button></div>
+      <div class="rating-option"><button data-rating="4">4 — A little improvement needed</button></div>
+      <div class="rating-option"><button data-rating="5">5 — No improvement needed</button></div>
     </div>
 
-    <label for="voiceSelect" data-i18n="ttsLabel">Choose text-to-speech voice</label>
-    <select id="voiceSelect"></select>
-    <div id="voiceInfo" class="small"></div>
-
-    <button id="openTtsSettingsBtn" class="secondary" data-i18n="mobileTts">
-      Open mobile TTS settings
-    </button>
-    <button id="feedbackBtn" class="secondary" data-i18n="feedback">
-      Email feedback / review
-    </button>
-    <button id="aboutBtn" class="secondary" data-i18n="about">About</button>
-    <button id="backHomeBtn" class="secondary" data-i18n="back">Back</button>
+    <button id="aboutBtn" class="secondary">About</button>
+    <button id="backHomeBtn" class="secondary">Back</button>
   </section>
 
   <section id="aboutView" class="view">
-    <h2 data-i18n="about">About</h2>
-    <p id="aboutPositive" class="small"></p>
-    <p class="small creator" data-i18n="creatorCredit">
-      Created by Humaira Sattar, Okara, Pakistan
-    </p>
-    <button id="backAboutBtn" class="secondary" data-i18n="back">Back</button>
+    <h2>About</h2>
+    <p>I am confident, capable, and moving forward with courage.</p>
+    <p>Created by Humaira Sardar, Okara, Pakistan</p>
+    <button id="backAboutBtn" class="secondary">Back</button>
   </section>
 </main>
 
-<script type="module">
-  import {
-    FilesetResolver,
-    ObjectDetector
-  } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/+esm";
+<script>
+(() => {
+  "use strict";
 
-  const WASM_URL =
-    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm";
-  const MODEL_URL =
-    "https://storage.googleapis.com/mediapipe-models/object_detector/efficientdet_lite0/float16/1/efficientdet_lite0.tflite";
+  const MODEL_URL = "./yolov8n.tflite";
+  const INPUT_SIZE = 640;
+  const CONFIDENCE_THRESHOLD = 0.5;
+  const IOU_THRESHOLD = 0.45;
+  const NORMAL_INTERVAL_MS = 120;
+  const SAVER_INTERVAL_MS = 450;
+  const REPEAT_INTERVAL_MS = 3000;
 
-  // A camera-image-size heuristic, not a sensor measurement.
-  // Different object sizes make this estimate unreliable in real-world use.
+  // This image-size heuristic is only an approximate estimate, not a measured range.
   const DISTANCE_FACTOR_METERS = 0.35;
-  const INFERENCE_INTERVAL_MS = 180;
-  const CLEAR_STABLE_MS = 1200;
-  const CLEAR_SPEECH_COOLDOWN_MS = 12000;
-  const SAME_ALERT_COOLDOWN_MS = 3500;
+  const MAX_ANNOUNCED_DISTANCE_METERS = 4;
+  const CENTER_LEFT_BOUNDARY = 0.35;
+  const CENTER_RIGHT_BOUNDARY = 0.65;
 
-  const $ = (id) => document.getElementById(id);
-  const languageSelect = $("languageSelect");
-  const voiceSelect = $("voiceSelect");
-  const video = $("camera");
-  const statusEl = $("status");
+  const COCO_LABELS = [
+    "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light",
+    "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow",
+    "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase", "frisbee",
+    "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle",
+    "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange",
+    "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "couch", "potted plant", "bed",
+    "dining table", "toilet", "tv", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven",
+    "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"
+  ];
 
-  const inlineLanguages = {
-    "en-US": {
-      languageName: "English (United States)",
-      homeSubtitle: "Camera-based obstacle alerts",
-      languageLabel: "Select language",
-      start: "Start",
-      stop: "Stop",
-      settings: "Settings",
-      safetyNotice: "This app can miss hazards. No detection does not prove that a path is safe. Keep using your usual mobility aid.",
-      settingsSubtitle: "Smart Cane settings",
-      batteryOn: "Battery Saver: ON",
-      batteryOff: "Battery Saver: OFF",
-      aiOn: "AI Agent: ON (on-device)",
-      aiOff: "AI Agent: OFF",
-      aiDescription: "Smart Cane uses on-device object detection. It is not a general chat bot. Keep the camera running to receive detection and approximate-distance alerts.",
-      askLabel: "Ask Smart Cane about its identity or current detection",
-      askPlaceholder: "For example: What is your name?",
-      ask: "Ask",
-      askIdentityAnswer: "Smart Cane",
-      askStatusUnknown: "No obstacle is currently detected in the camera view. This does not confirm that the path is safe.",
-      askRestricted: "I can only answer that I am Smart Cane or report the current camera-detection status.",
-      ttsLabel: "Choose text-to-speech voice",
-      noVoices: "No system voices are available yet.",
-      voiceCount: "{n} voices available. Google voices are preferred automatically when available.",
-      mobileTts: "Open mobile TTS settings",
-      feedback: "Email feedback / review",
-      about: "About",
-      back: "Back",
-      creatorCredit: "Created by Humaira Sattar, Okara, Pakistan",
-      aboutPositive: "I am confident, capable, and moving forward with courage.",
-      ready: "Press Start to begin.",
-      starting: "Starting camera and on-device detector…",
-      active: "Detection is active. Smart Cane is checking the camera view.",
-      stopped: "Detection stopped.",
-      cameraError: "Camera unavailable. Allow camera access and open this page over HTTPS or localhost.",
-      detectorError: "The on-device detector could not be loaded. Check your connection and try again.",
-      obstacle: "{object} detected {direction}. Roughly {distance} meters away. Stop and assess.",
-      left: "left",
-      center: "center",
-      right: "right",
-      clear: "No obstacle detected in the camera view. Continue cautiously.",
-      noCamera: "Start camera detection before asking about current surroundings.",
-      identityPrompt: "What is your name?",
-      emailSubject: "Smart Cane feedback / review"
-    },
-    "ur-PK": {
-      languageName: "اردو (پاکستان)",
-      homeSubtitle: "کیمرے کے ذریعے رکاوٹ کی اطلاع",
-      languageLabel: "زبان منتخب کریں",
-      start: "شروع کریں",
-      stop: "بند کریں",
-      settings: "ترتیبات",
-      safetyNotice: "یہ ایپ خطرات کو نظرانداز کر سکتی ہے۔ رکاوٹ نہ ملنے کا مطلب یہ نہیں کہ راستہ محفوظ ہے۔ اپنا معمول کا امدادی آلہ استعمال کرتے رہیں۔",
-      settingsSubtitle: "اسمارٹ کین کی ترتیبات",
-      batteryOn: "بیٹری سیور: آن",
-      batteryOff: "بیٹری سیور: آف",
-      aiOn: "AI ایجنٹ: آن (ڈیوائس پر)",
-      aiOff: "AI ایجنٹ: آف",
-      aiDescription: "اسمارٹ کین ڈیوائس پر آبجیکٹ ڈیٹیکشن کرتا ہے۔ یہ عام چیٹ بوٹ نہیں ہے۔ رکاوٹ اور اندازاً فاصلے کی اطلاع کے لیے کیمرہ چلتا رہنا چاہیے۔",
-      askLabel: "اسمارٹ کین سے اس کی شناخت یا موجودہ ڈیٹیکشن کے بارے میں پوچھیں",
-      askPlaceholder: "مثال: آپ کا نام کیا ہے؟",
-      ask: "پوچھیں",
-      askIdentityAnswer: "Smart Cane",
-      askStatusUnknown: "کیمرے کے منظر میں اس وقت کوئی رکاوٹ نہیں ملی۔ اس سے راستے کے محفوظ ہونے کی تصدیق نہیں ہوتی۔",
-      askRestricted: "میں صرف اپنی شناخت Smart Cane بتا سکتا ہوں یا کیمرے کی موجودہ ڈیٹیکشن کی صورتِ حال بتا سکتا ہوں۔",
-      ttsLabel: "آواز منتخب کریں",
-      noVoices: "سسٹم کی کوئی آواز ابھی دستیاب نہیں۔",
-      voiceCount: "{n} آوازیں دستیاب ہیں۔ دستیابی پر Google کی آواز خودکار طور پر ترجیح دی جاتی ہے۔",
-      mobileTts: "موبائل کی TTS ترتیبات کھولیں",
-      feedback: "ای میل کے ذریعے رائے / جائزہ",
-      about: "ایپ کے بارے میں",
-      back: "واپس",
-      creatorCredit: "Created by Humaira Sattar, Okara, Pakistan",
-      aboutPositive: "I am پُراعتماد، باصلاحیت، اور حوصلے کے ساتھ آگے بڑھ رہی ہوں۔",
-      ready: "شروع کرنے کے لیے اسٹارٹ دبائیں۔",
-      starting: "کیمرہ اور ڈیوائس ڈیٹیکٹر شروع ہو رہے ہیں۔",
-      active: "ڈیٹیکشن فعال ہے۔ اسمارٹ کین کیمرے کا منظر دیکھ رہا ہے۔",
-      stopped: "ڈیٹیکشن بند ہے۔",
-      cameraError: "کیمرہ دستیاب نہیں۔ اجازت دیں اور یہ صفحہ HTTPS یا localhost پر کھولیں۔",
-      detectorError: "ڈیوائس ڈیٹیکٹر لوڈ نہیں ہو سکا۔ انٹرنیٹ چیک کرکے دوبارہ کوشش کریں۔",
-      obstacle: "{object} کیمرے کے منظر میں {direction} ہے۔ فاصلہ تقریباً {distance} میٹر ہے۔ رک کر صورتِ حال دیکھیں۔",
-      left: "بائیں جانب",
-      center: "درمیان میں",
-      right: "دائیں جانب",
-      clear: "کیمرے کے منظر میں کوئی رکاوٹ نہیں ملی۔ احتیاط سے چلیں۔",
-      noCamera: "موجودہ ماحول کے بارے میں پوچھنے سے پہلے کیمرہ ڈیٹیکشن شروع کریں۔",
-      identityPrompt: "آپ کا نام کیا ہے؟",
-      emailSubject: "اسمارٹ کین رائے / جائزہ"
-    }
+  const ENGLISH_SPEECH = {
+    active: "Live detection is active.",
+    starting: "Starting live detection.",
+    stopped: "Detection stopped.",
+    cameraError: "Camera unavailable. Allow camera access and use HTTPS or localhost.",
+    modelError: "The TFLite model could not be loaded or its output format was not recognized.",
+    noCenter: "No close obstacle detected in the center camera view.",
+    obstacle: "Stop. About {distance} meters ahead, {object} is {direction}.",
+    side: "{direction}: {object}, about {distance} meters away.",
+    dark: "The camera image is very dark.",
+    locationWaiting: "Location unavailable.",
+    locationError: "Location permission or service unavailable.",
+    location: "Location: {lat}, {lon}",
+    testVoice: "Text to speech is working."
   };
 
-  const extraLanguages = window.SMART_CANE_LANGUAGES || {};
-  const languages = { ...extraLanguages, ...inlineLanguages };
-  const supportedCodes = Object.keys(languages);
-  const savedLanguage = safeGet("smartCaneLanguage");
-  let languageCode = supportedCodes.includes(savedLanguage) ? savedLanguage : "en-US";
+  const URDU_LABELS = {
+    person: "شخص", bicycle: "سائیکل", car: "گاڑی", motorcycle: "موٹر سائیکل",
+    airplane: "طیارہ", bus: "بس", train: "ٹرین", truck: "ٹرک", boat: "کشتی",
+    "traffic light": "ٹریفک لائٹ", "fire hydrant": "فائر ہائیڈرنٹ",
+    "stop sign": "اسٹاپ سائن", "parking meter": "پارکنگ میٹر", bench: "بینچ",
+    bird: "پرندہ", cat: "بلی", dog: "کتا", horse: "گھوڑا", sheep: "بھیڑ",
+    cow: "گائے", elephant: "ہاتھی", bear: "ریچھ", zebra: "زیبرا",
+    giraffe: "زرافہ", backpack: "بیگ", umbrella: "چھتری", handbag: "ہینڈ بیگ",
+    tie: "ٹائی", suitcase: "سوٹ کیس", frisbee: "فریسبی", skis: "اسکیز",
+    snowboard: "اسنو بورڈ", "sports ball": "کھیل کی گیند", kite: "پتنگ",
+    "baseball bat": "بیس بال بیٹ", "baseball glove": "بیس بال دستانہ",
+    skateboard: "اسکیٹ بورڈ", surfboard: "سرف بورڈ", "tennis racket": "ٹینس ریکٹ",
+    bottle: "بوتل", "wine glass": "وائن گلاس", cup: "کپ", fork: "کانٹا",
+    knife: "چاقو", spoon: "چمچ", bowl: "پیالہ", banana: "کیلا", apple: "سیب",
+    sandwich: "سینڈوچ", orange: "سنگترہ", broccoli: "بروکلی", carrot: "گاجر",
+    "hot dog": "ہاٹ ڈاگ", pizza: "پیزا", donut: "ڈونٹ", cake: "کیک",
+    chair: "کرسی", couch: "صوفہ", "potted plant": "گملے کا پودا", bed: "بستر",
+    "dining table": "کھانے کی میز", toilet: "ٹوائلٹ", tv: "ٹی وی",
+    laptop: "لیپ ٹاپ", mouse: "ماؤس", remote: "ریموٹ", keyboard: "کی بورڈ",
+    "cell phone": "موبائل فون", microwave: "مائیکروویو", oven: "اوون",
+    toaster: "ٹوسٹر", sink: "سنک", refrigerator: "ریفریجریٹر", book: "کتاب",
+    clock: "گھڑی", vase: "گلدان", scissors: "قینچی", "teddy bear": "ٹیڈی بیئر",
+    "hair drier": "ہیئر ڈرائر", toothbrush: "دانتوں کا برش"
+  };
 
-  let detector = null;
+  const $ = (id) => document.getElementById(id);
+  const video = $("camera");
+  const statusEl = $("status");
+  const locationEl = $("locationStatus");
+  const languageSelect = $("languageSelect");
+  const searchInput = $("languageSearch");
+  const voiceSelect = $("voiceSelect");
+
+  const localeCodes = (window.SMART_CANE_LANGUAGES?.locales || [])
+    .map((item) => item.code)
+    .filter(Boolean);
+
+  if (!localeCodes.includes("en-US")) localeCodes.unshift("en-US");
+
+  let languageCode = readStorage("smartCaneLanguage") || "en-US";
+  if (!localeCodes.includes(languageCode)) languageCode = "en-US";
+
+  let model = null;
   let stream = null;
   let running = false;
-  let aiEnabled = true;
-  let batterySaver = safeGet("smartCaneBatterySaver") === "true";
+  let starting = false;
+  let sessionId = 0;
   let animationId = 0;
+  let inFlight = false;
+  let batterySaver = readStorage("smartCaneBatterySaver") === "true";
+  let voices = [];
+  let selectedVoiceURI = readStorage("smartCaneVoiceURI") || "";
+  let manualVoiceChoice = false;
+  let lastSceneKey = "";
+  let lastSceneSpeechAt = 0;
   let lastInferenceAt = 0;
   let lastTimestamp = 0;
-  let lastAlertKey = "";
-  let lastAlertAt = 0;
+  let lastDarkSpeechAt = 0;
   let noDetectionSince = 0;
-  let lastClearSpokenAt = 0;
-  let lastDetectionSummary = "";
-  let voices = [];
-  let manualVoiceChoice = false;
-  let selectedVoiceURI = safeGet("smartCaneVoiceURI") || "";
+  let locationWatchId = null;
 
-  function safeGet(key) {
+  function readStorage(key) {
     try { return localStorage.getItem(key); } catch { return null; }
   }
 
-  function safeSet(key, value) {
+  function writeStorage(key, value) {
     try { localStorage.setItem(key, value); } catch {}
   }
 
-  function tr(key, values = {}) {
-    const language = languages[languageCode] || inlineLanguages["en-US"];
-    let result = language[key] ?? inlineLanguages["en-US"][key] ?? key;
+  function say(key, values = {}, display = true) {
+    let message = ENGLISH_SPEECH[key] || key;
     for (const [name, value] of Object.entries(values)) {
-      result = result.replaceAll(`{${name}}`, String(value));
+      message = message.replaceAll(`{${name}}`, String(value));
     }
-    return result;
-  }
 
-  function showView(id) {
-    for (const view of document.querySelectorAll(".view")) {
-      view.classList.toggle("active", view.id === id);
-    }
-  }
-
-  function renderTranslations() {
-    document.documentElement.lang = languageCode;
-    document.querySelectorAll("[data-i18n]").forEach((element) => {
-      const key = element.dataset.i18n;
-      element.textContent = tr(key);
-    });
-
-    $("agentQuestion").placeholder = tr("askPlaceholder");
-    $("aboutPositive").textContent = tr("aboutPositive");
-    updateBatteryButton();
-    updateAiButton();
-
-    if (!running) statusEl.textContent = tr("ready");
-  }
-
-  function populateLanguageOptions() {
-    languageSelect.innerHTML = "";
-    for (const code of supportedCodes) {
-      const option = document.createElement("option");
-      option.value = code;
-      option.textContent = languages[code].languageName || code;
-      languageSelect.append(option);
-    }
-    languageSelect.value = languageCode;
-  }
-
-  function setLanguage(code) {
-    if (!languages[code]) code = "en-US";
-    languageCode = code;
-    safeSet("smartCaneLanguage", code);
-    languageSelect.value = code;
-    renderTranslations();
-
-    // Re-select the preferred Google voice for the new language only when
-    // the user has not manually chosen a voice.
-    if (!manualVoiceChoice) choosePreferredVoice();
-  }
-
-  function updateBatteryButton() {
-    $("batteryBtn").textContent = tr(batterySaver ? "batteryOn" : "batteryOff");
-  }
-
-  function updateAiButton() {
-    $("aiBtn").textContent = tr(aiEnabled ? "aiOn" : "aiOff");
-  }
-
-  function speak(message) {
-    statusEl.textContent = message;
+    if (display) statusEl.textContent = message;
     if (!("speechSynthesis" in window)) return;
 
     try {
-      window.speechSynthesis.cancel();
+      speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(message);
       utterance.lang = languageCode;
       utterance.rate = 1;
-      const selectedVoice = voices.find((voice) => voice.voiceURI === selectedVoiceURI);
-      if (selectedVoice) utterance.voice = selectedVoice;
-      window.speechSynthesis.speak(utterance);
+
+      const voice = voices.find((item) => item.voiceURI === selectedVoiceURI);
+      if (voice) utterance.voice = voice;
+
+      speechSynthesis.speak(utterance);
     } catch (error) {
-      console.warn("Speech synthesis failed:", error);
+      console.warn("Speech synthesis error:", error);
     }
   }
 
-  function googleVoice(voice) {
+  function showView(id) {
+    document.querySelectorAll(".view").forEach((view) => {
+      view.classList.toggle("active", view.id === id);
+    });
+  }
+
+  function regionLabel(code) {
+    try {
+      const parts = code.split("-");
+      const region = parts.find((part) => part.length === 2 || /^\d{3}$/.test(part));
+      const language = new Intl.DisplayNames([code], { type: "language" }).of(parts[0]);
+      const regionName = region
+        ? new Intl.DisplayNames([code], { type: "region" }).of(region)
+        : "";
+      return `${language || code}${regionName ? " " + regionName : ""}`;
+    } catch {
+      return code;
+    }
+  }
+
+  function renderLanguages(filter = "") {
+    const query = filter.trim().toLocaleLowerCase();
+    const matches = localeCodes.filter((code) => {
+      const label = regionLabel(code).toLocaleLowerCase();
+      return !query || label.includes(query) || code.toLowerCase().includes(query);
+    });
+
+    languageSelect.innerHTML = "";
+    for (const code of matches) {
+      const option = document.createElement("option");
+      option.value = code;
+      option.textContent = regionLabel(code);
+      languageSelect.append(option);
+    }
+
+    if (matches.includes(languageCode)) languageSelect.value = languageCode;
+  }
+
+  function updateButtons() {
+    $("startBtn").classList.toggle("hidden", running || starting);
+    $("startBtn").disabled = running || starting;
+    $("stopBtn").classList.toggle("hidden", !running && !starting);
+    $("stopBtn").disabled = false;
+    $("batteryBtn").textContent = `Battery Saver: ${batterySaver ? "ON" : "OFF"}`;
+  }
+
+  function isGoogleVoice(voice) {
     return /google/i.test(`${voice.name} ${voice.voiceURI}`);
   }
 
   function voiceMatchesLanguage(voice) {
-    const wanted = languageCode.toLowerCase().split("-")[0];
-    return voice.lang.toLowerCase().split("-")[0] === wanted;
+    return voice.lang.toLowerCase().split("-")[0] === languageCode.toLowerCase().split("-")[0];
   }
 
   function populateVoices() {
-    if (!("speechSynthesis" in window)) {
-      $("voiceInfo").textContent = tr("noVoices");
-      return;
-    }
+    if (!("speechSynthesis" in window)) return;
 
-    voices = window.speechSynthesis.getVoices() || [];
+    voices = speechSynthesis.getVoices() || [];
     voiceSelect.innerHTML = "";
 
-    if (!voices.length) {
-      $("voiceInfo").textContent = tr("noVoices");
-      return;
-    }
-
-    voices.forEach((voice) => {
+    for (const voice of voices) {
       const option = document.createElement("option");
       option.value = voice.voiceURI;
-      option.textContent = `${googleVoice(voice) ? "Google · " : ""}${voice.name} (${voice.lang})`;
+      option.textContent = `${isGoogleVoice(voice) ? "Google · " : ""}${voice.name} (${voice.lang})`;
       voiceSelect.append(option);
-    });
+    }
 
-    $("voiceInfo").textContent = tr("voiceCount", { n: voices.length });
+    if (!voices.length) return;
 
-    const savedVoice = voices.find((voice) => voice.voiceURI === selectedVoiceURI);
-    if (manualVoiceChoice && savedVoice) {
-      voiceSelect.value = savedVoice.voiceURI;
+    let chosen = voices.find((voice) => voice.voiceURI === selectedVoiceURI);
+    if (!manualVoiceChoice || !chosen) {
+      chosen =
+        voices.find((voice) => isGoogleVoice(voice) && voiceMatchesLanguage(voice)) ||
+        voices.find(isGoogleVoice) ||
+        voices.find(voiceMatchesLanguage) ||
+        voices[0];
+
+      selectedVoiceURI = chosen.voiceURI;
+      writeStorage("smartCaneVoiceURI", selectedVoiceURI);
+    }
+
+    voiceSelect.value = selectedVoiceURI;
+  }
+
+  async function loadModel() {
+    if (model) return model;
+
+    if (!window.tf || !window.tflite ||
+        typeof window.tflite.loadTFLiteModel !== "function") {
+      throw new Error("TFLite runtime unavailable.");
+    }
+
+    await tf.ready();
+
+    if (typeof tflite.setWasmPath === "function") {
+      tflite.setWasmPath(
+        "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/dist/"
+      );
+    }
+
+    model = await tflite.loadTFLiteModel("./yolov8n.tflite");
+    return model;
+  }
+
+  function startLocation() {
+    if (!navigator.geolocation) {
+      locationEl.textContent = ENGLISH_SPEECH.locationError;
       return;
     }
 
-    choosePreferredVoice();
+    locationEl.textContent = ENGLISH_SPEECH.locationWaiting;
+    locationWatchId = navigator.geolocation.watchPosition(
+      (position) => {
+        locationEl.textContent = ENGLISH_SPEECH.location
+          .replace("{lat}", position.coords.latitude.toFixed(5))
+          .replace("{lon}", position.coords.longitude.toFixed(5));
+      },
+      () => { locationEl.textContent = ENGLISH_SPEECH.locationError; },
+      { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+    );
   }
 
-  function choosePreferredVoice() {
-    if (!voices.length || manualVoiceChoice) return;
-
-    // Prefer a Google voice matching the selected language. If unavailable,
-    // use any Google voice, then a matching voice, then the first listed voice.
-    const chosen =
-      voices.find((voice) => googleVoice(voice) && voiceMatchesLanguage(voice)) ||
-      voices.find(googleVoice) ||
-      voices.find(voiceMatchesLanguage) ||
-      voices[0];
-
-    selectedVoiceURI = chosen.voiceURI;
-    voiceSelect.value = chosen.voiceURI;
-  }
-
-  function updateCameraConstraints() {
-    const track = stream?.getVideoTracks?.()[0];
-    if (!track?.applyConstraints) return;
-
-    const size = batterySaver
-      ? { width: 320, height: 240, frameRate: 15 }
-      : { width: 640, height: 480, frameRate: 30 };
-
-    track.applyConstraints({
-      width: { ideal: size.width },
-      height: { ideal: size.height },
-      frameRate: { ideal: size.frameRate }
-    }).catch((error) => console.warn("Could not update camera constraints:", error));
-  }
-
-  async function createDetector() {
-    const vision = await FilesetResolver.forVisionTasks(WASM_URL);
-    let lastError;
-
-    for (const delegate of ["GPU", "CPU"]) {
-      try {
-        return await ObjectDetector.createFromOptions(vision, {
-          baseOptions: { modelAssetPath: MODEL_URL, delegate },
-          runningMode: "VIDEO",
-          scoreThreshold: 0.45,
-          maxResults: 8
-        });
-      } catch (error) {
-        lastError = error;
-        console.warn(`MediaPipe ${delegate} initialization failed:`, error);
-      }
+  function stopLocation() {
+    if (locationWatchId !== null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(locationWatchId);
+      locationWatchId = null;
     }
-
-    throw lastError || new Error("Object detector initialization failed.");
   }
 
-  async function startDetection() {
-    if (running) return;
-
-    if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
-      speak(tr("cameraError"));
-      return;
+  function stopCamera() {
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+      stream = null;
     }
+    video.srcObject = null;
+  }
 
-    speak(tr("starting"));
-    $("startBtn").classList.add("hidden");
-    $("stopBtn").classList.remove("hidden");
+  async function start() {
+    if (running || starting) return;
+
+    starting = true;
+    const thisSession = ++sessionId;
+    updateButtons();
+    say("starting");
 
     try {
-      if (!detector) detector = await createDetector();
+      if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+        throw new Error("Camera access requires HTTPS or localhost.");
+      }
 
-      stream = await navigator.mediaDevices.getUserMedia({
+      const cameraPromise = navigator.mediaDevices.getUserMedia({
         audio: false,
         video: {
           facingMode: { ideal: "environment" },
-          width: { ideal: batterySaver ? 320 : 640 },
-          height: { ideal: batterySaver ? 240 : 480 },
-          frameRate: { ideal: batterySaver ? 15 : 30 }
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          frameRate: { ideal: 30 }
         }
       });
 
+      const [newStream] = await Promise.all([cameraPromise, loadModel()]);
+
+      if (thisSession !== sessionId) {
+        newStream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+
+      stream = newStream;
       video.srcObject = stream;
       await video.play();
 
+      if (thisSession !== sessionId) {
+        stopCamera();
+        return;
+      }
+
       running = true;
+      starting = false;
+      lastSceneKey = "";
+      lastSceneSpeechAt = 0;
       lastInferenceAt = 0;
       lastTimestamp = 0;
-      lastAlertKey = "";
+      lastDarkSpeechAt = 0;
       noDetectionSince = 0;
-      lastClearSpokenAt = 0;
-      lastDetectionSummary = "";
-
-      // This replaces the old "ready/press start" announcement.
-      speak(tr("active"));
-      animationId = requestAnimationFrame(processFrame);
+      updateButtons();
+      startLocation();
+      say("active");
+      animationId = requestAnimationFrame(loop);
     } catch (error) {
       console.error(error);
-      stopDetection(false);
-      speak(error?.name === "NotAllowedError" ? tr("cameraError") : tr("detectorError"));
+      if (thisSession === sessionId) {
+        starting = false;
+        running = false;
+        stopCamera();
+        stopLocation();
+        updateButtons();
+        say(error?.name === "NotAllowedError" ||
+            error?.message?.includes("HTTPS")
+          ? "cameraError"
+          : "modelError");
+      }
     }
   }
 
-  function estimateDistanceMeters(box) {
-    const heightFraction = box.height / video.videoHeight;
-    if (!Number.isFinite(heightFraction) || heightFraction <= 0) return null;
-
-    // Heuristic only: apparent size is not a reliable distance measurement.
-    const estimate = DISTANCE_FACTOR_METERS / heightFraction;
-    return Math.max(0.3, Math.min(8, estimate));
+  function stop() {
+    sessionId++;
+    starting = false;
+    running = false;
+    inFlight = false;
+    cancelAnimationFrame(animationId);
+    stopCamera();
+    stopLocation();
+    updateButtons();
+    say("stopped");
   }
 
-  function directionFor(box) {
-    const centerX = (box.originX + box.width / 2) / video.videoWidth;
-    if (centerX < 0.36) return tr("left");
-    if (centerX > 0.64) return tr("right");
-    return tr("center");
-  }
+  function prepareInput() {
+    const width = video.videoWidth;
+    const height = video.videoHeight;
+    const scale = Math.min(INPUT_SIZE / width, INPUT_SIZE / height);
+    const scaledWidth = Math.round(width * scale);
+    const scaledHeight = Math.round(height * scale);
+    const padX = Math.floor((INPUT_SIZE - scaledWidth) / 2);
+    const padY = Math.floor((INPUT_SIZE - scaledHeight) / 2);
 
-  function bestDetection(detections) {
-    let best = null;
+    const canvas = document.createElement("canvas");
+    canvas.width = INPUT_SIZE;
+    canvas.height = INPUT_SIZE;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
 
-    for (const detection of detections || []) {
-      const box = detection.boundingBox;
-      const category = detection.categories?.[0];
-      if (!box || !category || category.score < 0.45) continue;
-      if (box.width <= 0 || box.height <= 0) continue;
+    context.fillStyle = "rgb(114,114,114)";
+    context.fillRect(0, 0, INPUT_SIZE, INPUT_SIZE);
+    context.drawImage(video, padX, padY, scaledWidth, scaledHeight);
 
-      const distance = estimateDistanceMeters(box);
-      if (distance === null) continue;
+    const rgba = context.getImageData(0, 0, INPUT_SIZE, INPUT_SIZE).data;
+    const plane = INPUT_SIZE * INPUT_SIZE;
+    const chw = new Float32Array(plane * 3);
 
-      const candidate = {
-        box,
-        distance,
-        name: category.categoryName || "Object"
-      };
-
-      if (!best || candidate.distance < best.distance) best = candidate;
+    for (let i = 0, pixel = 0; i < rgba.length; i += 4, pixel++) {
+      chw[pixel] = rgba[i] / 255;
+      chw[plane + pixel] = rgba[i + 1] / 255;
+      chw[plane * 2 + pixel] = rgba[i + 2] / 255;
     }
 
-    return best;
+    return {
+      tensor: tf.tensor(chw, [1, 3, INPUT_SIZE, INPUT_SIZE], "float32"),
+      scale, padX, padY, sourceWidth: width, sourceHeight: height
+    };
   }
 
-  function processFrame() {
-    if (!running) return;
-    animationId = requestAnimationFrame(processFrame);
+  function outputData(output) {
+    const tensor = Array.isArray(output) ? output[0] : output;
+    if (!tensor || typeof tensor.dataSync !== "function") {
+      throw new Error("Unexpected model output.");
+    }
+    return { data: tensor.dataSync(), shape: tensor.shape };
+  }
 
-    if (!aiEnabled || !detector ||
-        video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ||
-        !video.videoWidth || !video.videoHeight) {
-      return;
+  function intersectionOverUnion(a, b) {
+    const x1 = Math.max(a.x1, b.x1);
+    const y1 = Math.max(a.y1, b.y1);
+    const x2 = Math.min(a.x2, b.x2);
+    const y2 = Math.min(a.y2, b.y2);
+    const intersection = Math.max(0, x2 - x1) * Math.max(0, y2 - y1);
+    const areaA = (a.x2 - a.x1) * (a.y2 - a.y1);
+    const areaB = (b.x2 - b.x1) * (b.y2 - b.y1);
+    return intersection / Math.max(1e-8, areaA + areaB - intersection);
+  }
+
+  function applyNms(boxes) {
+    boxes.sort((a, b) => b.score - a.score);
+    const selected = [];
+
+    for (const box of boxes) {
+      if (selected.every((item) =>
+        item.classId !== box.classId ||
+        intersectionOverUnion(item, box) <= IOU_THRESHOLD
+      )) {
+        selected.push(box);
+      }
+      if (selected.length >= 50) break;
     }
 
-    const now = performance.now();
-    const interval = batterySaver ? 320 : INFERENCE_INTERVAL_MS;
-    if (now - lastInferenceAt < interval) return;
-    lastInferenceAt = now;
+    return selected;
+  }
 
-    try {
-      const timestamp = Math.max(now, lastTimestamp + 1);
-      lastTimestamp = timestamp;
+  function decode(output, transform) {
+    const { data, shape } = outputData(output);
+    const channelsFirst =
+      shape.length === 3 && shape[1] === 84 && shape[2] === 8400;
+    const candidatesFirst =
+      shape.length === 3 && shape[1] === 8400 && shape[2] === 84;
 
-      const result = detector.detectForVideo(video, timestamp);
-      const detection = bestDetection(result.detections);
+    if (!channelsFirst && !candidatesFirst) {
+      throw new Error(`Unsupported model output shape: ${shape.join("x")}`);
+    }
 
-      if (detection) {
-        noDetectionSince = 0;
+    const read = (channel, candidate) =>
+      channelsFirst
+        ? Number(data[channel * 8400 + candidate])
+        : Number(data[candidate * 84 + channel]);
 
-        const direction = directionFor(detection.box);
-        const roundedDistance = Math.round(detection.distance * 2) / 2;
-        const key = `${detection.name}|${direction}|${roundedDistance}`;
-        lastDetectionSummary = tr("obstacle", {
-          object: detection.name,
-          direction,
-          distance: roundedDistance.toFixed(1)
-        });
+    const boxes = [];
 
-        if (key !== lastAlertKey || now - lastAlertAt >= SAME_ALERT_COOLDOWN_MS) {
-          lastAlertKey = key;
-          lastAlertAt = now;
-          speak(lastDetectionSummary);
-          try { navigator.vibrate?.([120, 60, 120]); } catch {}
-        }
-      } else {
-        lastAlertKey = "";
+    for (let i = 0; i < 8400; i++) {
+      let classId = -1;
+      let confidence = -Infinity;
 
-        if (!noDetectionSince) noDetectionSince = now;
-
-        const stableClear = now - noDetectionSince >= CLEAR_STABLE_MS;
-        const cooldownPassed = now - lastClearSpokenAt >= CLEAR_SPEECH_COOLDOWN_MS;
-
-        if (stableClear && cooldownPassed) {
-          lastClearSpokenAt = now;
-          lastDetectionSummary = tr("clear");
-          // Spoken clear-view message, with cooldown. It does not claim the route is safe.
-          speak(tr("clear"));
+      for (let c = 0; c < 80; c++) {
+        const score = read(c + 4, i);
+        if (score > confidence) {
+          confidence = score;
+          classId = c;
         }
       }
-    } catch (error) {
-      console.error("Detection frame failed:", error);
-      statusEl.textContent = tr("detectorError");
+
+      if (!Number.isFinite(confidence) || confidence < CONFIDENCE_THRESHOLD) continue;
+
+      const cx = read(0, i);
+      const cy = read(1, i);
+      const width = read(2, i);
+      const height = read(3, i);
+
+      if (![cx, cy, width, height].every(Number.isFinite) || width <= 0 || height <= 0) continue;
+
+      const x1Model = cx - width / 2;
+      const y1Model = cy - height / 2;
+      const x2Model = cx + width / 2;
+      const y2Model = cy + height / 2;
+
+      const x1 = Math.max(0, (x1Model - transform.padX) / transform.scale);
+      const y1 = Math.max(0, (y1Model - transform.padY) / transform.scale);
+      const x2 = Math.min(transform.sourceWidth, (x2Model - transform.padX) / transform.scale);
+      const y2 = Math.min(transform.sourceHeight, (y2Model - transform.padY) / transform.scale);
+
+      if (x2 <= x1 || y2 <= y1) continue;
+      boxes.push({ x1, y1, x2, y2, score: confidence, classId });
+    }
+
+    return applyNms(boxes);
+  }
+
+  function estimatedMeters(box) {
+    const fraction = (box.y2 - box.y1) / video.videoHeight;
+    if (!Number.isFinite(fraction) || fraction <= 0) return null;
+    return Math.max(0.5, Math.min(8, DISTANCE_FACTOR_METERS / fraction));
+  }
+
+  function zoneFor(box) {
+    const x = ((box.x1 + box.x2) / 2) / video.videoWidth;
+    if (x < CENTER_LEFT_BOUNDARY) return "left";
+    if (x > CENTER_RIGHT_BOUNDARY) return "right";
+    return "center";
+  }
+
+  function localizedLabel(classId) {
+    const label = COCO_LABELS[classId] || "object";
+    const translated =
+      window.SMART_CANE_TRANSLATIONS?.[languageCode]?.labels?.[label];
+    return translated || label;
+  }
+
+  function imageIsDark() {
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = 24;
+      canvas.height = 24;
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      context.drawImage(video, 0, 0, 24, 24);
+      const pixels = context.getImageData(0, 0, 24, 24).data;
+      let total = 0;
+
+      for (let i = 0; i < pixels.length; i += 4) {
+        total += (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
+      }
+
+      return total / (pixels.length / 4) < 22;
+    } catch {
+      return false;
     }
   }
 
-  function stopDetection(announce = true) {
-    running = false;
-    cancelAnimationFrame(animationId);
+  function describeScene(boxes, now) {
+    const objectsByZone = { left: [], center: [], right: [] };
 
-    if (stream) {
-      for (const track of stream.getTracks()) track.stop();
-      stream = null;
+    for (const box of boxes) {
+      const distance = estimatedMeters(box);
+      if (distance === null || distance > MAX_ANNOUNCED_DISTANCE_METERS) continue;
+
+      const rounded = Math.round(distance * 2) / 2;
+      objectsByZone[zoneFor(box)].push({
+        classId: box.classId,
+        label: localizedLabel(box.classId),
+        distance: rounded,
+        score: box.score
+      });
     }
 
-    video.srcObject = null;
-    $("startBtn").classList.remove("hidden");
-    $("stopBtn").classList.add("hidden");
+    for (const zone of Object.keys(objectsByZone)) {
+      objectsByZone[zone].sort((a, b) => b.score - a.score);
+    }
 
-    if (announce) speak(tr("stopped"));
-  }
+    const center = objectsByZone.center[0] || null;
+    const left = objectsByZone.left[0] || null;
+    const right = objectsByZone.right[0] || null;
 
-  function answerAgentQuestion() {
-    const question = $("agentQuestion").value.trim();
-    if (!question) return;
-
-    const identityPattern =
-      /(your name|who are you|what are you|your identity|آپ کا نام|تمہارا نام|کون ہو|شناخت)/i;
-
-    let answer;
-    if (identityPattern.test(question)) {
-      // The response to identity/name questions is deliberately exactly this.
-      answer = "Smart Cane";
-    } else if (/(obstacle|path|surround|distance|camera|رکاوٹ|راستہ|فاصلہ|کیمرہ)/i.test(question)) {
-      answer = running ? lastDetectionSummary || tr("clear") : tr("noCamera");
+    let parts = [];
+    if (center) {
+      parts.push(
+        `Stop. About ${center.distance} meters ahead, ${center.label} is in the center.`
+      );
     } else {
-      answer = tr("askRestricted");
+      parts.push(ENGLISH_SPEECH.noCenter);
     }
 
-    $("agentAnswer").textContent = answer;
-    speak(answer);
+    if (left) {
+      parts.push(`Left: ${left.label}, about ${left.distance} meters away.`);
+    }
+    if (right) {
+      parts.push(`Right: ${right.label}, about ${right.distance} meters away.`);
+    }
+
+    const signature = [
+      center ? `C:${center.classId}:${center.distance}` : "C:none",
+      left ? `L:${left.classId}:${left.distance}` : "L:none",
+      right ? `R:${right.classId}:${right.distance}` : "R:none"
+    ].join("|");
+
+    if (signature !== lastSceneKey) {
+      lastSceneKey = signature;
+      lastSceneSpeechAt = now;
+      const announcement = parts.join(" ");
+      statusEl.textContent = announcement;
+      speakText(announcement);
+    } else if (now - lastSceneSpeechAt >= REPEAT_INTERVAL_MS &&
+               (center || left || right)) {
+      lastSceneSpeechAt = now;
+      const announcement = parts.join(" ");
+      statusEl.textContent = announcement;
+      speakText(announcement);
+    }
   }
 
-  $("startBtn").addEventListener("click", startDetection);
-  $("stopBtn").addEventListener("click", () => stopDetection(true));
+  function speakText(message) {
+    if (!("speechSynthesis" in window)) return;
 
+    try {
+      speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(message);
+      utterance.lang = languageCode;
+      utterance.rate = 1;
+      const voice = voices.find((item) => item.voiceURI === selectedVoiceURI);
+      if (voice) utterance.voice = voice;
+      speechSynthesis.speak(utterance);
+    } catch (error) {
+      console.warn("Speech synthesis error:", error);
+    }
+  }
+
+  async function loop() {
+    if (!running) return;
+
+    // Schedule the next frame before checking inFlight so the loop continues.
+    animationId = requestAnimationFrame(loop);
+    if (inFlight) return;
+
+    if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ||
+        !video.videoWidth || !video.videoHeight) return;
+
+    const now = performance.now();
+    const interval = batterySaver ? SAVER_INTERVAL_MS : NORMAL_INTERVAL_MS;
+    if (now - lastInferenceAt < interval) return;
+
+    lastInferenceAt = now;
+    inFlight = true;
+    let inputTensor = null;
+    let output = null;
+
+    try {
+      if (imageIsDark()) {
+        if (now - lastDarkSpeechAt >= 8000) {
+          lastDarkSpeechAt = now;
+          say("dark");
+        }
+        noDetectionSince = 0;
+        return;
+      }
+
+      const prepared = prepareInput();
+      inputTensor = prepared.tensor;
+      output = model.predict(inputTensor);
+
+      const boxes = decode(output, prepared);
+      describeScene(boxes, now);
+    } catch (error) {
+      console.error("TFLite inference failed:", error);
+      statusEl.textContent = ENGLISH_SPEECH.modelError;
+    } finally {
+      inputTensor?.dispose?.();
+
+      if (Array.isArray(output)) {
+        output.forEach((tensor) => tensor?.dispose?.());
+      } else {
+        output?.dispose?.();
+      }
+
+      inFlight = false;
+    }
+  }
+
+  function prepareInput() {
+    const width = video.videoWidth;
+    const height = video.videoHeight;
+    const scale = Math.min(INPUT_SIZE / width, INPUT_SIZE / height);
+    const scaledWidth = Math.round(width * scale);
+    const scaledHeight = Math.round(height * scale);
+    const padX = Math.floor((INPUT_SIZE - scaledWidth) / 2);
+    const padY = Math.floor((INPUT_SIZE - scaledHeight) / 2);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = INPUT_SIZE;
+    canvas.height = INPUT_SIZE;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+
+    context.fillStyle = "rgb(114,114,114)";
+    context.fillRect(0, 0, INPUT_SIZE, INPUT_SIZE);
+    context.drawImage(video, padX, padY, scaledWidth, scaledHeight);
+
+    const rgba = context.getImageData(0, 0, INPUT_SIZE, INPUT_SIZE).data;
+    const planeSize = INPUT_SIZE * INPUT_SIZE;
+    const chw = new Float32Array(planeSize * 3);
+
+    for (let i = 0, pixel = 0; i < rgba.length; i += 4, pixel++) {
+      chw[pixel] = rgba[i] / 255;
+      chw[planeSize + pixel] = rgba[i + 1] / 255;
+      chw[planeSize * 2 + pixel] = rgba[i + 2] / 255;
+    }
+
+    return {
+      tensor: tf.tensor(chw, [1, 3, INPUT_SIZE, INPUT_SIZE], "float32"),
+      scale,
+      padX,
+      padY,
+      sourceWidth: width,
+      sourceHeight: height
+    };
+  }
+
+  $("startBtn").addEventListener("click", start);
+  $("stopBtn").addEventListener("click", stop);
   $("settingsBtn").addEventListener("click", () => showView("settingsView"));
   $("backHomeBtn").addEventListener("click", () => showView("homeView"));
   $("aboutBtn").addEventListener("click", () => showView("aboutView"));
   $("backAboutBtn").addEventListener("click", () => showView("settingsView"));
 
-  languageSelect.addEventListener("change", () => setLanguage(languageSelect.value));
-
   $("batteryBtn").addEventListener("click", () => {
     batterySaver = !batterySaver;
-    safeSet("smartCaneBatterySaver", String(batterySaver));
-    document.body.classList.toggle("saver", batterySaver);
-    updateBatteryButton();
-    updateCameraConstraints();
+    writeStorage("smartCaneBatterySaver", String(batterySaver));
+    updateButtons();
   });
 
-  $("aiBtn").addEventListener("click", () => {
-    aiEnabled = !aiEnabled;
-    updateAiButton();
-    $("aiPanel").classList.toggle("hidden", !aiEnabled);
-    if (aiEnabled && running) {
-      noDetectionSince = 0;
-      lastClearSpokenAt = 0;
-    }
+  $("testVoiceBtn").addEventListener("click", () => say("testVoice"));
+
+  $("feedbackBtn").addEventListener("click", () => {
+    $("ratings").classList.toggle("hidden");
   });
 
-  $("askBtn").addEventListener("click", answerAgentQuestion);
-  $("agentQuestion").addEventListener("keydown", (event) => {
-    if (event.key === "Enter") answerAgentQuestion();
+  $("ratings").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-rating]");
+    if (!button) return;
+
+    const rating = Number(button.dataset.rating);
+    const descriptions = {
+      1: "Major improvement needed",
+      2: "Considerable improvement needed",
+      3: "Some improvement needed",
+      4: "A little improvement needed",
+      5: "No improvement needed"
+    };
+
+    const subject = encodeURIComponent("Smart Cane Feedback / Review");
+    const body = encodeURIComponent(
+      `My rating: ${rating}/5 — ${descriptions[rating]}`
+    );
+
+    window.location.href =
+      `mailto:humairasardar10@gmail.com?subject=${subject}&body=${body}`;
+  });
+
+  searchInput.addEventListener("input", () => renderLanguages(searchInput.value));
+
+  languageSelect.addEventListener("change", () => {
+    languageCode = languageSelect.value;
+    writeStorage("smartCaneLanguage", languageCode);
+    populateVoices();
   });
 
   voiceSelect.addEventListener("change", () => {
     selectedVoiceURI = voiceSelect.value;
     manualVoiceChoice = true;
-    safeSet("smartCaneVoiceURI", selectedVoiceURI);
+    writeStorage("smartCaneVoiceURI", selectedVoiceURI);
   });
 
-  $("openTtsSettingsBtn").addEventListener("click", () => {
-    // Android may handle this intent; other platforms can ignore it.
-    window.location.href =
-      "intent://com.android.settings.TTS_SETTINGS#Intent;action=android.settings.TTS_SETTINGS;end";
-  });
-
-  $("feedbackBtn").addEventListener("click", () => {
-    const subject = encodeURIComponent(tr("emailSubject"));
-    window.location.href =
-      `mailto:humairasardar@gmail.com?subject=${subject}`;
-  });
-
-  populateLanguageOptions();
-  setLanguage(languageCode);
-  document.body.classList.toggle("saver", batterySaver);
-  updateBatteryButton();
-  updateAiButton();
-  $("aiPanel").classList.toggle("hidden", !aiEnabled);
+  renderLanguages();
+  languageSelect.value = languageCode;
+  updateButtons();
 
   if ("speechSynthesis" in window) {
     populateVoices();
-    window.speechSynthesis.addEventListener?.("voiceschanged", populateVoices);
-    // Compatibility with browsers that use the property instead of the event.
-    window.speechSynthesis.onvoiceschanged = populateVoices;
+    speechSynthesis.onvoiceschanged = populateVoices;
   }
 
-  statusEl.textContent = tr("ready");
-
-  window.addEventListener("pagehide", () => stopDetection(false));
+  window.addEventListener("pagehide", stop);
+})();
 </script>
 </body>
 </html>
