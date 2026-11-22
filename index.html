@@ -8,94 +8,198 @@
 
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body { margin: 0; padding: 16px; background: #0a0f1e; color: #fff; font-family: Arial, sans-serif; }
-    main { max-width: 620px; margin: auto; padding: 22px; border-radius: 16px; background: #111827; box-shadow: 0 4px 20px rgba(0,0,0,.45); }
+    body {
+      margin: 0;
+      padding: 16px;
+      background: #0a0f1e;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+    main {
+      max-width: 620px;
+      margin: auto;
+      padding: 22px;
+      border-radius: 16px;
+      background: #111827;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, .45);
+    }
     h1, h2 { margin: 0; color: #00ffcc; text-align: center; }
     h1 { font-size: 24px; }
     h2 { font-size: 22px; }
-    label { display: block; margin: 14px 0 6px; color: #00ffcc; font-size: 14px; font-weight: 700; }
-    input, select { width: 100%; padding: 12px; border: 1px solid #374151; border-radius: 10px; background: #1f2937; color: #fff; font-size: 16px; }
-    #languageSearch { margin-top: 14px; }
-    video { display: block; width: 100%; height: 280px; margin: 14px 0 10px; border: 3px solid #00ffcc; border-radius: 12px; background: #000; object-fit: cover; }
-    button { width: 100%; margin-top: 10px; padding: 14px; border: 0; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; }
+    label {
+      display: block;
+      margin: 14px 0 6px;
+      color: #00ffcc;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #374151;
+      border-radius: 10px;
+      background: #1f2937;
+      color: #fff;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 14px;
+      border: 0;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
     button:disabled { opacity: .65; cursor: wait; }
     .primary { background: #00ffcc; color: #000; }
     .stop { background: #ef4444; color: #fff; }
     .secondary { background: #374151; color: #fff; }
     .gold { background: #ca8a04; color: #fff; }
-    #status, #locationStatus { min-height: 28px; margin: 12px 0; font-size: 16px; font-weight: 700; line-height: 1.45; text-align: center; overflow-wrap: anywhere; }
+    video {
+      display: block;
+      width: 100%;
+      height: 280px;
+      margin: 14px 0 10px;
+      border: 3px solid #00ffcc;
+      border-radius: 12px;
+      background: #000;
+      object-fit: cover;
+    }
+    #status, #locationStatus {
+      min-height: 28px;
+      margin: 12px 0;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.45;
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
     #status { color: #38bdf8; }
     #locationStatus { color: #cbd5e1; font-size: 13px; }
     .view { display: none; }
     .view.active { display: block; }
     .hidden { display: none !important; }
-    .rating-option { margin-top: 8px; padding: 12px; border: 1px solid #374151; border-radius: 8px; background: #1f2937; }
-    .rating-option button { margin: 0; background: transparent; color: #00ffcc; text-align: left; }
+    .language-control { position: relative; margin-top: 14px; }
+    #languageSelect { margin: 0; text-align: left; }
+    #languageDropdown {
+      position: absolute;
+      z-index: 5;
+      top: calc(100% + 5px);
+      left: 0;
+      right: 0;
+      max-height: 320px;
+      padding: 8px;
+      overflow: auto;
+      border: 1px solid #374151;
+      border-radius: 10px;
+      background: #111827;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, .45);
+    }
+    #languageSearch { margin: 0 0 8px; }
+    #languageOptions { max-height: 230px; overflow-y: auto; }
+    .language-option {
+      display: block;
+      width: 100%;
+      margin: 2px 0;
+      padding: 10px;
+      border-radius: 7px;
+      background: transparent;
+      color: #fff;
+      text-align: left;
+    }
+    .language-option:hover, .language-option[aria-selected="true"] {
+      background: #1f2937;
+      color: #00ffcc;
+    }
+    .rating-option {
+      margin-top: 8px;
+      padding: 12px;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      background: #1f2937;
+    }
+    .rating-option button {
+      margin: 0;
+      background: transparent;
+      color: #00ffcc;
+      text-align: left;
+    }
   </style>
 
   <script src="./languages.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/dist/tf-tflite.min.js"></script>
 </head>
-
 <body>
 <main>
   <section id="homeView" class="view active">
     <h1>Your Eyes, Smart Cane</h1>
-    <input id="languageSearch" type="search" aria-label="Search languages">
-    <select id="languageSelect" aria-label="Select language"></select>
+
+    <div class="language-control">
+      <button id="languageSelect" class="secondary" type="button"
+              aria-haspopup="listbox" aria-expanded="false">
+        English (United States)
+      </button>
+      <div id="languageDropdown" class="hidden">
+        <input id="languageSearch" type="search" aria-label="Search languages">
+        <div id="languageOptions" role="listbox" aria-label="Languages"></div>
+      </div>
+    </div>
 
     <video id="camera" autoplay playsinline muted aria-label="Camera preview"></video>
     <div id="status" aria-live="polite"></div>
     <div id="locationStatus" aria-live="polite"></div>
 
-    <button id="startBtn" class="primary">Start Live AI</button>
-    <button id="stopBtn" class="stop hidden">Stop</button>
-    <button id="settingsBtn" class="secondary">Settings</button>
+    <button id="startBtn" class="primary" type="button">Start Live AI</button>
+    <button id="stopBtn" class="stop hidden" type="button">Stop</button>
+    <button id="settingsBtn" class="secondary" type="button">Settings</button>
   </section>
 
   <section id="settingsView" class="view">
     <h2>Settings</h2>
-    <button id="batteryBtn" class="gold">Battery Saver: OFF</button>
+
+    <button id="batteryBtn" class="gold" type="button">Battery Saver: OFF</button>
 
     <label for="voiceSelect">TTS</label>
     <select id="voiceSelect" aria-label="Select text-to-speech voice"></select>
-    <button id="testVoiceBtn" class="secondary">Test TTS</button>
+    <button id="testVoiceBtn" class="secondary" type="button">Test TTS</button>
 
-    <button id="feedbackBtn" class="secondary">Feedback</button>
+    <button id="feedbackBtn" class="secondary" type="button">Feedback</button>
     <div id="ratings" class="hidden">
-      <div class="rating-option"><button data-rating="1">1 — Major improvement needed</button></div>
-      <div class="rating-option"><button data-rating="2">2 — Considerable improvement needed</button></div>
-      <div class="rating-option"><button data-rating="3">3 — Some improvement needed</button></div>
-      <div class="rating-option"><button data-rating="4">4 — A little improvement needed</button></div>
-      <div class="rating-option"><button data-rating="5">5 — No improvement needed</button></div>
+      <div class="rating-option"><button type="button" data-rating="1">1 — Major improvement needed</button></div>
+      <div class="rating-option"><button type="button" data-rating="2">2 — Considerable improvement needed</button></div>
+      <div class="rating-option"><button type="button" data-rating="3">3 — Some improvement needed</button></div>
+      <div class="rating-option"><button type="button" data-rating="4">4 — A little improvement needed</button></div>
+      <div class="rating-option"><button type="button" data-rating="5">5 — No improvement needed</button></div>
     </div>
 
-    <button id="aboutBtn" class="secondary">About</button>
-    <button id="backHomeBtn" class="secondary">Back</button>
+    <button id="aboutBtn" class="secondary" type="button">About</button>
+    <button id="backHomeBtn" class="secondary" type="button">Back</button>
   </section>
 
   <section id="aboutView" class="view">
     <h2>About</h2>
     <p>I am confident, capable, and moving forward with courage.</p>
     <p>Created by Humaira Sardar, Okara, Pakistan</p>
-    <button id="backAboutBtn" class="secondary">Back</button>
+    <button id="backAboutBtn" class="secondary" type="button">Back</button>
   </section>
 </main>
 
-<script>
-(() => {
-  "use strict";
+<script type="module">
+  import {
+    loadLiteRt,
+    loadAndCompile,
+    Tensor
+  } from "https://cdn.jsdelivr.net/npm/@litertjs/core/+esm";
 
   const MODEL_URL = "./yolov8n.tflite";
+  const LITERT_WASM_URL = "https://cdn.jsdelivr.net/npm/@litertjs/core/wasm/";
   const INPUT_SIZE = 640;
   const CONFIDENCE_THRESHOLD = 0.5;
   const IOU_THRESHOLD = 0.45;
   const NORMAL_INTERVAL_MS = 120;
   const SAVER_INTERVAL_MS = 450;
   const REPEAT_INTERVAL_MS = 3000;
-
-  // This image-size heuristic is only an approximate estimate, not a measured range.
   const DISTANCE_FACTOR_METERS = 0.35;
   const MAX_ANNOUNCED_DISTANCE_METERS = 4;
   const CENTER_LEFT_BOUNDARY = 0.35;
@@ -117,9 +221,9 @@
     starting: "Starting live detection.",
     stopped: "Detection stopped.",
     cameraError: "Camera unavailable. Allow camera access and use HTTPS or localhost.",
-    modelError: "The TFLite model could not be loaded or its output format was not recognized.",
+    modelError: "The LiteRT model could not be loaded or its output format was not recognized.",
     noCenter: "No close obstacle detected in the center camera view.",
-    obstacle: "Stop. About {distance} meters ahead, {object} is {direction}.",
+    obstacle: "Stop. About {distance} meters ahead, {object} is in the center.",
     side: "{direction}: {object}, about {distance} meters away.",
     dark: "The camera image is very dark.",
     locationWaiting: "Location unavailable.",
@@ -128,42 +232,19 @@
     testVoice: "Text to speech is working."
   };
 
-  const URDU_LABELS = {
-    person: "شخص", bicycle: "سائیکل", car: "گاڑی", motorcycle: "موٹر سائیکل",
-    airplane: "طیارہ", bus: "بس", train: "ٹرین", truck: "ٹرک", boat: "کشتی",
-    "traffic light": "ٹریفک لائٹ", "fire hydrant": "فائر ہائیڈرنٹ",
-    "stop sign": "اسٹاپ سائن", "parking meter": "پارکنگ میٹر", bench: "بینچ",
-    bird: "پرندہ", cat: "بلی", dog: "کتا", horse: "گھوڑا", sheep: "بھیڑ",
-    cow: "گائے", elephant: "ہاتھی", bear: "ریچھ", zebra: "زیبرا",
-    giraffe: "زرافہ", backpack: "بیگ", umbrella: "چھتری", handbag: "ہینڈ بیگ",
-    tie: "ٹائی", suitcase: "سوٹ کیس", frisbee: "فریسبی", skis: "اسکیز",
-    snowboard: "اسنو بورڈ", "sports ball": "کھیل کی گیند", kite: "پتنگ",
-    "baseball bat": "بیس بال بیٹ", "baseball glove": "بیس بال دستانہ",
-    skateboard: "اسکیٹ بورڈ", surfboard: "سرف بورڈ", "tennis racket": "ٹینس ریکٹ",
-    bottle: "بوتل", "wine glass": "وائن گلاس", cup: "کپ", fork: "کانٹا",
-    knife: "چاقو", spoon: "چمچ", bowl: "پیالہ", banana: "کیلا", apple: "سیب",
-    sandwich: "سینڈوچ", orange: "سنگترہ", broccoli: "بروکلی", carrot: "گاجر",
-    "hot dog": "ہاٹ ڈاگ", pizza: "پیزا", donut: "ڈونٹ", cake: "کیک",
-    chair: "کرسی", couch: "صوفہ", "potted plant": "گملے کا پودا", bed: "بستر",
-    "dining table": "کھانے کی میز", toilet: "ٹوائلٹ", tv: "ٹی وی",
-    laptop: "لیپ ٹاپ", mouse: "ماؤس", remote: "ریموٹ", keyboard: "کی بورڈ",
-    "cell phone": "موبائل فون", microwave: "مائیکروویو", oven: "اوون",
-    toaster: "ٹوسٹر", sink: "سنک", refrigerator: "ریفریجریٹر", book: "کتاب",
-    clock: "گھڑی", vase: "گلدان", scissors: "قینچی", "teddy bear": "ٹیڈی بیئر",
-    "hair drier": "ہیئر ڈرائر", toothbrush: "دانتوں کا برش"
-  };
-
   const $ = (id) => document.getElementById(id);
   const video = $("camera");
   const statusEl = $("status");
   const locationEl = $("locationStatus");
-  const languageSelect = $("languageSelect");
-  const searchInput = $("languageSearch");
   const voiceSelect = $("voiceSelect");
+  const languageButton = $("languageSelect");
+  const languageDropdown = $("languageDropdown");
+  const languageSearch = $("languageSearch");
+  const languageOptions = $("languageOptions");
 
   const localeCodes = (window.SMART_CANE_LANGUAGES?.locales || [])
-    .map((item) => item.code)
-    .filter(Boolean);
+    .map((locale) => locale.code)
+    .filter((code) => typeof code === "string" && code.length);
 
   if (!localeCodes.includes("en-US")) localeCodes.unshift("en-US");
 
@@ -184,7 +265,6 @@
   let lastSceneKey = "";
   let lastSceneSpeechAt = 0;
   let lastInferenceAt = 0;
-  let lastTimestamp = 0;
   let lastDarkSpeechAt = 0;
   let noDetectionSince = 0;
   let locationWatchId = null;
@@ -197,12 +277,16 @@
     try { localStorage.setItem(key, value); } catch {}
   }
 
-  function say(key, values = {}, display = true) {
-    let message = ENGLISH_SPEECH[key] || key;
+  function translationFor(key, values = {}) {
+    const external = window.SMART_CANE_TRANSLATIONS?.[languageCode]?.messages?.[key];
+    let message = typeof external === "string" ? external : ENGLISH_SPEECH[key] || key;
     for (const [name, value] of Object.entries(values)) {
       message = message.replaceAll(`{${name}}`, String(value));
     }
+    return message;
+  }
 
+  function speakText(message, display = true) {
     if (display) statusEl.textContent = message;
     if (!("speechSynthesis" in window)) return;
 
@@ -221,6 +305,10 @@
     }
   }
 
+  function say(key, values = {}, display = true) {
+    speakText(translationFor(key, values), display);
+  }
+
   function showView(id) {
     document.querySelectorAll(".view").forEach((view) => {
       view.classList.toggle("active", view.id === id);
@@ -231,9 +319,9 @@
     try {
       const parts = code.split("-");
       const region = parts.find((part) => part.length === 2 || /^\d{3}$/.test(part));
-      const language = new Intl.DisplayNames([code], { type: "language" }).of(parts[0]);
+      const language = new Intl.DisplayNames(["en"], { type: "language" }).of(parts[0]);
       const regionName = region
-        ? new Intl.DisplayNames([code], { type: "region" }).of(region)
+        ? new Intl.DisplayNames(["en"], { type: "region" }).of(region)
         : "";
       return `${language || code}${regionName ? " " + regionName : ""}`;
     } catch {
@@ -248,15 +336,29 @@
       return !query || label.includes(query) || code.toLowerCase().includes(query);
     });
 
-    languageSelect.innerHTML = "";
-    for (const code of matches) {
-      const option = document.createElement("option");
-      option.value = code;
-      option.textContent = regionLabel(code);
-      languageSelect.append(option);
-    }
+    languageOptions.replaceChildren();
 
-    if (matches.includes(languageCode)) languageSelect.value = languageCode;
+    for (const code of matches) {
+      const option = document.createElement("button");
+      option.type = "button";
+      option.className = "language-option";
+      option.setAttribute("role", "option");
+      option.setAttribute("aria-selected", String(code === languageCode));
+      option.textContent = regionLabel(code);
+      option.addEventListener("click", () => selectLanguage(code));
+      languageOptions.append(option);
+    }
+  }
+
+  function selectLanguage(code) {
+    if (!localeCodes.includes(code)) return;
+    languageCode = code;
+    writeStorage("smartCaneLanguage", code);
+    languageButton.textContent = regionLabel(code);
+    languageDropdown.classList.add("hidden");
+    languageButton.setAttribute("aria-expanded", "false");
+    renderLanguages(languageSearch.value);
+    populateVoices();
   }
 
   function updateButtons() {
@@ -272,19 +374,21 @@
   }
 
   function voiceMatchesLanguage(voice) {
-    return voice.lang.toLowerCase().split("-")[0] === languageCode.toLowerCase().split("-")[0];
+    return voice.lang.toLowerCase().split("-")[0] ===
+      languageCode.toLowerCase().split("-")[0];
   }
 
   function populateVoices() {
     if (!("speechSynthesis" in window)) return;
 
     voices = speechSynthesis.getVoices() || [];
-    voiceSelect.innerHTML = "";
+    voiceSelect.replaceChildren();
 
     for (const voice of voices) {
       const option = document.createElement("option");
       option.value = voice.voiceURI;
-      option.textContent = `${isGoogleVoice(voice) ? "Google · " : ""}${voice.name} (${voice.lang})`;
+      option.textContent =
+        `${isGoogleVoice(voice) ? "Google · " : ""}${voice.name} (${voice.lang})`;
       voiceSelect.append(option);
     }
 
@@ -308,20 +412,15 @@
   async function loadModel() {
     if (model) return model;
 
-    if (!window.tf || !window.tflite ||
-        typeof window.tflite.loadTFLiteModel !== "function") {
-      throw new Error("TFLite runtime unavailable.");
+    await loadLiteRt(LITERT_WASM_URL, { jspi: true });
+
+    try {
+      model = await loadAndCompile(MODEL_URL, { accelerator: "webgpu" });
+    } catch (webgpuError) {
+      console.warn("LiteRT WebGPU unavailable; trying WASM:", webgpuError);
+      model = await loadAndCompile(MODEL_URL, { accelerator: "wasm" });
     }
 
-    await tf.ready();
-
-    if (typeof tflite.setWasmPath === "function") {
-      tflite.setWasmPath(
-        "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-tflite@0.0.1-alpha.10/dist/"
-      );
-    }
-
-    model = await tflite.loadTFLiteModel("./yolov8n.tflite");
     return model;
   }
 
@@ -402,7 +501,6 @@
       lastSceneKey = "";
       lastSceneSpeechAt = 0;
       lastInferenceAt = 0;
-      lastTimestamp = 0;
       lastDarkSpeechAt = 0;
       noDetectionSince = 0;
       updateButtons();
@@ -429,7 +527,6 @@
     sessionId++;
     starting = false;
     running = false;
-    inFlight = false;
     cancelAnimationFrame(animationId);
     stopCamera();
     stopLocation();
@@ -438,11 +535,11 @@
   }
 
   function prepareInput() {
-    const width = video.videoWidth;
-    const height = video.videoHeight;
-    const scale = Math.min(INPUT_SIZE / width, INPUT_SIZE / height);
-    const scaledWidth = Math.round(width * scale);
-    const scaledHeight = Math.round(height * scale);
+    const sourceWidth = video.videoWidth;
+    const sourceHeight = video.videoHeight;
+    const scale = Math.min(INPUT_SIZE / sourceWidth, INPUT_SIZE / sourceHeight);
+    const scaledWidth = Math.round(sourceWidth * scale);
+    const scaledHeight = Math.round(sourceHeight * scale);
     const padX = Math.floor((INPUT_SIZE - scaledWidth) / 2);
     const padY = Math.floor((INPUT_SIZE - scaledHeight) / 2);
 
@@ -456,27 +553,19 @@
     context.drawImage(video, padX, padY, scaledWidth, scaledHeight);
 
     const rgba = context.getImageData(0, 0, INPUT_SIZE, INPUT_SIZE).data;
-    const plane = INPUT_SIZE * INPUT_SIZE;
-    const chw = new Float32Array(plane * 3);
+    const planeSize = INPUT_SIZE * INPUT_SIZE;
+    const chw = new Float32Array(planeSize * 3);
 
     for (let i = 0, pixel = 0; i < rgba.length; i += 4, pixel++) {
       chw[pixel] = rgba[i] / 255;
-      chw[plane + pixel] = rgba[i + 1] / 255;
-      chw[plane * 2 + pixel] = rgba[i + 2] / 255;
+      chw[planeSize + pixel] = rgba[i + 1] / 255;
+      chw[planeSize * 2 + pixel] = rgba[i + 2] / 255;
     }
 
     return {
-      tensor: tf.tensor(chw, [1, 3, INPUT_SIZE, INPUT_SIZE], "float32"),
-      scale, padX, padY, sourceWidth: width, sourceHeight: height
+      tensor: new Tensor(chw, [1, 3, INPUT_SIZE, INPUT_SIZE]),
+      scale, padX, padY, sourceWidth, sourceHeight
     };
-  }
-
-  function outputData(output) {
-    const tensor = Array.isArray(output) ? output[0] : output;
-    if (!tensor || typeof tensor.dataSync !== "function") {
-      throw new Error("Unexpected model output.");
-    }
-    return { data: tensor.dataSync(), shape: tensor.shape };
   }
 
   function intersectionOverUnion(a, b) {
@@ -507,60 +596,69 @@
     return selected;
   }
 
-  function decode(output, transform) {
-    const { data, shape } = outputData(output);
-    const channelsFirst =
-      shape.length === 3 && shape[1] === 84 && shape[2] === 8400;
-    const candidatesFirst =
-      shape.length === 3 && shape[1] === 8400 && shape[2] === 84;
+  async function decodeOutputs(results, transform) {
+    if (!results || !results.length) throw new Error("Model returned no output tensors.");
 
-    if (!channelsFirst && !candidatesFirst) {
-      throw new Error(`Unsupported model output shape: ${shape.join("x")}`);
-    }
+    const outputTensor = await results[0].moveTo("wasm");
+    try {
+      const data = outputTensor.toTypedArray();
+      const shape = outputTensor.shape;
 
-    const read = (channel, candidate) =>
-      channelsFirst
-        ? Number(data[channel * 8400 + candidate])
-        : Number(data[candidate * 84 + channel]);
+      const channelsFirst =
+        shape?.length === 3 && shape[1] === 84 && shape[2] === 8400;
+      const candidatesFirst =
+        shape?.length === 3 && shape[1] === 8400 && shape[2] === 84;
 
-    const boxes = [];
-
-    for (let i = 0; i < 8400; i++) {
-      let classId = -1;
-      let confidence = -Infinity;
-
-      for (let c = 0; c < 80; c++) {
-        const score = read(c + 4, i);
-        if (score > confidence) {
-          confidence = score;
-          classId = c;
-        }
+      if (!channelsFirst && !candidatesFirst) {
+        throw new Error(`Unsupported YOLO output shape: ${shape?.join("x") || "unknown"}`);
       }
 
-      if (!Number.isFinite(confidence) || confidence < CONFIDENCE_THRESHOLD) continue;
+      const read = (channel, candidate) =>
+        channelsFirst
+          ? Number(data[channel * 8400 + candidate])
+          : Number(data[candidate * 84 + channel]);
 
-      const cx = read(0, i);
-      const cy = read(1, i);
-      const width = read(2, i);
-      const height = read(3, i);
+      const boxes = [];
 
-      if (![cx, cy, width, height].every(Number.isFinite) || width <= 0 || height <= 0) continue;
+      for (let i = 0; i < 8400; i++) {
+        let classId = -1;
+        let confidence = -Infinity;
 
-      const x1Model = cx - width / 2;
-      const y1Model = cy - height / 2;
-      const x2Model = cx + width / 2;
-      const y2Model = cy + height / 2;
+        for (let c = 0; c < 80; c++) {
+          const score = read(c + 4, i);
+          if (score > confidence) {
+            confidence = score;
+            classId = c;
+          }
+        }
 
-      const x1 = Math.max(0, (x1Model - transform.padX) / transform.scale);
-      const y1 = Math.max(0, (y1Model - transform.padY) / transform.scale);
-      const x2 = Math.min(transform.sourceWidth, (x2Model - transform.padX) / transform.scale);
-      const y2 = Math.min(transform.sourceHeight, (y2Model - transform.padY) / transform.scale);
+        if (!Number.isFinite(confidence) || confidence < CONFIDENCE_THRESHOLD) continue;
 
-      if (x2 <= x1 || y2 <= y1) continue;
-      boxes.push({ x1, y1, x2, y2, score: confidence, classId });
+        const cx = read(0, i);
+        const cy = read(1, i);
+        const width = read(2, i);
+        const height = read(3, i);
+        if (![cx, cy, width, height].every(Number.isFinite) || width <= 0 || height <= 0) continue;
+
+        const x1Model = cx - width / 2;
+        const y1Model = cy - height / 2;
+        const x2Model = cx + width / 2;
+        const y2Model = cy + height / 2;
+
+        const x1 = Math.max(0, (x1Model - transform.padX) / transform.scale);
+        const y1 = Math.max(0, (y1Model - transform.padY) / transform.scale);
+        const x2 = Math.min(transform.sourceWidth, (x2Model - transform.padX) / transform.scale);
+        const y2 = Math.min(transform.sourceHeight, (y2Model - transform.padY) / transform.scale);
+
+        if (x2 <= x1 || y2 <= y1) continue;
+        boxes.push({ x1, y1, x2, y2, score: confidence, classId });
+      }
+
+      return applyNms(boxes);
+    } finally {
+      outputTensor.delete();
+      results.delete?.();
     }
-
-    return applyNms(boxes);
   }
 
   function estimatedMeters(box) {
@@ -570,17 +668,15 @@
   }
 
   function zoneFor(box) {
-    const x = ((box.x1 + box.x2) / 2) / video.videoWidth;
-    if (x < CENTER_LEFT_BOUNDARY) return "left";
-    if (x > CENTER_RIGHT_BOUNDARY) return "right";
+    const centerX = ((box.x1 + box.x2) / 2) / video.videoWidth;
+    if (centerX < CENTER_LEFT_BOUNDARY) return "left";
+    if (centerX > CENTER_RIGHT_BOUNDARY) return "right";
     return "center";
   }
 
   function localizedLabel(classId) {
     const label = COCO_LABELS[classId] || "object";
-    const translated =
-      window.SMART_CANE_TRANSLATIONS?.[languageCode]?.labels?.[label];
-    return translated || label;
+    return window.SMART_CANE_TRANSLATIONS?.[languageCode]?.labels?.[label] || label;
   }
 
   function imageIsDark() {
@@ -596,7 +692,6 @@
       for (let i = 0; i < pixels.length; i += 4) {
         total += (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
       }
-
       return total / (pixels.length / 4) < 22;
     } catch {
       return false;
@@ -604,44 +699,45 @@
   }
 
   function describeScene(boxes, now) {
-    const objectsByZone = { left: [], center: [], right: [] };
+    const byZone = { left: [], center: [], right: [] };
 
     for (const box of boxes) {
       const distance = estimatedMeters(box);
       if (distance === null || distance > MAX_ANNOUNCED_DISTANCE_METERS) continue;
 
-      const rounded = Math.round(distance * 2) / 2;
-      objectsByZone[zoneFor(box)].push({
+      byZone[zoneFor(box)].push({
         classId: box.classId,
         label: localizedLabel(box.classId),
-        distance: rounded,
+        distance: Math.round(distance * 2) / 2,
         score: box.score
       });
     }
 
-    for (const zone of Object.keys(objectsByZone)) {
-      objectsByZone[zone].sort((a, b) => b.score - a.score);
-    }
+    Object.values(byZone).forEach((items) => items.sort((a, b) => b.score - a.score));
 
-    const center = objectsByZone.center[0] || null;
-    const left = objectsByZone.left[0] || null;
-    const right = objectsByZone.right[0] || null;
+    const center = byZone.center[0] || null;
+    const left = byZone.left[0] || null;
+    const right = byZone.right[0] || null;
+    const messages = [];
 
-    let parts = [];
-    if (center) {
-      parts.push(
-        `Stop. About ${center.distance} meters ahead, ${center.label} is in the center.`
-      );
-    } else {
-      parts.push(ENGLISH_SPEECH.noCenter);
-    }
+    messages.push(center
+      ? translationFor("obstacle", {
+          distance: center.distance,
+          object: center.label
+        })
+      : translationFor("noCenter"));
 
-    if (left) {
-      parts.push(`Left: ${left.label}, about ${left.distance} meters away.`);
-    }
-    if (right) {
-      parts.push(`Right: ${right.label}, about ${right.distance} meters away.`);
-    }
+    if (left) messages.push(translationFor("side", {
+      direction: window.SMART_CANE_TRANSLATIONS?.[languageCode]?.directions?.left || "Left",
+      object: left.label,
+      distance: left.distance
+    }));
+
+    if (right) messages.push(translationFor("side", {
+      direction: window.SMART_CANE_TRANSLATIONS?.[languageCode]?.directions?.right || "Right",
+      object: right.label,
+      distance: right.distance
+    }));
 
     const signature = [
       center ? `C:${center.classId}:${center.distance}` : "C:none",
@@ -649,44 +745,19 @@
       right ? `R:${right.classId}:${right.distance}` : "R:none"
     ].join("|");
 
-    if (signature !== lastSceneKey) {
+    if (signature !== lastSceneKey ||
+        ((center || left || right) && now - lastSceneSpeechAt >= REPEAT_INTERVAL_MS)) {
       lastSceneKey = signature;
       lastSceneSpeechAt = now;
-      const announcement = parts.join(" ");
-      statusEl.textContent = announcement;
-      speakText(announcement);
-    } else if (now - lastSceneSpeechAt >= REPEAT_INTERVAL_MS &&
-               (center || left || right)) {
-      lastSceneSpeechAt = now;
-      const announcement = parts.join(" ");
-      statusEl.textContent = announcement;
-      speakText(announcement);
-    }
-  }
-
-  function speakText(message) {
-    if (!("speechSynthesis" in window)) return;
-
-    try {
-      speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(message);
-      utterance.lang = languageCode;
-      utterance.rate = 1;
-      const voice = voices.find((item) => item.voiceURI === selectedVoiceURI);
-      if (voice) utterance.voice = voice;
-      speechSynthesis.speak(utterance);
-    } catch (error) {
-      console.warn("Speech synthesis error:", error);
+      speakText(messages.join(" "));
     }
   }
 
   async function loop() {
     if (!running) return;
 
-    // Schedule the next frame before checking inFlight so the loop continues.
     animationId = requestAnimationFrame(loop);
     if (inFlight) return;
-
     if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ||
         !video.videoWidth || !video.videoHeight) return;
 
@@ -696,8 +767,9 @@
 
     lastInferenceAt = now;
     inFlight = true;
+
     let inputTensor = null;
-    let output = null;
+    let results = null;
 
     try {
       if (imageIsDark()) {
@@ -711,63 +783,52 @@
 
       const prepared = prepareInput();
       inputTensor = prepared.tensor;
-      output = model.predict(inputTensor);
 
-      const boxes = decode(output, prepared);
-      describeScene(boxes, now);
-    } catch (error) {
-      console.error("TFLite inference failed:", error);
-      statusEl.textContent = ENGLISH_SPEECH.modelError;
-    } finally {
-      inputTensor?.dispose?.();
+      results = await model.run(inputTensor);
+      inputTensor.delete();
+      inputTensor = null;
 
-      if (Array.isArray(output)) {
-        output.forEach((tensor) => tensor?.dispose?.());
-      } else {
-        output?.dispose?.();
+      if (!running) {
+        results.delete?.();
+        results = null;
+        return;
       }
 
+      const boxes = await decodeOutputs(results, prepared);
+      results = null;
+      describeScene(boxes, now);
+
+      if (boxes.length === 0) noDetectionSince = noDetectionSince || now;
+      else noDetectionSince = 0;
+    } catch (error) {
+      console.error("LiteRT inference failed:", error);
+      statusEl.textContent = ENGLISH_SPEECH.modelError;
+      results?.delete?.();
+    } finally {
+      inputTensor?.delete();
       inFlight = false;
     }
   }
 
-  function prepareInput() {
-    const width = video.videoWidth;
-    const height = video.videoHeight;
-    const scale = Math.min(INPUT_SIZE / width, INPUT_SIZE / height);
-    const scaledWidth = Math.round(width * scale);
-    const scaledHeight = Math.round(height * scale);
-    const padX = Math.floor((INPUT_SIZE - scaledWidth) / 2);
-    const padY = Math.floor((INPUT_SIZE - scaledHeight) / 2);
-
-    const canvas = document.createElement("canvas");
-    canvas.width = INPUT_SIZE;
-    canvas.height = INPUT_SIZE;
-    const context = canvas.getContext("2d", { willReadFrequently: true });
-
-    context.fillStyle = "rgb(114,114,114)";
-    context.fillRect(0, 0, INPUT_SIZE, INPUT_SIZE);
-    context.drawImage(video, padX, padY, scaledWidth, scaledHeight);
-
-    const rgba = context.getImageData(0, 0, INPUT_SIZE, INPUT_SIZE).data;
-    const planeSize = INPUT_SIZE * INPUT_SIZE;
-    const chw = new Float32Array(planeSize * 3);
-
-    for (let i = 0, pixel = 0; i < rgba.length; i += 4, pixel++) {
-      chw[pixel] = rgba[i] / 255;
-      chw[planeSize + pixel] = rgba[i + 1] / 255;
-      chw[planeSize * 2 + pixel] = rgba[i + 2] / 255;
+  languageButton.addEventListener("click", () => {
+    const opening = languageDropdown.classList.contains("hidden");
+    languageDropdown.classList.toggle("hidden", !opening);
+    languageButton.setAttribute("aria-expanded", String(opening));
+    if (opening) {
+      languageSearch.value = "";
+      renderLanguages();
+      languageSearch.focus();
     }
+  });
 
-    return {
-      tensor: tf.tensor(chw, [1, 3, INPUT_SIZE, INPUT_SIZE], "float32"),
-      scale,
-      padX,
-      padY,
-      sourceWidth: width,
-      sourceHeight: height
-    };
-  }
+  languageSearch.addEventListener("input", () => renderLanguages(languageSearch.value));
+
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".language-control")) {
+      languageDropdown.classList.add("hidden");
+      languageButton.setAttribute("aria-expanded", "false");
+    }
+  });
 
   $("startBtn").addEventListener("click", start);
   $("stopBtn").addEventListener("click", stop);
@@ -802,20 +863,9 @@
     };
 
     const subject = encodeURIComponent("Smart Cane Feedback / Review");
-    const body = encodeURIComponent(
-      `My rating: ${rating}/5 — ${descriptions[rating]}`
-    );
-
+    const body = encodeURIComponent(`My rating: ${rating}/5 — ${descriptions[rating]}`);
     window.location.href =
       `mailto:humairasardar10@gmail.com?subject=${subject}&body=${body}`;
-  });
-
-  searchInput.addEventListener("input", () => renderLanguages(searchInput.value));
-
-  languageSelect.addEventListener("change", () => {
-    languageCode = languageSelect.value;
-    writeStorage("smartCaneLanguage", languageCode);
-    populateVoices();
   });
 
   voiceSelect.addEventListener("change", () => {
@@ -825,7 +875,7 @@
   });
 
   renderLanguages();
-  languageSelect.value = languageCode;
+  languageButton.textContent = regionLabel(languageCode);
   updateButtons();
 
   if ("speechSynthesis" in window) {
@@ -834,7 +884,6 @@
   }
 
   window.addEventListener("pagehide", stop);
-})();
 </script>
 </body>
 </html>
