@@ -5,23 +5,77 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#0a0f1e">
   <title>Your Eyes, Smart Cane</title>
+
   <style>
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body { margin: 0; padding: 16px; background: #0a0f1e; color: #fff; font-family: Arial, sans-serif; }
-    main { max-width: 620px; margin: auto; padding: 22px; border-radius: 16px; background: #111827; box-shadow: 0 4px 20px rgba(0, 0, 0, .45); }
+    body {
+      margin: 0;
+      padding: 16px;
+      background: #0a0f1e;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+    main {
+      max-width: 620px;
+      margin: auto;
+      padding: 22px;
+      border-radius: 16px;
+      background: #111827;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, .45);
+    }
     h1, h2 { margin: 0; color: #00ffcc; text-align: center; }
     h1 { font-size: 24px; }
     h2 { font-size: 22px; }
-    label { display: block; margin: 14px 0 6px; color: #00ffcc; font-size: 14px; font-weight: 700; }
-    input, select { width: 100%; padding: 12px; border: 1px solid #374151; border-radius: 10px; background: #1f2937; color: #fff; font-size: 16px; }
-    button { width: 100%; margin-top: 10px; padding: 14px; border: 0; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; }
+    label {
+      display: block;
+      margin: 14px 0 6px;
+      color: #00ffcc;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    input, select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #374151;
+      border-radius: 10px;
+      background: #1f2937;
+      color: #fff;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 14px;
+      border: 0;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
     button:disabled { opacity: .65; cursor: wait; }
     .primary { background: #00ffcc; color: #000; }
     .stop { background: #ef4444; color: #fff; }
     .secondary { background: #374151; color: #fff; }
-    .selected-voice { background: #00ffcc !important; color: #000 !important; }
-    video { display: block; width: 100%; height: 280px; margin: 14px 0 10px; border: 3px solid #00ffcc; border-radius: 12px; background: #000; object-fit: cover; }
-    #status, #locationStatus { min-height: 28px; margin: 12px 0; font-size: 16px; font-weight: 700; line-height: 1.45; text-align: center; overflow-wrap: anywhere; }
+    .gold { background: #ca8a04; color: #fff; }
+    video {
+      display: block;
+      width: 100%;
+      height: 280px;
+      margin: 14px 0 10px;
+      border: 3px solid #00ffcc;
+      border-radius: 12px;
+      background: #000;
+      object-fit: cover;
+    }
+    #status, #locationStatus {
+      min-height: 28px;
+      margin: 12px 0;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1.45;
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
     #status { color: #38bdf8; }
     #locationStatus { color: #cbd5e1; font-size: 13px; }
     .view { display: none; }
@@ -29,106 +83,87 @@
     .hidden { display: none !important; }
     .language-control { position: relative; margin-top: 14px; }
     #languageSelect { margin: 0; text-align: left; }
-    #languageDropdown { position: absolute; z-index: 5; top: calc(100% + 5px); left: 0; right: 0; max-height: 320px; padding: 8px; overflow: auto; border: 1px solid #374151; border-radius: 10px; background: #111827; box-shadow: 0 8px 20px rgba(0, 0, 0, .45); }
+    #languageDropdown {
+      position: absolute;
+      z-index: 5;
+      top: calc(100% + 5px);
+      left: 0;
+      right: 0;
+      max-height: 320px;
+      padding: 8px;
+      overflow: auto;
+      border: 1px solid #374151;
+      border-radius: 10px;
+      background: #111827;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, .45);
+    }
     #languageSearch { margin: 0 0 8px; }
     #languageOptions { max-height: 230px; overflow-y: auto; }
-    .language-option { display: block; width: 100%; margin: 2px 0; padding: 10px; border-radius: 7px; background: transparent; color: #fff; text-align: left; }
-    .language-option:hover, .language-option[aria-selected="true"] { background: #1f2937; color: #00ffcc; }
-    .rating-option { margin-top: 8px; padding: 12px; border: 1px solid #374151; border-radius: 8px; background: #1f2937; }
-    .rating-option button { margin: 0; background: transparent; color: #00ffcc; text-align: left; }
+    .language-option {
+      display: block;
+      width: 100%;
+      margin: 2px 0;
+      padding: 10px;
+      border-radius: 7px;
+      background: transparent;
+      color: #fff;
+      text-align: left;
+    }
+    .language-option:hover, .language-option[aria-selected="true"] {
+      background: #1f2937;
+      color: #00ffcc;
+    }
+    .rating-option {
+      margin-top: 8px;
+      padding: 12px;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      background: #1f2937;
+    }
+    .rating-option button {
+      margin: 0;
+      background: transparent;
+      color: #00ffcc;
+      text-align: left;
+    }
   </style>
-  <script>
-    window.SMART_CANE_LANGUAGES = {
-      locales: [
-        { code: "en-US", label: "English US" },
-        { code: "ur-PK", label: "Urdu Pakistan" },
-        { code: "hi-IN", label: "Hindi India" },
-        { code: "ar-SA", label: "Arabic Saudi Arabia" },
-        { code: "bn-BD", label: "Bengali Bangladesh" },
-        { code: "pa-PK", label: "Punjabi Pakistan" },
-        { code: "ps-AF", label: "Pashto Afghanistan" },
-        { code: "fa-IR", label: "Persian Iran" },
-        { code: "tr-TR", label: "Turkish Turkey" },
-        { code: "fr-FR", label: "French France" },
-        { code: "de-DE", label: "German Germany" },
-        { code: "es-ES", label: "Spanish Spain" },
-        { code: "it-IT", label: "Italian Italy" },
-        { code: "pt-BR", label: "Portuguese Brazil" },
-        { code: "ru-RU", label: "Russian Russia" },
-        { code: "zh-CN", label: "Chinese China" },
-        { code: "ja-JP", label: "Japanese Japan" },
-        { code: "ko-KR", label: "Korean Korea" },
-        { code: "id-ID", label: "Indonesian Indonesia" },
-        { code: "ms-MY", label: "Malay Malaysia" }
-      ]
-    };
-    window.SMART_CANE_TRANSLATIONS = {
-      "en-US": {
-        messages: {
-          active: "Live detection is active.",
-          starting: "Starting live detection.",
-          stopped: "Detection stopped.",
-          cameraError: "Camera unavailable. Allow camera access and use HTTPS or localhost.",
-          modelError: "The LiteRT model could not be loaded or its output format was not recognized.",
-          noCenter: "No close obstacle detected in the center camera view.",
-          obstacle: "Stop. About {distance} meters ahead, {object} is in the center.",
-          side: "{direction}: {object}, about {distance} meters away.",
-          dark: "The camera image is very dark.",
-          locationWaiting: "Location unavailable.",
-          locationError: "Location permission or service unavailable.",
-          location: "Location: {lat}, {lon}",
-          testVoice: "Text to speech is working."
-        },
-        labels: { "person": "person", "chair": "chair", "bed": "bed", "dining table": "dining table", "TV": "TV", "car": "car", "dog": "dog", "cat": "cat" },
-        directions: { left: "Left", right: "Right" }
-      },
-      "ur-PK": {
-        messages: {
-          active: "Live detection is active.",
-          starting: "Starting live detection.",
-          stopped: "Detection stopped.",
-          cameraError: "Camera unavailable. Allow camera access and use HTTPS or localhost.",
-          modelError: "The LiteRT model could not be loaded or its output format was not recognized.",
-          noCenter: "No close obstacle detected in the center camera view.",
-          obstacle: "Stop. About {distance} meters ahead, {object} is in the center.",
-          side: "{direction}: {object}, about {distance} meters away.",
-          dark: "The camera image is very dark.",
-          locationWaiting: "Location unavailable.",
-          locationError: "Location permission or service unavailable.",
-          location: "Location: {lat}, {lon}",
-          testVoice: "Text to speech is working."
-        },
-        labels: { "person": "person", "chair": "chair", "bed": "bed", "dining table": "dining table", "TV": "TV", "car": "car", "dog": "dog", "cat": "cat" },
-        directions: { left: "Left", right: "Right" }
-      }
-    };
-  </script>
+
+  <script src="./languages.js"></script>
 </head>
 <body>
 <main>
   <section id="homeView" class="view active">
     <h1>Your Eyes, Smart Cane</h1>
+
     <div class="language-control">
-      <button id="languageSelect" class="secondary" type="button" aria-haspopup="listbox" aria-expanded="false">English US</button>
+      <button id="languageSelect" class="secondary" type="button"
+              aria-haspopup="listbox" aria-expanded="false">
+        English United States
+      </button>
       <div id="languageDropdown" class="hidden">
         <input id="languageSearch" type="search" aria-label="Search languages">
         <div id="languageOptions" role="listbox" aria-label="Languages"></div>
       </div>
     </div>
+
     <video id="camera" autoplay playsinline muted aria-label="Camera preview"></video>
     <div id="status" aria-live="polite"></div>
     <div id="locationStatus" aria-live="polite"></div>
+
     <button id="startBtn" class="primary" type="button">Start Live AI</button>
     <button id="stopBtn" class="stop hidden" type="button">Stop</button>
     <button id="settingsBtn" class="secondary" type="button">Settings</button>
   </section>
+
   <section id="settingsView" class="view">
     <h2>Settings</h2>
-    <label>TTS Voice</label>
-    <button id="voiceGoogleBtn" class="secondary selected-voice" type="button">Google Text-to-Speech</button>
-    <button id="voiceVocalizerBtn" class="secondary" type="button">Vocalizer</button>
-    <button id="voiceAutoBtn" class="secondary" type="button">Auto</button>
+
+    <button id="batteryBtn" class="gold" type="button">Battery Saver: OFF</button>
+
+    <label for="voiceSelect">TTS</label>
+    <select id="voiceSelect" aria-label="Select text-to-speech voice"></select>
     <button id="testVoiceBtn" class="secondary" type="button">Test TTS</button>
+
     <button id="feedbackBtn" class="secondary" type="button">Feedback</button>
     <div id="ratings" class="hidden">
       <div class="rating-option"><button type="button" data-rating="1">1 — Major improvement needed</button></div>
@@ -137,9 +172,11 @@
       <div class="rating-option"><button type="button" data-rating="4">4 — A little improvement needed</button></div>
       <div class="rating-option"><button type="button" data-rating="5">5 — No improvement needed</button></div>
     </div>
+
     <button id="aboutBtn" class="secondary" type="button">About</button>
     <button id="backHomeBtn" class="secondary" type="button">Back</button>
   </section>
+
   <section id="aboutView" class="view">
     <h2>About</h2>
     <p>I am confident, capable, and moving forward with courage.</p>
@@ -147,19 +184,27 @@
     <button id="backAboutBtn" class="secondary" type="button">Back</button>
   </section>
 </main>
+
 <script type="module">
-  import { loadLiteRt, loadAndCompile, Tensor } from "https://cdn.jsdelivr.net/npm/@litertjs/core/+esm";
+  import {
+    loadLiteRt,
+    loadAndCompile,
+    Tensor
+  } from "https://cdn.jsdelivr.net/npm/@litertjs/core/+esm";
+
   const MODEL_URL = "./yolov8n.tflite";
   const LITERT_WASM_URL = "https://cdn.jsdelivr.net/npm/@litertjs/core/wasm/";
   const INPUT_SIZE = 640;
-  const CONFIDENCE_THRESHOLD = 0.35;
+  const CONFIDENCE_THRESHOLD = 0.25;
   const IOU_THRESHOLD = 0.45;
   const NORMAL_INTERVAL_MS = 120;
+  const SAVER_INTERVAL_MS = 450;
   const REPEAT_INTERVAL_MS = 3000;
-  const DISTANCE_FACTOR_METERS = 0.35;
+  const DISTANCE_FACTOR_METERS = 0.45;
   const MAX_ANNOUNCED_DISTANCE_METERS = 6;
-  const CENTER_LEFT_BOUNDARY = 0.35;
-  const CENTER_RIGHT_BOUNDARY = 0.65;
+  const CENTER_LEFT_BOUNDARY = 0.32;
+  const CENTER_RIGHT_BOUNDARY = 0.68;
+
   const COCO_LABELS = [
     "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat", "traffic light",
     "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep", "cow",
@@ -167,9 +212,10 @@
     "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket", "bottle",
     "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple", "sandwich", "orange",
     "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "couch", "potted plant", "bed",
-    "dining table", "toilet", "TV", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven",
+    "dining table", "toilet", "tv", "laptop", "mouse", "remote", "keyboard", "cell phone", "microwave", "oven",
     "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"
   ];
+
   const ENGLISH_SPEECH = {
     active: "Live detection is active.",
     starting: "Starting live detection.",
@@ -185,168 +231,323 @@
     location: "Location: {lat}, {lon}",
     testVoice: "Text to speech is working."
   };
+
   const $ = (id) => document.getElementById(id);
   const video = $("camera");
   const statusEl = $("status");
   const locationEl = $("locationStatus");
+  const voiceSelect = $("voiceSelect");
   const languageButton = $("languageSelect");
   const languageDropdown = $("languageDropdown");
   const languageSearch = $("languageSearch");
   const languageOptions = $("languageOptions");
-  const localeList = (window.SMART_CANE_LANGUAGES?.locales || []);
-  const localeCodes = localeList.map((l) => l.code).filter((c) => typeof c === "string" && c.length);
+
+  const localeCodes = (window.SMART_CANE_LANGUAGES?.locales || [])
+    .map((locale) => locale.code)
+    .filter((code) => typeof code === "string" && code.length);
+
   if (!localeCodes.includes("en-US")) localeCodes.unshift("en-US");
-  function labelFor(code) { const found = localeList.find((l) => l.code === code); if (found) return found.label; return code; }
+
   let languageCode = readStorage("smartCaneLanguage") || "en-US";
   if (!localeCodes.includes(languageCode)) languageCode = "en-US";
+
   let model = null;
+  let modelInputShape = null;
   let stream = null;
   let running = false;
   let starting = false;
   let sessionId = 0;
   let animationId = 0;
   let inFlight = false;
+  let batterySaver = readStorage("smartCaneBatterySaver") === "true";
   let voices = [];
-  let voiceMode = readStorage("smartCaneVoiceMode") || "google";
+  let selectedVoiceURI = readStorage("smartCaneVoiceURI") || "";
+  let manualVoiceChoice = false;
   let lastSceneKey = "";
   let lastSceneSpeechAt = 0;
   let lastInferenceAt = 0;
   let lastDarkSpeechAt = 0;
+  let noDetectionSince = 0;
   let locationWatchId = null;
-  let consecutiveErrors = 0;
-  function readStorage(key) { try { return localStorage.getItem(key); } catch { return null; } }
-  function writeStorage(key, value) { try { localStorage.setItem(key, value); } catch {} }
+
+  function readStorage(key) {
+    try { return localStorage.getItem(key); } catch { return null; }
+  }
+
+  function writeStorage(key, value) {
+    try { localStorage.setItem(key, value); } catch {}
+  }
+
   function translationFor(key, values = {}) {
     const external = window.SMART_CANE_TRANSLATIONS?.[languageCode]?.messages?.[key];
     let message = typeof external === "string" ? external : ENGLISH_SPEECH[key] || key;
-    for (const [name, value] of Object.entries(values)) { message = message.replaceAll(`{${name}}`, String(value)); }
+    for (const [name, value] of Object.entries(values)) {
+      message = message.replaceAll(`{${name}}`, String(value));
+    }
     return message;
   }
-  function isGoogleVoice(voice) { return /google/i.test(`${voice.name} ${voice.voiceURI}`); }
-  function isVocalizerVoice(voice) { return /vocalizer|nuance/i.test(`${voice.name} ${voice.voiceURI}`); }
-  function voiceMatchesLanguage(voice) { return voice.lang.toLowerCase().split("-")[0] === languageCode.toLowerCase().split("-")[0]; }
-  function pickVoice() {
-    if (!voices.length) return null;
-    if (voiceMode === "google") {
-      return voices.find((v) => isGoogleVoice(v) && voiceMatchesLanguage(v)) || voices.find(isGoogleVoice) || voices.find(voiceMatchesLanguage) || voices[0];
-    }
-    if (voiceMode === "vocalizer") {
-      return voices.find((v) => isVocalizerVoice(v) && voiceMatchesLanguage(v)) || voices.find(isVocalizerVoice) || voices.find((v) => isGoogleVoice(v) && voiceMatchesLanguage(v)) || voices.find(voiceMatchesLanguage) || voices[0];
-    }
-    return voices.find((v) => isGoogleVoice(v) && voiceMatchesLanguage(v)) || voices.find((v) => isVocalizerVoice(v) && voiceMatchesLanguage(v)) || voices.find(voiceMatchesLanguage) || voices[0];
-  }
-  function updateVoiceButtons() {
-    $("voiceGoogleBtn").classList.toggle("selected-voice", voiceMode === "google");
-    $("voiceVocalizerBtn").classList.toggle("selected-voice", voiceMode === "vocalizer");
-    $("voiceAutoBtn").classList.toggle("selected-voice", voiceMode === "auto");
-  }
-  function setVoiceMode(mode) { voiceMode = mode; writeStorage("smartCaneVoiceMode", mode); updateVoiceButtons(); }
+
   function speakText(message, display = true) {
     if (display) statusEl.textContent = message;
     if (!("speechSynthesis" in window)) return;
-    try {
-      if (speechSynthesis.speaking || speechSynthesis.pending) return;
-      const utterance = new SpeechSynthesisUtterance(message);
-      utterance.lang = languageCode;
-      utterance.rate = 1;
-      const voice = pickVoice();
-      if (voice) utterance.voice = voice;
-      speechSynthesis.speak(utterance);
-    } catch (error) { console.warn("Speech synthesis error:", error); }
-  }
-  function say(key, values = {}, display = true) { speakText(translationFor(key, values), display); }
-  function sayForce(key, values = {}) {
-    const message = translationFor(key, values);
-    statusEl.textContent = message;
-    if (!("speechSynthesis" in window)) return;
+
     try {
       speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(message);
       utterance.lang = languageCode;
       utterance.rate = 1;
-      const voice = pickVoice();
+
+      const voice = voices.find((item) => item.voiceURI === selectedVoiceURI);
       if (voice) utterance.voice = voice;
+
       speechSynthesis.speak(utterance);
-    } catch (error) { console.warn("Speech synthesis error:", error); }
+    } catch (error) {
+      console.warn("Speech synthesis error:", error);
+    }
   }
-  function showView(id) { document.querySelectorAll(".view").forEach((view) => { view.classList.toggle("active", view.id === id); }); }
+
+  function say(key, values = {}, display = true) {
+    speakText(translationFor(key, values), display);
+  }
+
+  function showView(id) {
+    document.querySelectorAll(".view").forEach((view) => {
+      view.classList.toggle("active", view.id === id);
+    });
+  }
+
+  function regionLabel(code) {
+    try {
+      const normalized = code.replace("_", "-");
+      const parts = normalized.split("-");
+      const region = parts.find((part) => part.length === 2 || /^\d{3}$/.test(part));
+      const language = new Intl.DisplayNames([normalized], { type: "language" }).of(parts[0]);
+      const regionName = region
+        ? new Intl.DisplayNames([normalized], { type: "region" }).of(region)
+        : "";
+      return `${language || code}${regionName ? " " + regionName : ""}`;
+    } catch {
+      return code;
+    }
+  }
+
   function renderLanguages(filter = "") {
     const query = filter.trim().toLocaleLowerCase();
-    const matches = localeList.filter((item) => { const label = item.label.toLocaleLowerCase(); return !query || label.includes(query) || item.code.toLowerCase().includes(query); });
+    const matches = localeCodes.filter((code) => {
+      const label = regionLabel(code).toLocaleLowerCase();
+      return !query || label.includes(query) || code.toLowerCase().includes(query);
+    });
+
     languageOptions.replaceChildren();
-    for (const item of matches) {
+
+    for (const code of matches) {
       const option = document.createElement("button");
       option.type = "button";
       option.className = "language-option";
       option.setAttribute("role", "option");
-      option.setAttribute("aria-selected", String(item.code === languageCode));
-      option.textContent = item.label;
-      option.addEventListener("click", () => selectLanguage(item.code));
+      option.setAttribute("aria-selected", String(code === languageCode));
+      option.textContent = regionLabel(code);
+      option.addEventListener("click", () => selectLanguage(code));
       languageOptions.append(option);
     }
   }
+
   function selectLanguage(code) {
     if (!localeCodes.includes(code)) return;
     languageCode = code;
     writeStorage("smartCaneLanguage", code);
-    languageButton.textContent = labelFor(code);
+    languageButton.textContent = regionLabel(code);
     languageDropdown.classList.add("hidden");
     languageButton.setAttribute("aria-expanded", "false");
     renderLanguages(languageSearch.value);
+    populateVoices();
   }
+
   function updateButtons() {
     $("startBtn").classList.toggle("hidden", running || starting);
     $("startBtn").disabled = running || starting;
     $("stopBtn").classList.toggle("hidden", !running && !starting);
     $("stopBtn").disabled = false;
+    $("batteryBtn").textContent = `Battery Saver: ${batterySaver ? "ON" : "OFF"}`;
   }
-  function populateVoices() { if (!("speechSynthesis" in window)) return; voices = speechSynthesis.getVoices() || []; }
+
+  function isGoogleVoice(voice) {
+    return /google/i.test(`${voice.name} ${voice.voiceURI}`);
+  }
+
+  function voiceMatchesLanguage(voice) {
+    return voice.lang.toLowerCase().split("-")[0] ===
+      languageCode.toLowerCase().replace("_", "-").split("-")[0];
+  }
+
+  function populateVoices() {
+    if (!("speechSynthesis" in window)) return;
+
+    voices = speechSynthesis.getVoices() || [];
+    voiceSelect.replaceChildren();
+
+    for (const voice of voices) {
+      const option = document.createElement("option");
+      option.value = voice.voiceURI;
+      option.textContent =
+        `${isGoogleVoice(voice) ? "Google · " : ""}${voice.name} (${voice.lang})`;
+      voiceSelect.append(option);
+    }
+
+    if (!voices.length) return;
+
+    let chosen = voices.find((voice) => voice.voiceURI === selectedVoiceURI);
+    if (!manualVoiceChoice || !chosen) {
+      chosen =
+        voices.find((voice) => isGoogleVoice(voice) && voiceMatchesLanguage(voice)) ||
+        voices.find(isGoogleVoice) ||
+        voices.find(voiceMatchesLanguage) ||
+        voices[0];
+
+      selectedVoiceURI = chosen.voiceURI;
+      writeStorage("smartCaneVoiceURI", selectedVoiceURI);
+    }
+
+    voiceSelect.value = selectedVoiceURI;
+  }
+
+  function detectModelInputShape(compiledModel) {
+    try {
+      const inputDetails = compiledModel?.getInputDetails?.() || compiledModel?.inputs;
+      const shape = inputDetails?.[0]?.shape;
+      if (Array.isArray(shape) && shape.length === 4) {
+        return shape;
+      }
+    } catch {}
+    return [1, INPUT_SIZE, INPUT_SIZE, 3];
+  }
+
   async function loadModel() {
     if (model) return model;
+
     await loadLiteRt(LITERT_WASM_URL, { jspi: true });
-    try { model = await loadAndCompile(MODEL_URL, { accelerator: "webgpu" }); }
-    catch (webgpuError) { console.warn("LiteRT WebGPU unavailable; trying WASM:", webgpuError); model = await loadAndCompile(MODEL_URL, { accelerator: "wasm" }); }
+
+    try {
+      model = await loadAndCompile(MODEL_URL, { accelerator: "webgpu" });
+    } catch (webgpuError) {
+      console.warn("LiteRT WebGPU unavailable; trying WASM:", webgpuError);
+      model = await loadAndCompile(MODEL_URL, { accelerator: "wasm" });
+    }
+
+    modelInputShape = detectModelInputShape(model);
     return model;
   }
+
   function startLocation() {
-    if (!navigator.geolocation) { locationEl.textContent = ENGLISH_SPEECH.locationError; return; }
+    if (!navigator.geolocation) {
+      locationEl.textContent = ENGLISH_SPEECH.locationError;
+      return;
+    }
+
     locationEl.textContent = ENGLISH_SPEECH.locationWaiting;
     locationWatchId = navigator.geolocation.watchPosition(
-      (position) => { locationEl.textContent = ENGLISH_SPEECH.location.replace("{lat}", position.coords.latitude.toFixed(5)).replace("{lon}", position.coords.longitude.toFixed(5)); },
+      (position) => {
+        locationEl.textContent = ENGLISH_SPEECH.location
+          .replace("{lat}", position.coords.latitude.toFixed(5))
+          .replace("{lon}", position.coords.longitude.toFixed(5));
+      },
       () => { locationEl.textContent = ENGLISH_SPEECH.locationError; },
       { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
     );
   }
-  function stopLocation() { if (locationWatchId !== null && navigator.geolocation) { navigator.geolocation.clearWatch(locationWatchId); locationWatchId = null; } }
-  function stopCamera() { if (stream) { stream.getTracks().forEach((track) => track.stop()); stream = null; } video.srcObject = null; }
+
+  function stopLocation() {
+    if (locationWatchId !== null && navigator.geolocation) {
+      navigator.geolocation.clearWatch(locationWatchId);
+      locationWatchId = null;
+    }
+  }
+
+  function stopCamera() {
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+      stream = null;
+    }
+    video.srcObject = null;
+  }
+
   async function start() {
     if (running || starting) return;
+
     starting = true;
     const thisSession = ++sessionId;
     updateButtons();
-    sayForce("starting");
+    say("starting");
+
     try {
-      if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) { throw new Error("Camera access requires HTTPS or localhost."); }
-      const cameraPromise = navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: "environment" }, width: { ideal: 640 }, height: { ideal: 480 }, frameRate: { ideal: 30 } } });
+      if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+        throw new Error("Camera access requires HTTPS or localhost.");
+      }
+
+      const cameraPromise = navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          frameRate: { ideal: 30 }
+        }
+      });
+
       const [newStream] = await Promise.all([cameraPromise, loadModel()]);
-      if (thisSession !== sessionId) { newStream.getTracks().forEach((track) => track.stop()); return; }
+
+      if (thisSession !== sessionId) {
+        newStream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+
       stream = newStream;
       video.srcObject = stream;
       await video.play();
-      if (thisSession !== sessionId) { stopCamera(); return; }
+
+      if (thisSession !== sessionId) {
+        stopCamera();
+        return;
+      }
+
       running = true;
       starting = false;
-      lastSceneKey = ""; lastSceneSpeechAt = 0; lastInferenceAt = 0; lastDarkSpeechAt = 0; consecutiveErrors = 0; inFlight = false;
+      lastSceneKey = "";
+      lastSceneSpeechAt = 0;
+      lastInferenceAt = 0;
+      lastDarkSpeechAt = 0;
+      noDetectionSince = 0;
       updateButtons();
       startLocation();
-      sayForce("active");
+      say("active");
       animationId = requestAnimationFrame(loop);
     } catch (error) {
       console.error(error);
-      if (thisSession === sessionId) { starting = false; running = false; inFlight = false; stopCamera(); stopLocation(); updateButtons(); sayForce(error?.name === "NotAllowedError" || error?.message?.includes("HTTPS") ? "cameraError" : "modelError"); }
+      if (thisSession === sessionId) {
+        starting = false;
+        running = false;
+        stopCamera();
+        stopLocation();
+        updateButtons();
+        say(error?.name === "NotAllowedError" ||
+            error?.message?.includes("HTTPS")
+          ? "cameraError"
+          : "modelError");
+      }
     }
   }
-  function stop() { sessionId++; starting = false; running = false; inFlight = false; cancelAnimationFrame(animationId); stopCamera(); stopLocation(); updateButtons(); sayForce("stopped"); }
+
+  function stop() {
+    sessionId++;
+    starting = false;
+    running = false;
+    cancelAnimationFrame(animationId);
+    stopCamera();
+    stopLocation();
+    updateButtons();
+    say("stopped");
+  }
+
   function prepareInput() {
     const sourceWidth = video.videoWidth;
     const sourceHeight = video.videoHeight;
@@ -355,159 +556,370 @@
     const scaledHeight = Math.round(sourceHeight * scale);
     const padX = Math.floor((INPUT_SIZE - scaledWidth) / 2);
     const padY = Math.floor((INPUT_SIZE - scaledHeight) / 2);
+
     const canvas = document.createElement("canvas");
-    canvas.width = INPUT_SIZE; canvas.height = INPUT_SIZE;
+    canvas.width = INPUT_SIZE;
+    canvas.height = INPUT_SIZE;
     const context = canvas.getContext("2d", { willReadFrequently: true });
+
     context.fillStyle = "rgb(114,114,114)";
     context.fillRect(0, 0, INPUT_SIZE, INPUT_SIZE);
     context.drawImage(video, padX, padY, scaledWidth, scaledHeight);
+
     const rgba = context.getImageData(0, 0, INPUT_SIZE, INPUT_SIZE).data;
     const planeSize = INPUT_SIZE * INPUT_SIZE;
-    const chw = new Float32Array(planeSize * 3);
-    for (let i = 0, pixel = 0; i < rgba.length; i += 4, pixel++) { chw[pixel] = rgba[i] / 255; chw[planeSize + pixel] = rgba[i + 1] / 255; chw[planeSize * 2 + pixel] = rgba[i + 2] / 255; }
-    return { tensor: new Tensor(chw, [1, 3, INPUT_SIZE, INPUT_SIZE]), scale, padX, padY, sourceWidth, sourceHeight };
+    const isNchw = Array.isArray(modelInputShape) && modelInputShape[1] === 3;
+    const data = new Float32Array(planeSize * 3);
+
+    if (isNchw) {
+      for (let i = 0, pixel = 0; i < rgba.length; i += 4, pixel++) {
+        data[pixel] = rgba[i] / 255;
+        data[planeSize + pixel] = rgba[i + 1] / 255;
+        data[planeSize * 2 + pixel] = rgba[i + 2] / 255;
+      }
+      return {
+        tensor: new Tensor(data, [1, 3, INPUT_SIZE, INPUT_SIZE]),
+        scale, padX, padY, sourceWidth, sourceHeight
+      };
+    }
+
+    for (let i = 0, outIdx = 0; i < rgba.length; i += 4) {
+      data[outIdx++] = rgba[i] / 255;
+      data[outIdx++] = rgba[i + 1] / 255;
+      data[outIdx++] = rgba[i + 2] / 255;
+    }
+
+    return {
+      tensor: new Tensor(data, [1, INPUT_SIZE, INPUT_SIZE, 3]),
+      scale, padX, padY, sourceWidth, sourceHeight
+    };
   }
+
   function intersectionOverUnion(a, b) {
-    const x1 = Math.max(a.x1, b.x1); const y1 = Math.max(a.y1, b.y1); const x2 = Math.min(a.x2, b.x2); const y2 = Math.min(a.y2, b.y2);
+    const x1 = Math.max(a.x1, b.x1);
+    const y1 = Math.max(a.y1, b.y1);
+    const x2 = Math.min(a.x2, b.x2);
+    const y2 = Math.min(a.y2, b.y2);
     const intersection = Math.max(0, x2 - x1) * Math.max(0, y2 - y1);
-    const areaA = (a.x2 - a.x1) * (a.y2 - a.y1); const areaB = (b.x2 - b.x1) * (b.y2 - b.y1);
+    const areaA = (a.x2 - a.x1) * (a.y2 - a.y1);
+    const areaB = (b.x2 - b.x1) * (b.y2 - b.y1);
     return intersection / Math.max(1e-8, areaA + areaB - intersection);
   }
+
   function applyNms(boxes) {
     boxes.sort((a, b) => b.score - a.score);
     const selected = [];
-    for (const box of boxes) { if (selected.every((item) => item.classId !== box.classId || intersectionOverUnion(item, box) <= IOU_THRESHOLD)) { selected.push(box); } if (selected.length >= 50) break; }
+
+    for (const box of boxes) {
+      if (selected.every((item) =>
+        item.classId !== box.classId ||
+        intersectionOverUnion(item, box) <= IOU_THRESHOLD
+      )) {
+        selected.push(box);
+      }
+      if (selected.length >= 50) break;
+    }
+
     return selected;
   }
+
   async function decodeOutputs(results, transform) {
     if (!results || !results.length) throw new Error("Model returned no output tensors.");
+
     const outputTensor = await results[0].moveTo("wasm");
     try {
       const data = outputTensor.toTypedArray();
       const shape = outputTensor.shape;
-      const channelsFirst = shape?.length === 3 && shape[1] === 84 && shape[2] === 8400;
-      const candidatesFirst = shape?.length === 3 && shape[1] === 8400 && shape[2] === 84;
-      if (!channelsFirst && !candidatesFirst) { throw new Error(`Unsupported YOLO output shape: ${shape?.join("x") || "unknown"}`); }
-      const read = (channel, candidate) => channelsFirst ? Number(data[channel * 8400 + candidate]) : Number(data[candidate * 84 + channel]);
+
+      const channelsFirst =
+        shape?.length === 3 && shape[1] === 84 && shape[2] === 8400;
+      const candidatesFirst =
+        shape?.length === 3 && shape[1] === 8400 && shape[2] === 84;
+
+      if (!channelsFirst && !candidatesFirst) {
+        throw new Error(`Unsupported YOLO output shape: ${shape?.join("x") || "unknown"}`);
+      }
+
+      const read = (channel, candidate) =>
+        channelsFirst
+          ? Number(data[channel * 8400 + candidate])
+          : Number(data[candidate * 84 + channel]);
+
+      const normalizedCoords =
+        Math.max(Math.abs(read(0, 0)), Math.abs(read(2, 0))) <= 2.5;
       const boxes = [];
+
       for (let i = 0; i < 8400; i++) {
-        let classId = -1; let confidence = -Infinity;
-        for (let c = 0; c < 80; c++) { const score = read(c + 4, i); if (score > confidence) { confidence = score; classId = c; } }
+        let classId = -1;
+        let confidence = -Infinity;
+
+        for (let c = 0; c < 80; c++) {
+          const score = read(c + 4, i);
+          if (score > confidence) {
+            confidence = score;
+            classId = c;
+          }
+        }
+
         if (!Number.isFinite(confidence) || confidence < CONFIDENCE_THRESHOLD) continue;
-        const cx = read(0, i); const cy = read(1, i); const width = read(2, i); const height = read(3, i);
+
+        let cx = read(0, i);
+        let cy = read(1, i);
+        let width = read(2, i);
+        let height = read(3, i);
+
+        if (normalizedCoords) {
+          cx *= INPUT_SIZE;
+          cy *= INPUT_SIZE;
+          width *= INPUT_SIZE;
+          height *= INPUT_SIZE;
+        }
+
         if (![cx, cy, width, height].every(Number.isFinite) || width <= 0 || height <= 0) continue;
-        const x1Model = cx - width / 2; const y1Model = cy - height / 2; const x2Model = cx + width / 2; const y2Model = cy + height / 2;
+
+        const x1Model = cx - width / 2;
+        const y1Model = cy - height / 2;
+        const x2Model = cx + width / 2;
+        const y2Model = cy + height / 2;
+
         const x1 = Math.max(0, (x1Model - transform.padX) / transform.scale);
         const y1 = Math.max(0, (y1Model - transform.padY) / transform.scale);
         const x2 = Math.min(transform.sourceWidth, (x2Model - transform.padX) / transform.scale);
         const y2 = Math.min(transform.sourceHeight, (y2Model - transform.padY) / transform.scale);
+
         if (x2 <= x1 || y2 <= y1) continue;
         boxes.push({ x1, y1, x2, y2, score: confidence, classId });
       }
+
       return applyNms(boxes);
-    } finally { outputTensor.delete(); results.delete?.(); }
+    } finally {
+      outputTensor.delete();
+      results.delete?.();
+    }
   }
-  function estimatedMeters(box) { const fraction = (box.y2 - box.y1) / video.videoHeight; if (!Number.isFinite(fraction) || fraction <= 0) return null; return Math.max(0.5, Math.min(8, DISTANCE_FACTOR_METERS / fraction)); }
-  function zoneFor(box) { const centerX = ((box.x1 + box.x2) / 2) / video.videoWidth; if (centerX < CENTER_LEFT_BOUNDARY) return "left"; if (centerX > CENTER_RIGHT_BOUNDARY) return "right"; return "center"; }
-  function localizedLabel(classId) { const label = COCO_LABELS[classId] || "object"; return window.SMART_CANE_TRANSLATIONS?.[languageCode]?.labels?.[label] || label; }
+
+  function estimatedMeters(box) {
+    const fraction = (box.y2 - box.y1) / video.videoHeight;
+    if (!Number.isFinite(fraction) || fraction <= 0) return null;
+    return Math.max(0.5, Math.min(8, DISTANCE_FACTOR_METERS / fraction));
+  }
+
+  function zoneFor(box) {
+    const centerX = ((box.x1 + box.x2) / 2) / video.videoWidth;
+    if (centerX < CENTER_LEFT_BOUNDARY) return "left";
+    if (centerX > CENTER_RIGHT_BOUNDARY) return "right";
+    return "center";
+  }
+
+  function localizedLabel(classId) {
+    const label = COCO_LABELS[classId] || "object";
+    return window.SMART_CANE_TRANSLATIONS?.[languageCode]?.labels?.[label] || label;
+  }
+
   function imageIsDark() {
     try {
-      const canvas = document.createElement("canvas"); canvas.width = 24; canvas.height = 24;
+      const canvas = document.createElement("canvas");
+      canvas.width = 24;
+      canvas.height = 24;
       const context = canvas.getContext("2d", { willReadFrequently: true });
       context.drawImage(video, 0, 0, 24, 24);
       const pixels = context.getImageData(0, 0, 24, 24).data;
       let total = 0;
-      for (let i = 0; i < pixels.length; i += 4) { total += (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3; }
+
+      for (let i = 0; i < pixels.length; i += 4) {
+        total += (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
+      }
       return total / (pixels.length / 4) < 22;
-    } catch { return false; }
+    } catch {
+      return false;
+    }
   }
+
   function describeScene(boxes, now) {
     const byZone = { left: [], center: [], right: [] };
+
     for (const box of boxes) {
       const distance = estimatedMeters(box);
       if (distance === null || distance > MAX_ANNOUNCED_DISTANCE_METERS) continue;
-      byZone[zoneFor(box)].push({ classId: box.classId, label: localizedLabel(box.classId), distance: Math.round(distance * 2) / 2, score: box.score });
+
+      byZone[zoneFor(box)].push({
+        classId: box.classId,
+        label: localizedLabel(box.classId),
+        distance: Math.round(distance * 2) / 2,
+        score: box.score
+      });
     }
+
     Object.values(byZone).forEach((items) => items.sort((a, b) => b.score - a.score));
+
     const center = byZone.center[0] || null;
     const left = byZone.left[0] || null;
     const right = byZone.right[0] || null;
     const messages = [];
-    messages.push(center ? translationFor("obstacle", { distance: center.distance, object: center.label }) : translationFor("noCenter"));
-    if (left) messages.push(translationFor("side", { direction: window.SMART_CANE_TRANSLATIONS?.[languageCode]?.directions?.left || "Left", object: left.label, distance: left.distance }));
-    if (right) messages.push(translationFor("side", { direction: window.SMART_CANE_TRANSLATIONS?.[languageCode]?.directions?.right || "Right", object: right.label, distance: right.distance }));
-    const signature = [center ? `C:${center.classId}:${center.distance}` : "C:none", left ? `L:${left.classId}:${left.distance}` : "L:none", right ? `R:${right.classId}:${right.distance}` : "R:none"].join("|");
-    if (signature !== lastSceneKey || ((center || left || right) && now - lastSceneSpeechAt >= REPEAT_INTERVAL_MS)) { lastSceneKey = signature; lastSceneSpeechAt = now; speakText(messages.join(" ")); }
+
+    messages.push(center
+      ? translationFor("obstacle", {
+          distance: center.distance,
+          object: center.label
+        })
+      : translationFor("noCenter"));
+
+    if (left) messages.push(translationFor("side", {
+      direction: window.SMART_CANE_TRANSLATIONS?.[languageCode]?.directions?.left || "Left",
+      object: left.label,
+      distance: left.distance
+    }));
+
+    if (right) messages.push(translationFor("side", {
+      direction: window.SMART_CANE_TRANSLATIONS?.[languageCode]?.directions?.right || "Right",
+      object: right.label,
+      distance: right.distance
+    }));
+
+    const signature = [
+      center ? `C:${center.classId}:${center.distance}` : "C:none",
+      left ? `L:${left.classId}:${left.distance}` : "L:none",
+      right ? `R:${right.classId}:${right.distance}` : "R:none"
+    ].join("|");
+
+    if (signature !== lastSceneKey ||
+        ((center || left || right) && now - lastSceneSpeechAt >= REPEAT_INTERVAL_MS)) {
+      lastSceneKey = signature;
+      lastSceneSpeechAt = now;
+      speakText(messages.join(" "));
+    }
   }
+
   async function loop() {
     if (!running) return;
+
     animationId = requestAnimationFrame(loop);
     if (inFlight) return;
-    if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA || !video.videoWidth || !video.videoHeight) return;
+    if (video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA ||
+        !video.videoWidth || !video.videoHeight) return;
+
     const now = performance.now();
-    if (now - lastInferenceAt < NORMAL_INTERVAL_MS) return;
+    const interval = batterySaver ? SAVER_INTERVAL_MS : NORMAL_INTERVAL_MS;
+    if (now - lastInferenceAt < interval) return;
+
     lastInferenceAt = now;
     inFlight = true;
+
     let inputTensor = null;
     let results = null;
+
     try {
       if (imageIsDark()) {
-        if (now - lastDarkSpeechAt >= 8000) { lastDarkSpeechAt = now; say("dark"); }
-        consecutiveErrors = 0;
+        if (now - lastDarkSpeechAt >= 8000) {
+          lastDarkSpeechAt = now;
+          say("dark");
+        }
+        noDetectionSince = 0;
         return;
       }
+
       const prepared = prepareInput();
       inputTensor = prepared.tensor;
+
       results = await model.run(inputTensor);
-      inputTensor.delete(); inputTensor = null;
-      if (!running) { results.delete?.(); results = null; return; }
+      inputTensor.delete();
+      inputTensor = null;
+
+      if (!running) {
+        results.delete?.();
+        results = null;
+        return;
+      }
+
       const boxes = await decodeOutputs(results, prepared);
       results = null;
-      consecutiveErrors = 0;
       describeScene(boxes, now);
+
+      if (boxes.length === 0) noDetectionSince = noDetectionSince || now;
+      else noDetectionSince = 0;
     } catch (error) {
       console.error("LiteRT inference failed:", error);
-      consecutiveErrors++;
-      if (consecutiveErrors >= 3) { statusEl.textContent = ENGLISH_SPEECH.modelError; consecutiveErrors = 0; }
+      statusEl.textContent = ENGLISH_SPEECH.modelError;
       results?.delete?.();
     } finally {
-      try { inputTensor?.delete(); } catch {}
+      inputTensor?.delete();
       inFlight = false;
     }
   }
+
   languageButton.addEventListener("click", () => {
     const opening = languageDropdown.classList.contains("hidden");
     languageDropdown.classList.toggle("hidden", !opening);
     languageButton.setAttribute("aria-expanded", String(opening));
-    if (opening) { languageSearch.value = ""; renderLanguages(); languageSearch.focus(); }
+    if (opening) {
+      languageSearch.value = "";
+      renderLanguages();
+      languageSearch.focus();
+    }
   });
+
   languageSearch.addEventListener("input", () => renderLanguages(languageSearch.value));
-  document.addEventListener("click", (event) => { if (!event.target.closest(".language-control")) { languageDropdown.classList.add("hidden"); languageButton.setAttribute("aria-expanded", "false"); } });
+
+  document.addEventListener("click", (event) => {
+    if (!event.target.closest(".language-control")) {
+      languageDropdown.classList.add("hidden");
+      languageButton.setAttribute("aria-expanded", "false");
+    }
+  });
+
   $("startBtn").addEventListener("click", start);
   $("stopBtn").addEventListener("click", stop);
   $("settingsBtn").addEventListener("click", () => showView("settingsView"));
   $("backHomeBtn").addEventListener("click", () => showView("homeView"));
   $("aboutBtn").addEventListener("click", () => showView("aboutView"));
   $("backAboutBtn").addEventListener("click", () => showView("settingsView"));
-  $("voiceGoogleBtn").addEventListener("click", () => { setVoiceMode("google"); sayForce("testVoice"); });
-  $("voiceVocalizerBtn").addEventListener("click", () => { setVoiceMode("vocalizer"); sayForce("testVoice"); });
-  $("voiceAutoBtn").addEventListener("click", () => { setVoiceMode("auto"); sayForce("testVoice"); });
-  $("testVoiceBtn").addEventListener("click", () => sayForce("testVoice"));
-  $("feedbackBtn").addEventListener("click", () => { $("ratings").classList.toggle("hidden"); });
+
+  $("batteryBtn").addEventListener("click", () => {
+    batterySaver = !batterySaver;
+    writeStorage("smartCaneBatterySaver", String(batterySaver));
+    updateButtons();
+  });
+
+  $("testVoiceBtn").addEventListener("click", () => say("testVoice"));
+
+  $("feedbackBtn").addEventListener("click", () => {
+    $("ratings").classList.toggle("hidden");
+  });
+
   $("ratings").addEventListener("click", (event) => {
     const button = event.target.closest("[data-rating]");
     if (!button) return;
+
     const rating = Number(button.dataset.rating);
-    const descriptions = { 1: "Major improvement needed", 2: "Considerable improvement needed", 3: "Some improvement needed", 4: "A little improvement needed", 5: "No improvement needed" };
+    const descriptions = {
+      1: "Major improvement needed",
+      2: "Considerable improvement needed",
+      3: "Some improvement needed",
+      4: "A little improvement needed",
+      5: "No improvement needed"
+    };
+
     const subject = encodeURIComponent("Smart Cane Feedback / Review");
     const body = encodeURIComponent(`My rating: ${rating}/5 — ${descriptions[rating]}`);
-    window.location.href = `mailto:humairasardar10@gmail.com?subject=${subject}&body=${body}`;
+    window.location.href =
+      `mailto:humairasardar10@gmail.com?subject=${subject}&body=${body}`;
   });
+
+  voiceSelect.addEventListener("change", () => {
+    selectedVoiceURI = voiceSelect.value;
+    manualVoiceChoice = true;
+    writeStorage("smartCaneVoiceURI", selectedVoiceURI);
+  });
+
   renderLanguages();
-  languageButton.textContent = labelFor(languageCode);
+  languageButton.textContent = regionLabel(languageCode);
   updateButtons();
-  updateVoiceButtons();
-  if ("speechSynthesis" in window) { populateVoices(); speechSynthesis.onvoiceschanged = populateVoices; }
+
+  if ("speechSynthesis" in window) {
+    populateVoices();
+    speechSynthesis.onvoiceschanged = populateVoices;
+  }
+
   window.addEventListener("pagehide", stop);
 </script>
 </body>
