@@ -1,104 +1,433 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Your Eyes Smart Cam - Created by Humaira Sardar</title>
-<script src="keys.js"></script>
-<style>
-body{margin:0;background:#000;color:#fff;font-family:sans-serif;text-align:center}
-header{background:#111;padding:12px}
-h1{font-size:20px;margin:5px;color:#00e676}
-p{font-size:13px;color:#ccc;margin:0}
-video{width:100%;height:55vh;object-fit:cover;background:#222}
-button{font-size:17px;padding:12px 16px;margin:6px;border-radius:12px;border:none;font-weight:bold}
-.green{background:#00e676;color:#000}
-.blue{background:#2196f3;color:#fff}
-.orange{background:#ff9800;color:#000}
-.grey{background:#444;color:#fff}
-#text{background:#222;padding:14px;font-size:19px;min-height:70px;margin:10px;border-radius:12px}
-#menu{display:none;background:#222;padding:10px;border-radius:12px;margin:10px}
-#about{display:none;background:#fff;color:#000;padding:15px;margin:10px;border-radius:12px}
-input{width:90%;padding:12px;font-size:17px;border-radius:12px;border:none;margin:8px}
-select{padding:12px;font-size:16px;border-radius:12px;margin:6px;width:90%}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0f1e">
+  <title>Your Eyes, Smart Cane - Created by Humaira Sardar</title>
+  <script src="keys.js"></script>
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { margin: 0; padding: 16px; background: #0a0f1e; color: #fff; font-family: Arial, sans-serif; }
+    main { max-width: 620px; margin: auto; padding: 22px; border-radius: 16px; background: #111827; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45); }
+    h1, h2 { margin: 0; color: #00ffcc; text-align: center; }
+    h1 { font-size: 22px; line-height: 1.3; }
+    h2 { font-size: 22px; }
+    .subtitle { text-align: center; color: #cbd5e1; font-size: 13px; margin: 6px 0 0; }
+    label { display: block; margin: 14px 0 6px; color: #00ffcc; font-size: 14px; font-weight: 700; }
+    input, select { width: 100%; padding: 12px; border: 1px solid #374151; border-radius: 10px; background: #1f2937; color: #fff; font-size: 16px; }
+    button { width: 100%; margin-top: 10px; padding: 14px; border: 0; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; }
+    button:disabled { opacity: 0.65; cursor: wait; }
+    .primary { background: #00ffcc; color: #000; }
+    .stop { background: #ef4444; color: #fff; }
+    .secondary { background: #374151; color: #fff; }
+    video { display: block; width: 100%; height: 280px; margin: 14px 0 10px; border: 3px solid #00ffcc; border-radius: 12px; background: #000; object-fit: cover; }
+    #status, #locationStatus { min-height: 28px; margin: 12px 0; font-size: 16px; font-weight: 700; line-height: 1.45; text-align: center; overflow-wrap: anywhere; }
+    #status { color: #38bdf8; }
+    #locationStatus { color: #cbd5e1; font-size: 13px; }
+    .view { display: none; }
+    .view.active { display: block; }
+    .hidden { display: none !important; }
+    .language-control { position: relative; margin-top: 14px; }
+    #languageSelect { margin: 0; text-align: left; }
+    #languageDropdown { position: absolute; z-index: 5; top: calc(100% + 5px); left: 0; right: 0; max-height: 320px; padding: 8px; overflow: auto; border: 1px solid #374151; border-radius: 10px; background: #111827; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45); }
+    #languageSearch { margin: 0 0 8px; }
+    #languageOptions { max-height: 230px; overflow-y: auto; }
+    .language-option { display: block; width: 100%; margin: 2px 0; padding: 10px; border-radius: 7px; background: transparent; color: #fff; text-align: left; }
+    .language-option:hover, .language-option[aria-selected="true"] { background: #1f2937; color: #00ffcc; }
+    .rating-option { margin-top: 8px; padding: 12px; border: 1px solid #374151; border-radius: 8px; background: #1f2937; }
+    .rating-option button { margin: 0; background: transparent; color: #00ffcc; text-align: left; }
+    .about-box { background: #1f2937; padding: 16px; border-radius: 12px; margin-top: 14px; line-height: 1.7; text-align: center; }
+  </style>
 </head>
 <body>
-<header>
-<h1>Your Eyes Smart Cam</h1>
-<p>Created by Humaira Sardar</p>
-<button class="grey" onclick="showMenu()">☰ Menu / Dropdown</button>
-<button class="grey" onclick="showSetting()">⚙️ Setting</button>
-</header>
+  <main>
+    <section id="homeView" class="view active">
+      <h1>Your Eyes, Smart Cane - Created by Humaira Sardar</h1>
+      <p class="subtitle">Okara, Pakistan</p>
+      <div class="language-control">
+        <button id="languageSelect" class="secondary" type="button" aria-haspopup="listbox" aria-expanded="false">English US</button>
+        <div id="languageDropdown" class="hidden">
+          <input id="languageSearch" type="search" placeholder="Search language..." aria-label="Search languages">
+          <div id="languageOptions" role="listbox" aria-label="Languages"></div>
+        </div>
+      </div>
+      <video id="camera" autoplay playsinline muted aria-label="Camera preview"></video>
+      <div id="status" aria-live="polite">Camera is ready.</div>
+      <div id="locationStatus" aria-live="polite"></div>
+      <button id="startBtn" class="primary" type="button">Start Live AI</button>
+      <button id="stopBtn" class="stop hidden" type="button">Stop</button>
+      <button id="settingsBtn" class="secondary" type="button">Settings</button>
+    </section>
 
-<div id="menu">
-<input id="searchBar" placeholder="🔍 Search... Yahan likho" oninput="searchKaro()">
-<br>
-<button class="blue" onclick="cameraOn()">📷 Camera Button</button>
-<button class="blue" onclick="switchCamera()">🔄 Camera Badlo</button>
-<select id="mode">
-<option>Live AI Mode</option>
-<option>Photo Mode</option>
-<option>Video Mode</option>
-</select>
-</div>
+    <section id="settingsView" class="view">
+      <h2>Settings</h2>
+      <button id="feedbackBtn" class="secondary" type="button">Feedback</button>
+      <div id="ratings" class="hidden">
+        <div class="rating-option"><button type="button" data-rating="1">1 - Major improvement needed</button></div>
+        <div class="rating-option"><button type="button" data-rating="2">2 - Considerable improvement needed</button></div>
+        <div class="rating-option"><button type="button" data-rating="3">3 - Some improvement needed</button></div>
+        <div class="rating-option"><button type="button" data-rating="4">4 - A little improvement needed</button></div>
+        <div class="rating-option"><button type="button" data-rating="5">5 - No improvement needed</button></div>
+      </div>
+      <button id="aboutBtn" class="secondary" type="button">About</button>
+      <button id="backHomeBtn" class="secondary" type="button">Back</button>
+    </section>
 
-<div id="setting" style="display:none;background:#222;padding:12px;border-radius:12px;margin:10px">
-<h3>Setting</h3>
-<button class="orange" onclick="showAbout()">ℹ️ About</button>
-<button class="orange" onclick="feedback()">✉️ Email / Feedback</button>
-<button class="grey" onclick="hideSetting()">Band Karo</button>
-</div>
+    <section id="aboutView" class="view">
+      <h2>About</h2>
+      <div class="about-box">
+        <p><b>Your Eyes, Smart Cane</b></p>
+        <p>I am confident, capable, and moving forward with courage.</p>
+        <p>This app is the eyes for those who cannot see. It watches through the camera and speaks to tell you what is in front of you, so you can walk with confidence and independence.</p>
+        <p><b>Created by Humaira Sardar, Okara, Pakistan</b></p>
+      </div>
+      <button id="backAboutBtn" class="secondary" type="button">Back</button>
+    </section>
+  </main>
 
-<div id="about">
-<b>About - Your Eyes Smart Cam</b><br><br>
-Ye app andhe logon ke liye hai.<br>
-Camera live dekh kar bol kar batayegi.<br><br>
-<b>Created by Humaira Sardar</b><br><br>
-<button onclick="hideAbout()">Band Karo</button>
-</div>
+  <canvas id="canvas" style="display: none;"></canvas>
 
-<video id="video" autoplay playsinline muted></video>
-<div id="text">Yahan jo camera dekhega, wo likha aayega</div>
-<button class="green" onclick="startLiveAI()">▶️ Start Live AI</button>
-<button class="grey" onclick="stopLiveAI()">⏹️ Stop</button>
-<canvas id="canvas" style="display:none"></canvas>
+  <script>
+    const LANGUAGES = [
+      ["en-US", "English US"],
+      ["en-GB", "English UK"],
+      ["en-AU", "English Australia"],
+      ["en-CA", "English Canada"],
+      ["en-IN", "English India"],
+      ["ur-PK", "Urdu Pakistan"],
+      ["ur-IN", "Urdu India"],
+      ["hi-IN", "Hindi India"],
+      ["ar-SA", "Arabic Saudi Arabia"],
+      ["ar-EG", "Arabic Egypt"],
+      ["ar-AE", "Arabic UAE"],
+      ["bn-BD", "Bengali Bangladesh"],
+      ["bn-IN", "Bengali India"],
+      ["pa-PK", "Punjabi Pakistan"],
+      ["pa-IN", "Punjabi India"],
+      ["ps-AF", "Pashto Afghanistan"],
+      ["ps-PK", "Pashto Pakistan"],
+      ["fa-IR", "Persian Iran"],
+      ["fa-AF", "Dari Afghanistan"],
+      ["tr-TR", "Turkish Turkey"],
+      ["fr-FR", "French France"],
+      ["fr-CA", "French Canada"],
+      ["fr-BE", "French Belgium"],
+      ["de-DE", "German Germany"],
+      ["de-AT", "German Austria"],
+      ["de-CH", "German Switzerland"],
+      ["es-ES", "Spanish Spain"],
+      ["es-MX", "Spanish Mexico"],
+      ["es-AR", "Spanish Argentina"],
+      ["es-US", "Spanish USA"],
+      ["it-IT", "Italian Italy"],
+      ["pt-BR", "Portuguese Brazil"],
+      ["pt-PT", "Portuguese Portugal"],
+      ["ru-RU", "Russian Russia"],
+      ["uk-UA", "Ukrainian Ukraine"],
+      ["zh-CN", "Chinese China"],
+      ["zh-TW", "Chinese Taiwan"],
+      ["zh-HK", "Chinese Hong Kong"],
+      ["ja-JP", "Japanese Japan"],
+      ["ko-KR", "Korean Korea"],
+      ["id-ID", "Indonesian Indonesia"],
+      ["ms-MY", "Malay Malaysia"],
+      ["th-TH", "Thai Thailand"],
+      ["vi-VN", "Vietnamese Vietnam"],
+      ["nl-NL", "Dutch Netherlands"],
+      ["nl-BE", "Dutch Belgium"],
+      ["sv-SE", "Swedish Sweden"],
+      ["da-DK", "Danish Denmark"],
+      ["fi-FI", "Finnish Finland"],
+      ["nb-NO", "Norwegian Norway"],
+      ["pl-PL", "Polish Poland"],
+      ["cs-CZ", "Czech Czechia"],
+      ["sk-SK", "Slovak Slovakia"],
+      ["hu-HU", "Hungarian Hungary"],
+      ["ro-RO", "Romanian Romania"],
+      ["bg-BG", "Bulgarian Bulgaria"],
+      ["hr-HR", "Croatian Croatia"],
+      ["sr-RS", "Serbian Serbia"],
+      ["sl-SI", "Slovenian Slovenia"],
+      ["el-GR", "Greek Greece"],
+      ["he-IL", "Hebrew Israel"],
+      ["am-ET", "Amharic Ethiopia"],
+      ["sw-KE", "Swahili Kenya"],
+      ["sw-TZ", "Swahili Tanzania"],
+      ["af-ZA", "Afrikaans South Africa"],
+      ["zu-ZA", "Zulu South Africa"],
+      ["xh-ZA", "Xhosa South Africa"],
+      ["yo-NG", "Yoruba Nigeria"],
+      ["ig-NG", "Igbo Nigeria"],
+      ["ha-NG", "Hausa Nigeria"],
+      ["so-SO", "Somali Somalia"],
+      ["ne-NP", "Nepali Nepal"],
+      ["si-LK", "Sinhala Sri Lanka"],
+      ["ta-IN", "Tamil India"],
+      ["ta-LK", "Tamil Sri Lanka"],
+      ["te-IN", "Telugu India"],
+      ["kn-IN", "Kannada India"],
+      ["ml-IN", "Malayalam India"],
+      ["mr-IN", "Marathi India"],
+      ["gu-IN", "Gujarati India"],
+      ["or-IN", "Odia India"],
+      ["as-IN", "Assamese India"],
+      ["my-MM", "Burmese Myanmar"],
+      ["km-KH", "Khmer Cambodia"],
+      ["lo-LA", "Lao Laos"],
+      ["ka-GE", "Georgian Georgia"],
+      ["hy-AM", "Armenian Armenia"],
+      ["az-AZ", "Azerbaijani Azerbaijan"],
+      ["kk-KZ", "Kazakh Kazakhstan"],
+      ["ky-KG", "Kyrgyz Kyrgyzstan"],
+      ["uz-UZ", "Uzbek Uzbekistan"],
+      ["tg-TJ", "Tajik Tajikistan"],
+      ["tk-TM", "Turkmen Turkmenistan"],
+      ["mn-MN", "Mongolian Mongolia"],
+      ["fil-PH", "Filipino Philippines"],
+      ["jv-ID", "Javanese Indonesia"],
+      ["su-ID", "Sundanese Indonesia"],
+      ["is-IS", "Icelandic Iceland"],
+      ["ga-IE", "Irish Ireland"],
+      ["cy-GB", "Welsh Wales"],
+      ["eu-ES", "Basque Spain"],
+      ["ca-ES", "Catalan Spain"],
+      ["gl-ES", "Galician Spain"],
+      ["lb-LU", "Luxembourgish Luxembourg"],
+      ["mt-MT", "Maltese Malta"],
+      ["sq-AL", "Albanian Albania"],
+      ["mk-MK", "Macedonian North Macedonia"],
+      ["bs-BA", "Bosnian Bosnia"],
+      ["et-EE", "Estonian Estonia"],
+      ["lv-LV", "Latvian Latvia"],
+      ["lt-LT", "Lithuanian Lithuania"],
+      ["be-BY", "Belarusian Belarus"]
+    ];
 
-<script>
-let video=document.getElementById('video');
-let canvas=document.getElementById('canvas');
-let textDiv=document.getElementById('text');
-let live=false; let currentFacing="environment";
+    const $ = (id) => document.getElementById(id);
+    const video = $("camera");
+    const statusEl = $("status");
+    const locationEl = $("locationStatus");
+    const canvas = $("canvas");
+    const languageButton = $("languageSelect");
+    const languageDropdown = $("languageDropdown");
+    const languageSearch = $("languageSearch");
+    const languageOptions = $("languageOptions");
 
-function showMenu(){ let m=document.getElementById('menu'); m.style.display=m.style.display=='none'?'block':'none'; }
-function showSetting(){ document.getElementById('setting').style.display='block'; }
-function hideSetting(){ document.getElementById('setting').style.display='none'; }
-function showAbout(){ document.getElementById('about').style.display='block'; }
-function hideAbout(){ document.getElementById('about').style.display='none'; }
-function feedback(){ window.location.href="mailto:humaira@example.com?subject=Feedback - Your Eyes Smart Cam"; }
-function searchKaro(){ let v=document.getElementById('searchBar').value; textDiv.innerText="Tumne search kiya: "+v; }
-async function cameraOn(){ try{ let s=await navigator.mediaDevices.getUserMedia({video:{facingMode:currentFacing}}); video.srcObject=s; textDiv.innerText="Camera On Ho Gaya"; }catch(e){ textDiv.innerText="Camera Error: "+e.message; } }
-async function switchCamera(){ currentFacing=currentFacing=="environment"?"user":"environment"; cameraOn(); }
-async function startLiveAI(){
-  if(!video.srcObject) await cameraOn();
-  live=true; textDiv.innerText="Live AI Shuru Ho Gaya... Main dekh kar bolungi";
-  setInterval(async ()=>{
-    if(!live) return;
-    canvas.width=video.videoWidth; canvas.height=video.videoHeight;
-    canvas.getContext('2d').drawImage(video,0,0);
-    let image=canvas.toDataURL('image/jpeg',0.7).split(',')[1];
-    let key=GEMINI_KEYS[0];
-    try{
-      let res=await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="+key,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({contents:[{parts:[{text:"Is image me kya hai, Urdu me 1-2 jumlon me batao. Samne rukawat ho to pehle wo batao."},{inline_data:{mime_type:"image/jpeg",data:image}}]}]})});
-      let data=await res.json();
-      let j=data.candidates[0].content.parts[0].text;
-      textDiv.innerText=j;
-      let bol=new SpeechSynthesisUtterance(j); bol.lang='ur-PK'; speechSynthesis.speak(bol);
-    }catch(e){ textDiv.innerText="Error: "+e.message; }
-  },5000);
-}
-function stopLiveAI(){ live=false; textDiv.innerText="Live AI Band Ho Gaya"; }
-cameraOn();
-</script>
+    let languageCode = "en-US";
+    let languageLabel = "English US";
+    let stream = null;
+    let running = false;
+    let timer = null;
+    let locationWatchId = null;
+
+    function getKey() {
+      if (typeof GEMINI_KEYS !== "undefined" && GEMINI_KEYS && GEMINI_KEYS[0]) {
+        return GEMINI_KEYS[0];
+      }
+      if (typeof PART1 !== "undefined" && typeof PART2 !== "undefined") {
+        return PART1 + PART2;
+      }
+      return "";
+    }
+
+    function showView(id) {
+      document.querySelectorAll(".view").forEach((view) => {
+        view.classList.toggle("active", view.id === id);
+      });
+    }
+
+    function renderLanguages(filter) {
+      const query = (filter || "").trim().toLowerCase();
+      languageOptions.innerHTML = "";
+      const matches = LANGUAGES.filter((item) => {
+        const code = item[0].toLowerCase();
+        const label = item[1].toLowerCase();
+        return !query || label.includes(query) || code.includes(query);
+      });
+      for (const item of matches) {
+        const code = item[0];
+        const label = item[1];
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "language-option";
+        button.textContent = label;
+        button.addEventListener("click", () => {
+          languageCode = code;
+          languageLabel = label;
+          languageButton.textContent = label;
+          languageDropdown.classList.add("hidden");
+        });
+        languageOptions.append(button);
+      }
+    }
+
+    function speak(text) {
+      statusEl.textContent = text;
+      try {
+        speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = languageCode;
+        utterance.rate = 1;
+        speechSynthesis.speak(utterance);
+      } catch (error) {
+        console.warn("Speech synthesis error:", error);
+      }
+    }
+
+    function startLocation() {
+      if (!navigator.geolocation) {
+        locationEl.textContent = "Location unavailable.";
+        return;
+      }
+      locationWatchId = navigator.geolocation.watchPosition(
+        (position) => {
+          locationEl.textContent = "Location: " + position.coords.latitude.toFixed(5) + ", " + position.coords.longitude.toFixed(5);
+        },
+        () => {
+          locationEl.textContent = "Location unavailable.";
+        },
+        { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+      );
+    }
+
+    function stopLocation() {
+      if (locationWatchId !== null && navigator.geolocation) {
+        navigator.geolocation.clearWatch(locationWatchId);
+        locationWatchId = null;
+      }
+    }
+
+    async function start() {
+      if (running) {
+        return;
+      }
+      const key = getKey();
+      if (!key) {
+        statusEl.textContent = "Key not found. Please check keys.js file.";
+        return;
+      }
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: { facingMode: { ideal: "environment" }, width: { ideal: 640 }, height: { ideal: 480 } }
+        });
+        video.srcObject = stream;
+        await video.play();
+        running = true;
+        $("startBtn").classList.add("hidden");
+        $("stopBtn").classList.remove("hidden");
+        startLocation();
+        speak("Live AI has started.");
+        timer = setInterval(askGemini, 5000);
+        askGemini();
+      } catch (error) {
+        statusEl.textContent = "Camera unavailable. Allow camera access.";
+      }
+    }
+
+    function stop() {
+      running = false;
+      clearInterval(timer);
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+      stopLocation();
+      $("startBtn").classList.remove("hidden");
+      $("stopBtn").classList.add("hidden");
+      speak("Detection stopped.");
+    }
+
+    async function askGemini() {
+      if (!running) {
+        return;
+      }
+      const key = getKey();
+      if (!key) {
+        return;
+      }
+      try {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext("2d").drawImage(video, 0, 0);
+        const image = canvas.toDataURL("image/jpeg", 0.7).split(",")[1];
+        const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + key, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: "Describe what is in front in " + languageLabel + " in 1-2 short sentences. If there is an obstacle, first say STOP, then name the object and its distance. If there is no obstacle, say the path is clear." },
+                { inline_data: { mime_type: "image/jpeg", data: image } }
+              ]
+            }]
+          })
+        });
+        const data = await response.json();
+        if (data.error) {
+          statusEl.textContent = "Gemini Error: " + (data.error.message || "Please check key or model.");
+          return;
+        }
+        const text = data && data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0] && data.candidates[0].content.parts[0].text;
+        if (!text) {
+          statusEl.textContent = "Gemini did not return an answer. Please try again.";
+          return;
+        }
+        speak(text);
+      } catch (error) {
+        statusEl.textContent = "Error: " + error.message;
+      }
+    }
+
+    languageButton.addEventListener("click", () => {
+      const opening = languageDropdown.classList.contains("hidden");
+      languageDropdown.classList.toggle("hidden", !opening);
+      if (opening) {
+        languageSearch.value = "";
+        renderLanguages("");
+        languageSearch.focus();
+      }
+    });
+
+    languageSearch.addEventListener("input", () => {
+      renderLanguages(languageSearch.value);
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!event.target.closest(".language-control")) {
+        languageDropdown.classList.add("hidden");
+      }
+    });
+
+    $("startBtn").addEventListener("click", start);
+    $("stopBtn").addEventListener("click", stop);
+    $("settingsBtn").addEventListener("click", () => showView("settingsView"));
+    $("backHomeBtn").addEventListener("click", () => showView("homeView"));
+    $("aboutBtn").addEventListener("click", () => showView("aboutView"));
+    $("backAboutBtn").addEventListener("click", () => showView("settingsView"));
+    $("feedbackBtn").addEventListener("click", () => $("ratings").classList.toggle("hidden"));
+
+    $("ratings").addEventListener("click", (event) => {
+      const button = event.target.closest("[data-rating]");
+      if (!button) {
+        return;
+      }
+      const rating = Number(button.dataset.rating);
+      const descriptions = {
+        1: "Major improvement needed",
+        2: "Considerable improvement needed",
+        3: "Some improvement needed",
+        4: "A little improvement needed",
+        5: "No improvement needed"
+      };
+      const subject = encodeURIComponent("Smart Cane Feedback / Review");
+      const body = encodeURIComponent("My rating: " + rating + "/5 - " + descriptions[rating]);
+      window.location.href = "mailto:humairasardar10@gmail.com?subject=" + subject + "&body=" + body;
+    });
+
+    renderLanguages("");
+    languageButton.textContent = languageLabel;
+    window.addEventListener("pagehide", stop);
+  </script>
 </body>
 </html>
