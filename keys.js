@@ -1,3 +1,1 @@
-const PART1 = "AQ.Ab8RN6KTqKdDIS6nwHpA01OOvi3GqH_";
-const PART2 = "Rkd4P00-pT6Za3YB_dg";
-const GEMINI_KEYS = [PART1 + PART2];
+const GEMINI_KEYS = [  AQ.Ab8RN6JBvdryoD6TT3CLsD41I_de3JjKcbrQtPFf3zBAoLXoKw];
