@@ -1,3 +1,0 @@
-const GEMINI_KEYS = [
-  "APNI_KEY_YAHAN_LIKHEN"
-];
