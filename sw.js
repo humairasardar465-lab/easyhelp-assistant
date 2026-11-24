@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-cane-v1';
+const CACHE_NAME = 'smart-cane-v2.5';
 const urlsToCache = [
   './',
   './index.html',
